@@ -1,0 +1,288 @@
+/* Customer Payment Page - Matching Landing Page Layout */
+@import './customer-global.css';
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+.customer-payment {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  height: 100%;
+  background: linear-gradient(145deg, #2D1B52 0%, #1A0B2E 50%, #0F051A 100%);
+  font-family: 'Poppins', 'Arial', sans-serif;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.customer-payment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header */
+.payment-header {
+  padding: 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Welcome Section */
+.welcome-section {
+  text-align: center;
+  padding: 30px 20px 30px;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-family: 'Poppins', 'Arial', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.8),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.page-subtitle {
+  font-family: 'Poppins', 'Arial', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  margin: 0;
+  opacity: 0.85;
+  letter-spacing: 0.5px;
+  color: #DDD6FE;
+}
+
+/* Payment Content */
+.payment-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 30px 40px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  gap: 25px;
+}
+
+/* Payment Methods */
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 18px 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: 'Poppins', sans-serif;
+}
+
+.payment-method:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(5px);
+}
+
+.payment-method.selected {
+  border-color: rgba(139, 92, 246, 0.8);
+  background: rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+.payment-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+}
+
+.payment-name {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  text-align: left;
+}
+
+.payment-radio {
+  font-size: 24px;
+  color: #C4B5FD;
+  flex-shrink: 0;
+}
+
+/* Order Summary */
+.order-summary {
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.summary-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 15px 0;
+  color: #C4B5FD;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summary-item:last-child {
+  border-bottom: none;
+}
+
+.summary-item.total {
+  font-size: 20px;
+  font-weight: 700;
+  color: white;
+  padding-top: 15px;
+  margin-top: 10px;
+  border-top: 2px solid rgba(139, 92, 246, 0.5);
+}
+
+/* Pay Button */
+.pay-btn {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50px;
+  color: white;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  font-family: 'Poppins', sans-serif;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 0 30px rgba(139, 92, 246, 0.4),
+    0 4px 15px rgba(0, 0, 0, 0.3);
+  margin-top: auto;
+}
+
+.pay-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.pay-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.pay-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 40px rgba(139, 92, 246, 0.6),
+    0 6px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.pay-btn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+.button-arrows {
+  font-size: 20px;
+  margin: 0 8px;
+}
+
+/* Responsive */
+@media (max-height: 700px) {
+  .welcome-section {
+    padding: 20px 20px 20px;
+  }
+  
+  .page-title {
+    font-size: 24px;
+  }
+  
+  .payment-content {
+    padding: 15px 30px 30px;
+    gap: 20px;
+  }
+}

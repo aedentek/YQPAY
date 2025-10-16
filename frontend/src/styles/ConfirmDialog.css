@@ -1,0 +1,105 @@
+/* Confirm Dialog Styles - Corporate Design */
+
+.confirm-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  min-width: 320px;
+  max-width: 500px;
+}
+
+.confirm-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.confirm-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  margin: 0 auto var(--space-3);
+}
+
+/* Icon Type Styling */
+.confirm-icon .icon-danger {
+  color: var(--error-color);
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.confirm-icon .icon-warning {
+  color: var(--warning-color);
+  background: rgba(251, 191, 36, 0.1);
+  border: 2px solid rgba(251, 191, 36, 0.2);
+}
+
+.confirm-icon .icon-success {
+  color: var(--success-color);
+  background: rgba(34, 197, 94, 0.1);
+  border: 2px solid rgba(34, 197, 94, 0.2);
+}
+
+.confirm-icon .icon-question {
+  color: var(--primary-color);
+  background: var(--primary-ultra-light);
+  border: 2px solid var(--primary-light);
+}
+
+.confirm-message {
+  color: var(--text-primary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-relaxed);
+  text-align: center;
+}
+
+.confirm-message p {
+  margin: 0;
+  font-weight: var(--font-weight-medium);
+}
+
+/* Button Styling for Success Status */
+.confirm-dialog.status-success .btn-success {
+  background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+  color: var(--white);
+  border: none;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  padding: var(--space-3) var(--space-6);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base) ease;
+  min-width: 120px;
+}
+
+.confirm-dialog.status-success .btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+/* Auto-close indicator */
+.auto-close-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.auto-close-progress {
+  height: 100%;
+  background: var(--success-color);
+  animation: progress-animation linear forwards;
+  width: 0;
+}
+
+@keyframes progress-animation {
+  from { width: 0; }
+  to { width: 100%; }
+}

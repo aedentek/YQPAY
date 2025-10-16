@@ -1,0 +1,136 @@
+/* Vertical Page Header Global Component */
+.vertical-page-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+}
+
+.vertical-page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.back-button-row {
+  margin-bottom: 20px;
+  z-index: 1;
+  position: relative;
+}
+
+.title-and-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1;
+  position: relative;
+  gap: 20px;
+}
+
+.vertical-page-header .back-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  text-decoration: none;
+}
+
+.vertical-page-header .back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateX(-2px);
+}
+
+.vertical-page-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.025em;
+  flex: 1;
+  text-align: left;
+}
+
+.action-button-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Action Button Styling for buttons inside the header */
+.vertical-page-header .action-btn,
+.vertical-page-header .header-btn {
+  background: var(--white);
+  color: var(--primary-color);
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.vertical-page-header .action-btn:hover,
+.vertical-page-header .header-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .vertical-page-header {
+    padding: 30px 20px;
+  }
+  
+  .vertical-page-header h1 {
+    font-size: 2rem;
+  }
+  
+  .title-and-action-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .action-button-container {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .vertical-page-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .vertical-page-header .back-btn {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+  
+  .vertical-page-header .action-btn,
+  .vertical-page-header .header-btn {
+    padding: 10px 16px;
+    font-size: 0.8rem;
+  }
+}

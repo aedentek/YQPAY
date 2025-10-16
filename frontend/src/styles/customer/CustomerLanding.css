@@ -1,0 +1,569 @@
+/* Import Fancy Gothic Fonts & Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Cinema Dark Purple Theme - Exact Match */
+.customer-landing {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(145deg, #2D1B52 0%, #1A0B2E 50%, #0F051A 100%);
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  /* Remove fixed positioning - it causes issues with browser chrome */
+  position: relative;
+  overflow-x: hidden;
+  /* iOS Safe Area Support - Extend background into safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.customer-landing::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(124, 58, 237, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(45, 27, 82, 0.3) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Cinema Header Section */
+.welcome-section {
+  text-align: center;
+  padding: 30px 0 20px;
+  background: transparent;
+  color: white;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Poppins Font Styling for Header */
+.welcome-title {
+  font-family: 'Poppins', 'Arial', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 3px;
+  margin: 0 0 12px 0;
+  opacity: 0.9;
+  text-transform: uppercase;
+  color: #C4B5FD;
+  text-shadow: 0 2px 10px rgba(196, 181, 253, 0.5);
+}
+
+.theater-name {
+  font-family: 'Poppins', 'Arial', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 
+    0 0 20px rgba(139, 92, 246, 0.8),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(145deg, #ffffff 0%, #E0E7FF 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theater-location {
+  font-family: 'Poppins', 'Arial', sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #DDD6FE;
+  text-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+/* Cinema Seat Information */
+.seat-info {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(196, 181, 253, 0.2);
+}
+
+.screen-name {
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 6px 0;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #C4B5FD;
+  text-shadow: 0 2px 6px rgba(196, 181, 253, 0.3);
+}
+
+.seat-number {
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 14px;
+  font-weight: 400;
+  margin: 0;
+  opacity: 0.85;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #DDD6FE;
+  text-shadow: 0 2px 6px rgba(139, 92, 246, 0.3);
+}
+
+/* Cinema Combo Section - Reference Match */
+.food-section {
+  padding: 20px 20px 0px;
+  background: transparent;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Cinema Combo Direct Image - Pure Image Only */
+.cinema-combo-direct {
+  width: 320px;
+  height: 280px;
+  margin: 0 auto;
+  object-fit: contain;
+  object-position: center;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+  background: transparent;
+}
+
+.cinema-combo-direct:hover {
+  transform: translateY(-5px) scale(1.02);
+  opacity: 0.9;
+}
+
+/* Cinema Loading Effects - Direct Image Match */
+.loading-placeholder {
+  width: 320px;
+  height: 280px;
+  border-radius: 25px;
+  background: linear-gradient(145deg, rgba(139, 92, 246, 0.15) 0%, rgba(45, 27, 82, 0.3) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  backdrop-filter: blur(15px);
+  margin: 0 auto;
+}
+
+.loading-shimmer {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    rgba(139, 92, 246, 0.1) 25%, 
+    rgba(196, 181, 253, 0.2) 50%, 
+    rgba(139, 92, 246, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: cinemaShimmer 2s infinite;
+  border-radius: 15px;
+}
+
+.error-placeholder {
+  width: 320px;
+  height: 280px;
+  border-radius: 25px;
+  background: rgba(45, 27, 82, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  border: 2px dashed rgba(196, 181, 253, 0.4);
+  color: #DDD6FE;
+  backdrop-filter: blur(10px);
+  margin: 0 auto;
+}
+
+/* Cinema Animations */
+@keyframes cinemaShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes cinemaGlow {
+  0%, 100% { 
+    text-shadow: 
+      0 0 20px rgba(139, 92, 246, 0.8),
+      0 4px 12px rgba(0, 0, 0, 0.6);
+  }
+  50% { 
+    text-shadow: 
+      0 0 30px rgba(139, 92, 246, 1),
+      0 6px 20px rgba(0, 0, 0, 0.8);
+  }
+}
+
+.theater-name {
+  animation: cinemaGlow 3s ease-in-out infinite;
+}
+
+/* Cinema Action Section */
+.action-section {
+  padding: 0px 30px 15px;
+  background: transparent;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  margin-top: -10px;
+}
+
+.order-button {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 50%, #6D28D9 100%);
+  color: #ffffff;
+  border: none;
+  padding: 20px 60px;
+  border-radius: 50px;
+  cursor: pointer;
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 18px;
+  font-weight: 600;
+  transition: all 0.4s ease;
+  box-shadow: 
+    0 8px 25px rgba(139, 92, 246, 0.5),
+    0 4px 15px rgba(0, 0, 0, 0.3),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 350px;
+  margin: 0 auto 15px;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+}
+
+.order-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.order-button:hover::before {
+  left: 100%;
+}
+
+.order-button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 
+    0 15px 40px rgba(139, 92, 246, 0.7),
+    0 8px 25px rgba(0, 0, 0, 0.4);
+  border-color: rgba(139, 92, 246, 0.6);
+}
+
+.order-button:active {
+  transform: translateY(-1px) scale(1.01);
+}
+
+.button-arrows {
+  font-size: 20px;
+  font-weight: 900;
+  opacity: 0.9;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.history-link {
+  background: none;
+  border: none;
+  color: #C4B5FD;
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 16px;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 8px;
+  text-decoration-color: rgba(196, 181, 253, 0.6);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 15px 25px;
+  text-shadow: 0 2px 8px rgba(196, 181, 253, 0.3);
+}
+
+.history-link:hover {
+  color: #DDD6FE;
+  text-decoration-color: rgba(221, 214, 254, 0.8);
+  text-decoration-thickness: 2px;
+  transform: scale(1.05);
+  text-shadow: 0 3px 12px rgba(196, 181, 253, 0.5);
+}
+
+/* Cinema Footer Section */
+.footer-section {
+  padding: 15px 30px 20px;
+  background: transparent;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  margin-top: 0;
+  flex-shrink: 0;
+}
+
+.footer-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.1) 0%, 
+    rgba(124, 58, 237, 0.05) 100%);
+  backdrop-filter: blur(5px);
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.powered-by {
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 12px;
+  color: #C4B5FD;
+  margin: 0 0 10px 0;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 6px rgba(196, 181, 253, 0.3);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  position: relative;
+  z-index: 2;
+}
+
+.logo-image {
+  max-height: 45px;
+  max-width: 180px;
+  object-fit: contain;
+  filter: 
+    drop-shadow(0 4px 12px rgba(139, 92, 246, 0.4))
+    brightness(1.2)
+    contrast(1.1);
+}
+
+.logo-text {
+  font-family: 'Cinzel', 'Playfair Display', 'Georgia', serif;
+  font-size: 24px;
+  font-weight: 600;
+  background: linear-gradient(145deg, #DDD6FE 0%, #C4B5FD 50%, #A78BFA 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 2px;
+  text-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Loading States */
+.customer-landing.loading {
+  justify-content: center;
+  align-items: center;
+  min-height: 40vh;
+}
+
+.loading-text {
+  font-size: 18px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+.loading-shimmer-bar {
+  width: 200px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 0 auto;
+  position: relative;
+}
+
+.loading-shimmer-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, #8B5CF6, transparent);
+  animation: loading-slide 1.5s infinite;
+}
+
+@keyframes loading-slide {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Error States */
+.customer-landing.error {
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+}
+
+.error-section {
+  text-align: center;
+  padding: 40px 30px;
+  color: #64748b;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.error-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+}
+
+.error-section p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+.error-hint {
+  font-size: 14px;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.fade-in-delay {
+  animation: fadeIn 0.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile Responsive Design */
+@media (max-width: 480px) {
+  .welcome-section {
+    padding: 30px 20px 25px;
+  }
+  
+  .theater-name {
+    font-size: 20px;
+  }
+  
+  .theater-location {
+    font-size: 16px;
+  }
+  
+  .food-section {
+    padding: 30px 20px;
+  }
+  
+  .food-image {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .loading-placeholder,
+  .error-placeholder {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .action-section {
+    padding: 25px 20px 35px;
+  }
+  
+  .order-button {
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+  
+  .footer-section {
+    padding: 25px 20px;
+  }
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  .welcome-section {
+    padding: 50px 40px 35px;
+  }
+  
+  .theater-name {
+    font-size: 28px;
+  }
+  
+  .theater-location {
+    font-size: 20px;
+  }
+  
+  .food-section {
+    padding: 50px 40px;
+  }
+  
+  .food-images {
+    gap: 25px;
+  }
+  
+  .food-image {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .loading-placeholder,
+  .error-placeholder {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .action-section {
+    padding: 40px 40px 50px;
+  }
+  
+  .footer-section {
+    padding: 35px 40px;
+  }
+}

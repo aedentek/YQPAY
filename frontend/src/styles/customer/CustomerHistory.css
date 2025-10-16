@@ -1,0 +1,73 @@
+/* Customer Order History Page */
+.customer-history {
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 60vh;
+  justify-content: center;
+  align-items: center;
+}
+
+.coming-soon-section {
+  text-align: center;
+  padding: 60px 40px;
+  color: #64748b;
+}
+
+.coming-soon-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+}
+
+.coming-soon-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px 0;
+}
+
+.coming-soon-section p {
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+.description {
+  font-size: 16px !important;
+  opacity: 0.8;
+  max-width: 300px;
+  margin: 0 auto 32px auto !important;
+}
+
+.back-button {
+  background: #8B5CF6;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.back-button:hover {
+  background: #7C3AED;
+  transform: translateY(-2px);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .coming-soon-section {
+    padding: 40px 30px;
+  }
+  
+  .coming-soon-icon {
+    font-size: 48px;
+  }
+  
+  .coming-soon-section h2 {
+    font-size: 24px;
+  }
+}

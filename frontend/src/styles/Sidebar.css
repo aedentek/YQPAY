@@ -1,0 +1,210 @@
+/* Enhanced Sidebar Tooltip Styles - Classic Typography */
+.nav-tooltip {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, 
+    rgba(20, 20, 30, 0.95) 0%, 
+    rgba(40, 25, 60, 0.98) 50%,
+    rgba(60, 30, 90, 0.95) 100%);
+  color: #f8f9fa;
+  padding: 14px 20px;
+  border-radius: 12px;
+  white-space: nowrap;
+  box-shadow: 
+    0 12px 35px rgba(0, 0, 0, 0.25),
+    0 6px 20px rgba(139, 92, 246, 0.4),
+    inset 0 2px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  z-index: var(--z-tooltip, 1070);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.5px;
+  line-height: 1.5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-width: max-content;
+  max-width: 320px;
+}
+
+/* Ensure sidebar has proper positioning context */
+.dashboard-sidebar {
+  position: relative;
+}
+
+/* Classic Tooltip Arrow */
+.nav-tooltip::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-right: 7px solid rgba(40, 25, 60, 0.98);
+  filter: drop-shadow(-2px 0 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Classic style enhancement */
+.nav-tooltip::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 50%,
+    rgba(0, 0, 0, 0.1) 100%);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Show tooltip on hover - faster response */
+.nav-item:hover .nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(8px);
+  transition-delay: 0.05s; /* Very fast response */
+}
+
+/* Enhanced nav-item positioning for tooltip */
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-light);
+  text-decoration: none;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  width: calc(100% - 16px);
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.1) 0%, 
+    rgba(109, 40, 217, 0.15) 100%);
+  color: var(--primary-color);
+  transform: translateX(4px);
+  box-shadow: 
+    0 4px 12px rgba(139, 92, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  font-weight: 600;
+  box-shadow: 
+    0 6px 20px rgba(139, 92, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.nav-item.active:hover {
+  transform: translateX(2px);
+  box-shadow: 
+    0 8px 25px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* Icon styling */
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.nav-text {
+  flex: 1;
+  font-weight: inherit;
+}
+
+/* Responsive classic tooltip positioning */
+@media (max-width: 1200px) {
+  .nav-tooltip {
+    left: calc(100% + 8px);
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    letter-spacing: 0.4px;
+    max-width: 280px;
+  }
+  
+  .nav-tooltip::before {
+    left: -6px;
+    border-right-width: 6px;
+    border-top-width: 6px;
+    border-bottom-width: 6px;
+  }
+}
+
+/* For collapsed sidebar state */
+.dashboard-sidebar.collapsed .nav-item {
+  padding: 14px 12px;
+  justify-content: center;
+}
+
+.dashboard-sidebar.collapsed .nav-text {
+  display: none;
+}
+
+.dashboard-sidebar.collapsed .nav-tooltip {
+  left: calc(100% + 15px);
+}
+
+/* Classic Animation improvements */
+@keyframes classicTooltipFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-8px) scale(0.92) rotateX(5deg);
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-50%) translateX(4px) scale(0.98) rotateX(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(-50%) translateX(8px) scale(1) rotateX(0deg);
+    filter: blur(0px);
+  }
+}
+
+.nav-item:hover .nav-tooltip {
+  animation: classicTooltipFadeIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Focus states for accessibility */
+.nav-item:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.nav-item:focus .nav-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(-50%) translateX(8px);
+}

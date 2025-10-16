@@ -1,0 +1,620 @@
+/* Theater QR Detail Styles - Using Settings Page Design System */
+
+/* Container styling - EXACTLY like Settings page */
+.theater-qr-settings-container {
+  max-width: 100%;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  display: flex;
+  min-height: 600px;
+  height: 100%;
+}
+
+/* Sidebar Tabs - EXACTLY like Settings page */
+.theater-qr-settings-tabs {
+  display: flex;
+  flex-direction: column;
+  background: #f8f8f5;
+  border-right: 1px solid #e5e5e0;
+  width: 280px;
+  min-width: 280px;
+  height: 100%;
+  min-height: 100%;
+}
+
+.theater-qr-settings-tab {
+  padding: 20px 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.theater-qr-settings-tab:hover {
+  background: #f0f0ed;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.theater-qr-settings-tab.active {
+  background: #fafaf8;
+  color: #6B0E9B;
+  border-right: 3px solid #6B0E9B;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.theater-qr-settings-tab.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #6B0E9B;
+}
+
+.theater-qr-tab-icon {
+  font-size: 18px;
+  min-width: 20px;
+}
+
+.theater-qr-tab-count {
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  margin-left: auto;
+}
+
+.theater-qr-settings-tab.active .theater-qr-tab-count {
+  background: #6B0E9B;
+  color: white;
+}
+
+/* Settings Content - EXACTLY like Settings page */
+.theater-qr-settings-content {
+  flex: 1;
+  padding: 32px;
+  background: transparent;
+  height: 100%;
+  min-height: 100%;
+}
+
+.theater-qr-settings-section {
+  max-width: 1200px;
+}
+
+.theater-qr-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.theater-qr-section-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.theater-qr-section-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.theater-qr-section-stats span {
+  font-weight: 500;
+}
+
+.nav-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.nav-text {
+  flex: 1;
+}
+
+.nav-count {
+  background: rgba(107, 14, 155, 0.1);
+  color: #6B0E9B;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.nav-item.active .nav-count {
+  background: rgba(107, 14, 155, 0.2);
+  color: #6B0E9B;
+}
+
+/* Sidebar Stats Section */
+.sidebar-stats {
+  padding: 20px 24px;
+  border-top: 1px solid #e5e5e0;
+  background: rgba(248, 248, 245, 0.5);
+}
+
+.sidebar-stats h3 {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(229, 229, 224, 0.5);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* QR Grid - Professional card layout */
+.theater-qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
+/* QR Detail Cards */
+.qr-detail-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.qr-detail-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* QR Image Section */
+.qr-image {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 16px auto;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+}
+
+.qr-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.2s ease;
+}
+
+.qr-img.loading {
+  opacity: 0.5;
+  filter: blur(2px);
+}
+
+.qr-img.error {
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dc2626;
+  font-size: 24px;
+}
+
+/* QR Badges */
+.qr-type-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.qr-status-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.qr-status-indicator.active {
+  background: #22c55e;
+}
+
+.qr-status-indicator.inactive {
+  background: #ef4444;
+}
+
+/* QR Info Section */
+.qr-info {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.qr-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+  line-height: 1.4;
+}
+
+.qr-seat {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+.qr-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.qr-stats span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.qr-status {
+  margin-top: 8px;
+}
+
+.qr-status .status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.qr-status .status.active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.qr-status .status.inactive {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* QR Actions */
+.qr-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Action Button Variants */
+.view-btn {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.view-btn:hover:not(:disabled) {
+  background: #93c5fd;
+  color: #1e40af;
+}
+
+.download-btn {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #86efac;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: #86efac;
+  color: #047857;
+}
+
+.toggle-btn.active {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+
+.toggle-btn.active:hover:not(:disabled) {
+  background: #fcd34d;
+  color: #b45309;
+}
+
+.toggle-btn.inactive {
+  background: #dcfce7;
+  color: #059669;
+  border: 1px solid #86efac;
+}
+
+.toggle-btn.inactive:hover:not(:disabled) {
+  background: #86efac;
+  color: #047857;
+}
+
+.delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.delete-btn:hover:not(:disabled) {
+  background: #fca5a5;
+  color: #b91c1c;
+}
+
+/* Empty State */
+.theater-qr-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.theater-qr-empty-state-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.theater-qr-empty-state h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.theater-qr-empty-state p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+}
+
+.generate-qr-btn {
+  background: #6B0E9B;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.generate-qr-btn:hover {
+  background: #5A0C82;
+  transform: translateY(-1px);
+}
+
+/* Skeleton/Loading States */
+.qr-loading-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.qr-skeleton {
+  width: 80%;
+  height: 80%;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.skeleton-image {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.skeleton-title {
+  height: 16px;
+  width: 80%;
+  margin: 0 auto 12px auto;
+}
+
+.skeleton-text {
+  height: 12px;
+  width: 60%;
+  margin: 0 auto 8px auto;
+}
+
+.skeleton-stats {
+  height: 10px;
+  width: 100%;
+  margin: 12px 0;
+}
+
+.skeleton-button {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Responsive Design - EXACTLY like Settings page */
+@media (max-width: 768px) {
+  .theater-qr-settings-container {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .theater-qr-settings-tabs {
+    flex-direction: row;
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    overflow-x: auto;
+  }
+
+  .theater-qr-settings-tab {
+    min-width: 140px;
+    padding: 16px 20px;
+    border-bottom: none;
+    border-right: 1px solid #e2e8f0;
+    justify-content: center;
+  }
+
+  .theater-qr-settings-tab.active {
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 3px solid #6B0E9B;
+  }
+
+  .theater-qr-settings-tab.active::before {
+    display: none;
+  }
+
+  .theater-qr-settings-content {
+    padding: 20px;
+  }
+
+  .theater-qr-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .theater-qr-tab-icon {
+    font-size: 16px;
+  }
+}
+
+/* Dynamic QR Names Loading States */
+.theater-qr-loading {
+  padding: 20px 24px;
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.theater-qr-no-names {
+  padding: 20px 24px;
+  color: #64748b;
+  text-align: center;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 14px;
+  background: #f8f8f5;
+}

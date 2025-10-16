@@ -1,0 +1,439 @@
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const { body, validationResult } = require('express-validator');
+const Theater = require('../models/Theater');
+const User = require('../models/User');
+
+const router = express.Router();
+
+// Generate JWT token
+const generateToken = (user) => {
+  const tokenPayload = {
+    userId: user._id,
+    username: user.username,
+    role: user.role,
+    theaterId: user.theaterId
+  };
+  
+  console.log('🎫 Generating token with payload:', tokenPayload);
+  
+  return jwt.sign(
+    tokenPayload,
+    process.env.JWT_SECRET || 'yqpaynow-super-secret-jwt-key-development-only',
+    { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+  );
+};
+
+// Generate refresh token
+const generateRefreshToken = (user) => {
+  return jwt.sign(
+    { userId: user._id },
+    process.env.JWT_REFRESH_SECRET || 'yqpaynow-super-secret-refresh-key-development-only',
+    { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d' }
+  );
+};
+
+/**
+ * POST /api/auth/login
+ * Authenticate user - supports both email (admins) and username (users)
+ */
+router.post('/login', [
+  body('email').optional(),
+  body('username').optional(),
+  body('password').notEmpty().withMessage('Password is required')
+], async (req, res) => {
+  try {
+    // Check validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { email, username, password } = req.body;
+    const loginIdentifier = email || username;
+    let authenticatedUser = null;
+
+    if (!loginIdentifier) {
+      return res.status(400).json({
+        error: 'Username or email is required',
+        code: 'MISSING_IDENTIFIER'
+      });
+    }
+
+    console.log(`🔐 Login attempt for: ${loginIdentifier}`);
+
+    // Step 1: Check ADMINS collection by email
+    if (loginIdentifier.includes('@')) {
+      console.log('📧 Checking admins collection by email...');
+      try {
+        const admin = await mongoose.connection.db.collection('admins')
+          .findOne({ email: loginIdentifier, isActive: true });
+        
+        if (admin && await bcrypt.compare(password, admin.password)) {
+          console.log('✅ Admin authenticated successfully');
+          authenticatedUser = {
+            _id: admin._id,
+            username: admin.email,
+            name: admin.name,
+            role: admin.role,
+            email: admin.email,
+            phone: admin.phone,
+            theaterId: null,
+            userType: admin.role || 'super_admin' // Use the actual role from the admin document
+          };
+          
+          // Update last login
+          await mongoose.connection.db.collection('admins')
+            .updateOne({ _id: admin._id }, { 
+              $set: { lastLogin: new Date() }
+            });
+        }
+      } catch (error) {
+        console.log('❌ Admin lookup error:', error.message);
+      }
+    }
+
+    // Step 2: Check THEATERUSERS collection by username if no admin found
+    if (!authenticatedUser) {
+      console.log('👤 Checking theaterusers collection by username...');
+      try {
+        const theaterUser = await mongoose.connection.db.collection('theaterusers')
+          .findOne({ username: loginIdentifier, isActive: true });
+        
+        if (theaterUser && await bcrypt.compare(password, theaterUser.password)) {
+          console.log('✅ Theater user authenticated successfully');
+          
+          // Get theater details
+          let theaterInfo = null;
+          if (theaterUser.theater) {
+            theaterInfo = await mongoose.connection.db.collection('theaters')
+              .findOne({ _id: theaterUser.theater });
+          }
+          
+          // Get role details if role is ObjectId
+          let roleInfo = null;
+          let userType = 'theater_user';
+          let rolePermissions = [];
+          
+          if (theaterUser.role) {
+            try {
+              if (typeof theaterUser.role === 'string' && theaterUser.role.includes('admin')) {
+                userType = 'theater_admin';
+              } else if (mongoose.Types.ObjectId.isValid(theaterUser.role)) {
+                roleInfo = await mongoose.connection.db.collection('roles')
+                  .findOne({ 
+                    _id: new mongoose.Types.ObjectId(theaterUser.role),
+                    isActive: true 
+                  });
+                
+                if (roleInfo) {
+                  // Check if role name includes 'admin'
+                  if (roleInfo.name && roleInfo.name.toLowerCase().includes('admin')) {
+                    userType = 'theater_admin';
+                  }
+                  
+                  // ✅ EXTRACT ROLE PERMISSIONS for theater users
+                  if (roleInfo.permissions && Array.isArray(roleInfo.permissions)) {
+                    rolePermissions = [{
+                      role: {
+                        _id: roleInfo._id,
+                        name: roleInfo.name,
+                        description: roleInfo.description || ''
+                      },
+                      permissions: roleInfo.permissions.filter(p => p.hasAccess === true)
+                    }];
+                    console.log(`🔑 Loaded ${rolePermissions[0].permissions.length} permissions for role: ${roleInfo.name}`);
+                  }
+                }
+              }
+            } catch (roleError) {
+              console.log('⚠️ Role lookup error:', roleError.message);
+            }
+          }
+          
+          authenticatedUser = {
+            _id: theaterUser._id,
+            username: theaterUser.username,
+            name: theaterUser.fullName || `${theaterUser.firstName || ''} ${theaterUser.lastName || ''}`.trim(),
+            role: roleInfo ? roleInfo.name : (theaterUser.role || 'theater_user'),
+            email: theaterUser.email,
+            phone: theaterUser.phoneNumber,
+            theaterId: theaterUser.theater || theaterUser.theaterId, // ✅ FIX: Support both field names
+            theaterName: theaterInfo ? theaterInfo.name : null,
+            userType: userType,
+            rolePermissions: rolePermissions // ✅ ATTACH ROLE PERMISSIONS to authenticated user
+          };
+          
+          // Update last login
+          await mongoose.connection.db.collection('theaterusers')
+            .updateOne({ _id: theaterUser._id }, { 
+              $set: { lastLogin: new Date() }
+            });
+        }
+      } catch (error) {
+        console.log('❌ Theater user lookup error:', error.message);
+      }
+    }
+
+    // Step 3: Check legacy USERS collection by username if no theater user found
+    if (!authenticatedUser) {
+      console.log('👤 Checking legacy users collection by username...');
+      try {
+        const user = await User.findOne({ 
+          username: loginIdentifier, 
+          isActive: true 
+        }).populate('theaterId');
+        
+        if (user && await bcrypt.compare(password, user.password)) {
+          console.log('✅ Legacy user authenticated successfully');
+          authenticatedUser = {
+            _id: user._id,
+            username: user.username,
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+            role: user.role,
+            email: user.email,
+            phone: user.phone,
+            theaterId: user.theaterId,
+            theaterName: user.theaterId ? user.theaterId.name : null,
+            userType: 'user'
+          };
+          
+          // Update last login
+          user.lastLogin = new Date();
+          await user.save();
+        }
+      } catch (error) {
+        console.log('❌ Legacy user lookup error:', error.message);
+      }
+    }
+
+    // Step 4: Authentication failed
+    if (!authenticatedUser) {
+      console.log('❌ Authentication failed for:', loginIdentifier);
+      return res.status(401).json({
+        error: 'Invalid credentials',
+        code: 'INVALID_CREDENTIALS'
+      });
+    }
+
+    // Step 5: Generate tokens and respond
+    console.log(`🎯 Generating tokens for ${authenticatedUser.userType}:`, authenticatedUser.username);
+    
+    const token = generateToken(authenticatedUser);
+    const refreshToken = generateRefreshToken(authenticatedUser);
+
+    // ✅ INCLUDE ROLE PERMISSIONS in response (theater users only)
+    const response = {
+      success: true,
+      message: 'Login successful',
+      token,
+      refreshToken,
+      user: {
+        id: authenticatedUser._id,
+        username: authenticatedUser.username,
+        name: authenticatedUser.name,
+        role: authenticatedUser.role,
+        email: authenticatedUser.email,
+        phone: authenticatedUser.phone,
+        theaterId: authenticatedUser.theaterId ? String(authenticatedUser.theaterId) : null, // ✅ Convert to string
+        theaterName: authenticatedUser.theaterName,
+        userType: authenticatedUser.userType
+      }
+    };
+
+    // Add rolePermissions for theater users only (not super admin)
+    if (authenticatedUser.rolePermissions && authenticatedUser.rolePermissions.length > 0) {
+      response.rolePermissions = authenticatedUser.rolePermissions;
+      console.log('✅ Including rolePermissions in login response');
+    } else {
+      console.log('ℹ️ No rolePermissions (super admin or role not found)');
+    }
+
+    console.log('📤 Login response:', {
+      success: response.success,
+      userType: response.user.userType,
+      theaterId: response.user.theaterId,
+      role: response.user.role,
+      hasRolePermissions: !!response.rolePermissions
+    });
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({
+      error: 'Login failed',
+      message: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/refresh
+ * Refresh JWT token using refresh token
+ */
+router.post('/refresh', [
+  body('refreshToken').notEmpty().withMessage('Refresh token is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { refreshToken } = req.body;
+
+    // Verify refresh token
+    const decoded = jwt.verify(
+      refreshToken, 
+      process.env.JWT_REFRESH_SECRET || 'yqpaynow-super-secret-refresh-key-development-only'
+    );
+
+    // Find user
+    const user = await User.findById(decoded.userId).populate('theaterId');
+    if (!user) {
+      return res.status(401).json({
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Generate new tokens
+    const newToken = generateToken(user);
+    const newRefreshToken = generateRefreshToken(user);
+
+    res.json({
+      success: true,
+      token: newToken,
+      refreshToken: newRefreshToken
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(401).json({
+      error: 'Invalid refresh token',
+      code: 'INVALID_REFRESH_TOKEN'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/logout
+ * Logout user (client-side token removal)
+ */
+router.post('/logout', (req, res) => {
+  // In a stateless JWT system, logout is handled client-side
+  // In production, you might want to maintain a blacklist of tokens
+  res.json({
+    success: true,
+    message: 'Logged out successfully'
+  });
+});
+
+/**
+ * GET /api/auth/me
+ * Get current user information
+ */
+router.get('/me', require('../middleware/auth').authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).populate('theaterId').select('-password');
+    
+    if (!user) {
+      // Handle default admin case
+      if (req.user.userId === 'admin_default') {
+        return res.json({
+          success: true,
+          user: {
+            id: 'admin_default',
+            username: 'admin111',
+            role: 'super_admin',
+            theaterId: null
+          }
+        });
+      }
+      
+      return res.status(404).json({
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        theaterId: user.theaterId,
+        theaterName: user.theaterId ? user.theaterId.name : null,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin
+      }
+    });
+
+  } catch (error) {
+    console.error('Get user info error:', error);
+    res.status(500).json({
+      error: 'Failed to get user information',
+      message: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * GET /api/auth/validate
+ * Validate JWT token and return user info if valid
+ */
+router.get('/validate', require('../middleware/auth').authenticateToken, async (req, res) => {
+  try {
+    // Check if userId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.user.userId)) {
+      console.log('Invalid token with non-ObjectId userId:', req.user.userId);
+      return res.status(401).json({
+        error: 'Invalid token format',
+        code: 'INVALID_TOKEN_FORMAT'
+      });
+    }
+
+    // Token is already validated by middleware, user info is in req.user
+    const user = await User.findById(req.user.userId)
+      .populate('theaterId', 'name location')
+      .select('-password');
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found'
+      });
+    }
+
+    res.json({
+      valid: true,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        theaterId: user.theaterId,
+        theaterName: user.theaterId ? user.theaterId.name : null,
+        createdAt: user.createdAt,
+        lastLogin: user.lastLogin
+      }
+    });
+
+  } catch (error) {
+    console.error('Token validation error:', error);
+    res.status(500).json({
+      error: 'Failed to validate token',
+      message: 'Internal server error'
+    });
+  }
+});
+
+module.exports = router;

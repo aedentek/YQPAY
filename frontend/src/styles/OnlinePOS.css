@@ -1,0 +1,200 @@
+/* Online POS Interface - 3 Column Layout */
+
+/* Main Container - 3 Column Grid */
+.online-pos-main-container {
+  display: grid;
+  grid-template-columns: 1fr 350px 350px; /* Products | Current Order | Online Order */
+  gap: 0;
+  height: calc(100vh - 80px);
+  max-height: calc(100vh - 80px);
+  overflow: hidden;
+}
+
+/* Left Column - Product Menu Section */
+.online-pos-menu-section {
+  background: #f8f9fa;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Middle and Right Columns - Order Sections */
+.online-pos-order-section {
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100vh - 80px);
+}
+
+.online-pos-order-section:last-child {
+  border-right: none;
+}
+
+/* Enhanced Product Card for dual functionality */
+.online-pos-menu-section .pos-product-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.online-pos-menu-section .pos-product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(107, 14, 155, 0.15);
+}
+
+.online-pos-menu-section .pos-product-card::after {
+  content: "Double-click for Online Order";
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(5, 150, 105, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.online-pos-menu-section .pos-product-card:hover::after {
+  opacity: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .online-pos-main-container {
+    grid-template-columns: 1fr 320px 320px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .online-pos-main-container {
+    grid-template-columns: 1fr 300px 300px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .online-pos-main-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 16px;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 16px;
+  }
+  
+  .online-pos-menu-section,
+  .online-pos-order-section {
+    border-right: none;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    max-height: 600px;
+    overflow: auto;
+  }
+
+  .online-pos-menu-section .pos-product-card::after {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .online-pos-main-container {
+    padding: 8px;
+    gap: 12px;
+  }
+  
+  .online-pos-order-section {
+    max-height: 500px;
+  }
+  
+  .pos-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .online-pos-main-container {
+    padding: 4px;
+    gap: 8px;
+  }
+  
+  .pos-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
+  
+  .online-pos-order-section {
+    max-height: 400px;
+  }
+}
+
+/* Content styling overrides for online POS */
+.online-pos-content {
+  background: #f8f9fa !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Ensure proper scrolling for order content */
+.online-pos-order-section .pos-order-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Style adjustments for online order header */
+.online-pos-order-section:last-child .pos-order-header {
+  background: #059669 !important;
+  background-color: #059669 !important;
+}
+
+/* Visual distinction for online order items */
+.online-pos-order-section:last-child .pos-order-item {
+  border-left: 3px solid #059669;
+  background: rgba(5, 150, 105, 0.02);
+}
+
+/* Online order button styling */
+.online-pos-order-section:last-child .pos-process-btn {
+  background: #059669 !important;
+  background-color: #059669 !important;
+}
+
+.online-pos-order-section:last-child .pos-process-btn:hover:not(:disabled) {
+  background: #047857 !important;
+  background-color: #047857 !important;
+}
+
+/* Empty state styling for online orders */
+.online-pos-order-section:last-child .empty-order-icon {
+  font-size: 3rem;
+  opacity: 0.6;
+  margin-bottom: 1rem;
+}
+
+/* Ensure products can scroll properly */
+.online-pos-menu-section .pos-products-grid {
+  overflow-y: auto;
+  max-height: calc(100vh - 160px);
+}
+
+/* Grid adjustments for smaller screens */
+@media (max-width: 1400px) {
+  .pos-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .pos-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
