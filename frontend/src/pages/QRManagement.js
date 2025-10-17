@@ -2,13 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import config from '../config';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import PageContainer from '../components/PageContainer';
 import ErrorBoundary from '../components/ErrorBoundary';
 import Pagination from '../components/Pagination';
 import { useModal } from '../contexts/ModalContext';
 import { clearTheaterCache, addCacheBuster } from '../utils/cacheManager';
 import { usePerformanceMonitoring, preventLayoutShift } from '../hooks/usePerformanceMonitoring';
-import '../styles/QRManagementPage.css';
 import '../styles/TheaterList.css';
 
 // Enhanced Lazy Loading Image Component with Intersection Observer (matching TheaterList)
@@ -316,90 +314,152 @@ const QRManagement = () => {
 
   const headerButton = (
     <button 
-      className="header-btn"
+      className="add-theater-btn"
       onClick={() => navigate('/qr-generate')}
     >
-      <span className="btn-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-      </span>
-      Generate QR Codes
+      <span className="btn-icon">+</span>
+      GENERATE QR CODES
     </button>
   );
 
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="QR Management" currentPage="qr-list">
-        <PageContainer
-          title="QR Code Management"
-          headerButton={headerButton}
-        >
-        {/* Stats Section */}
-        <div className="qr-stats">
-          <div className="stat-card">
-            <div className="stat-number">{summary.totalTheaters}</div>
-            <div className="stat-label">Total Theaters</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{summary.totalCanteenQRs}</div>
-            <div className="stat-label">Canteen QRs</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{summary.totalScreenQRs}</div>
-            <div className="stat-label">Screen QRs</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{summary.totalQRs}</div>
-            <div className="stat-label">Total QR Codes</div>
-          </div>
-        </div>
+        <div className="theater-list-container">
+          <div className="theater-main-container">
+            {/* Header matching TheaterList */}
+            <div className="theater-list-header">
+              <div className="header-content">
+                <div className="title-group">
+                  <h1>QR Code Management</h1>
+                </div>
+              </div>
+              {headerButton}
+            </div>
 
-        {/* Enhanced Filters Section matching TheaterList */}
-        <div className="theater-filters">
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search theaters by name, city, or owner..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
-            />
-          </div>
-          <div className="filter-controls">
-            <select
-              value="all"
-              className="status-filter"
-              disabled
-            >
-              <option value="all">All Status</option>
-            </select>
-            <div className="results-count">
-              Showing {sortedManagementData.length} of {totalItems} theaters (Page {currentPage} of {totalPages})
+            {/* Stats Section */}
+            <div className="theater-stats-section" style={{
+              background: 'var(--white)',
+              padding: '24px 40px',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '24px',
+              borderBottom: '1px solid var(--border-color)'
+            }}>
+              <div className="stat-card" style={{
+                background: 'var(--background-light)',
+                padding: '24px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div className="stat-number" style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: 'var(--primary-color)',
+                  marginBottom: '8px'
+                }}>{summary.totalTheaters}</div>
+                <div className="stat-label" style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--text-gray)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontWeight: '600'
+                }}>Total Theaters</div>
+              </div>
+              <div className="stat-card" style={{
+                background: 'var(--background-light)',
+                padding: '24px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div className="stat-number" style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: 'var(--primary-color)',
+                  marginBottom: '8px'
+                }}>{summary.totalCanteenQRs}</div>
+                <div className="stat-label" style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--text-gray)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontWeight: '600'
+                }}>Canteen QRs</div>
+              </div>
+              <div className="stat-card" style={{
+                background: 'var(--background-light)',
+                padding: '24px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div className="stat-number" style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: 'var(--primary-color)',
+                  marginBottom: '8px'
+                }}>{summary.totalScreenQRs}</div>
+                <div className="stat-label" style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--text-gray)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontWeight: '600'
+                }}>Screen QRs</div>
+              </div>
+              <div className="stat-card" style={{
+                background: 'var(--background-light)',
+                padding: '24px',
+                borderRadius: '12px',
+                textAlign: 'center',
+                border: '1px solid var(--border-color)'
+              }}>
+                <div className="stat-number" style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: 'var(--primary-color)',
+                  marginBottom: '8px'
+                }}>{summary.totalQRs}</div>
+                <div className="stat-label" style={{
+                  fontSize: '0.9rem',
+                  color: 'var(--text-gray)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontWeight: '600'
+                }}>Total QR Codes</div>
+              </div>
             </div>
-            <div className="items-per-page">
-              <label>Items per page:</label>
-              <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-          </div>
-        </div>
 
-        {/* Management Table */}
-        <div className="page-table-container">
-          {/* {error && (
-            <div className="error-message">
-              <p>{error}</p>
-              <button onClick={() => loadManagementData()} className="retry-btn">
-                Try Again
-              </button>
+            {/* Enhanced Filters Section matching TheaterList */}
+            <div className="theater-filters">
+              <div className="search-box">
+                <input
+                  type="text"
+                  placeholder="Search theaters by name, city, or owner..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+              </div>
+              <div className="filter-controls">
+                <span className="showing-text">
+                  Showing {sortedManagementData.length} of {totalItems} theaters (Page {currentPage} of {totalPages})
+                </span>
+                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
             </div>
-          )} */}
-          <table className="qr-management-table">
+
+            {/* Management Table */}
+            <div className="theater-content">
+              <div className="table-container">
+                <table className="theater-table">
             <thead>
               <tr>
                 <th>S.No</th>
@@ -472,8 +532,7 @@ const QRManagement = () => {
                       <button
                         className="action-btn view-btn"
                         onClick={() => viewTheaterQRs(theater)}
-                        title={`View QR Codes (${theater.totalQRCount || 0} total)`}
-                        disabled={(theater.totalQRCount || 0) === 0}
+                        title="View QR Code Names"
                       >
                         <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
                           <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
@@ -499,7 +558,14 @@ const QRManagement = () => {
           />
         )}
 
-        <div className="management-footer">
+        <div className="management-footer" style={{
+          padding: '20px 40px',
+          background: 'var(--white)',
+          borderTop: '1px solid var(--border-color)',
+          textAlign: 'center',
+          color: 'var(--text-gray)',
+          fontSize: '0.9rem'
+        }}>
           <p>
             {debouncedSearchTerm ? (
               `Showing ${totalItems} of ${summary.totalTheaters} theaters matching "${debouncedSearchTerm}"`
@@ -508,7 +574,9 @@ const QRManagement = () => {
             )}
           </p>
         </div>
-      </PageContainer>
+      </div>
+    </div>
+    </div>
     </AdminLayout>
   </ErrorBoundary>
   );

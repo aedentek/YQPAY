@@ -1,13 +1,13 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import PageContainer from '../components/PageContainer';
 import { useModal } from '../contexts/ModalContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
 import { clearTheaterCache } from '../utils/cacheManager';
 import config from '../config';
 import '../styles/AddTheater.css';
+import '../styles/TheaterList.css';
 
 // Simple cache utilities
 const getCachedData = (key) => {
@@ -77,7 +77,7 @@ const HeaderButton = React.memo(() => {
   return (
     <button 
       type="button" 
-      className="header-btn"
+      className="add-theater-btn"
       onClick={() => navigate('/theaters')}
     >
       <span className="btn-icon">
@@ -665,15 +665,15 @@ const AddTheater = React.memo(() => {
     }
   }, [formData, files, modal, navigate, clearSavedFormData]);
 
-  const headerButton = <HeaderButton />;
-
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="Add New Theater" currentPage="add-theater">
-        <PageContainer
-          title="Add New Theater"
-          headerButton={headerButton}
-      >
+        <div className="theater-list-container">
+          <div className="theater-main-container">
+            <div className="theater-list-header">
+              <h1>Add New Theater</h1>
+              <HeaderButton />
+            </div>
         <form 
           onSubmit={handleSubmit} 
           className="add-theater-form"
@@ -1209,7 +1209,8 @@ const AddTheater = React.memo(() => {
             Memory: {performanceMetrics.memoryUsage}MB
           </div>
         )}
-      </PageContainer>
+          </div>
+        </div>
     </AdminLayout>
     </ErrorBoundary>
   );

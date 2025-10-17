@@ -96,7 +96,7 @@
 }
 
 .theater-user-settings-section {
-  max-width: 1000px;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal size */
 }
 
 .theater-user-section-header {
@@ -341,8 +341,8 @@
 .theater-user-modal-content {
   background: white;
   border-radius: 16px;
-  width: 90%;
-  max-width: 600px;
+  width: 95%;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal size */
   max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);

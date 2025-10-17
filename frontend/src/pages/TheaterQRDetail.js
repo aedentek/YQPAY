@@ -317,7 +317,7 @@ const CrudModal = React.memo(({ isOpen, qrCode, mode, theater, onClose, onSave, 
             <div className="form-group">
               <label>QR Code Preview</label>
               <div className="qr-preview">
-                {console.log('🎨 Render: displayImageUrl =', displayImageUrl)}
+                {console.log('?? Render: displayImageUrl =', displayImageUrl)}
                 {displayImageUrl ? (
                   <div className="qr-image-container">
                     <img 
@@ -616,26 +616,23 @@ const TheaterQRDetail = () => {
       
       // PERFORMANCE OPTIMIZATION: Parallel requests for all QR codes
       console.log('ðŸš€ Making API calls for theater:', theaterId);
-      const singleUrl = addCacheBuster(`/api/qrcodes?theater=${theaterId}&qrType=single&limit=1000`);
-      const screenUrl = addCacheBuster(`/api/qrcodes?theater=${theaterId}&qrType=screen&limit=1000`);
+      const singleUrl = addCacheBuster(`${config.api.baseUrl}/single-qrcodes/theater/${theaterId}`);
+      // Fetching from singleqrcodes collection which contains both single and screen QR codes
       console.log('ðŸŒ Single QR URL:', singleUrl);
-      console.log('ðŸŒ Screen QR URL:', screenUrl);
+      // singleUrl removed
       
-      const [singleResponse, screenResponse] = await Promise.all([
-        fetch(singleUrl, { signal, headers }),
-        fetch(screenUrl, { signal, headers })
-      ]);
+      const singleResponse = await fetch(singleUrl, { signal, headers });
       
-      // Safely parse JSON responses
+      // Safely parse JSON response
       const singleData = singleResponse.ok ? await singleResponse.json().catch(() => ({ success: false, message: 'Invalid JSON response' })) : { success: false, message: `HTTP ${singleResponse.status}` };
-      const screenData = screenResponse.ok ? await screenResponse.json().catch(() => ({ success: false, message: 'Invalid JSON response' })) : { success: false, message: `HTTP ${screenResponse.status}` };
+      const screenData = { success: false }; // Not fetching screens separately anymore
       
       // Group QR codes by name
       const qrsByName = {};
       
       console.log('ðŸ” Single QR API Response Status:', singleResponse.status);
       console.log('ðŸ” Single QR Data Response:', singleData);
-      console.log('ðŸ” Screen QR API Response Status:', screenResponse.status);
+      // singleResponse removed
       console.log('ðŸ” Screen QR Data Response:', screenData);
       
       if (!singleData.success) {
@@ -672,7 +669,7 @@ const TheaterQRDetail = () => {
         });
       }
       
-      console.log('ðŸ” Screen QR API Response Status:', screenResponse.status);
+      // singleResponse removed
       console.log('ðŸ” Screen QR Data Response:', screenData);
       
       // Additional error logging for screen QR codes (already handled above)
@@ -717,7 +714,7 @@ const TheaterQRDetail = () => {
     if (!qrCodeId) return null;
     
     try {
-      console.log('🖼️ Fetching display image URL for QR code:', qrCodeId);
+      console.log('??? Fetching display image URL for QR code:', qrCodeId);
       
       const response = await fetch(`${config.api.baseUrl}/qrcodes/${qrCodeId}/image-url`, {
         headers: {
@@ -726,12 +723,12 @@ const TheaterQRDetail = () => {
       });
       
       if (!response.ok) {
-        console.error('❌ Failed to fetch display image URL:', response.status);
+        console.error('? Failed to fetch display image URL:', response.status);
         return null;
       }
       
       const data = await response.json();
-      console.log('✅ Display image URL response:', data);
+      console.log('? Display image URL response:', data);
       
       if (data.success && data.data && data.data.imageUrl) {
         return data.data.imageUrl;
@@ -739,7 +736,7 @@ const TheaterQRDetail = () => {
       
       return null;
     } catch (error) {
-      console.error('❌ Error fetching display image URL:', error);
+      console.error('? Error fetching display image URL:', error);
       return null;
     }
   }, []);
@@ -806,12 +803,12 @@ const TheaterQRDetail = () => {
     
     // Fetch display image URL for the QR code
     if (qrCode && qrCode._id) {
-      console.log('🔄 openCrudModal: Fetching display image for QR:', qrCode._id);
+      console.log('?? openCrudModal: Fetching display image for QR:', qrCode._id);
       setDisplayImageUrl(null); // Reset previous image
       const imageUrl = await fetchDisplayImageUrl(qrCode._id);
-      console.log('🖼️ openCrudModal: Got image URL:', imageUrl);
+      console.log('??? openCrudModal: Got image URL:', imageUrl);
       setDisplayImageUrl(imageUrl);
-      console.log('✅ openCrudModal: Set displayImageUrl state');
+      console.log('? openCrudModal: Set displayImageUrl state');
     }
   }, [fetchDisplayImageUrl]);
 
@@ -972,22 +969,22 @@ const TheaterQRDetail = () => {
   };
 
   const downloadQRCode = async (qrCode) => {
-    console.log('🔽 Download button clicked!', { qrCode: qrCode.name, id: qrCode._id });
+    console.log('?? Download button clicked!', { qrCode: qrCode.name, id: qrCode._id });
     try {
       if (!qrCode.qrImageUrl) {
-        console.error('❌ No QR image URL available');
+        console.error('? No QR image URL available');
         showError('QR code image not available');
         return;
       }
       
-      console.log('� QR Image URL:', qrCode.qrImageUrl);
+      console.log('? QR Image URL:', qrCode.qrImageUrl);
       
       // Create clean filename
       const filename = `${qrCode.name.replace(/[^a-zA-Z0-9\s]/g, '_').replace(/\s+/g, '_')}_QR.png`;
-      console.log('📁 Filename:', filename);
+      console.log('?? Filename:', filename);
       
       // Since GCS bucket is private, use backend to get signed URL
-      console.log('⬇️ Getting signed download URL from backend...');
+      console.log('?? Getting signed download URL from backend...');
       
       const response = await fetch(`${config.api.baseUrl}/qrcodes/${qrCode._id}/signed-url`);
       
@@ -996,7 +993,7 @@ const TheaterQRDetail = () => {
       }
       
       const data = await response.json();
-      console.log('� Signed URL response:', data);
+      console.log('? Signed URL response:', data);
       
       if (!data.success || !data.data || !data.data.signedUrl) {
         throw new Error('Failed to generate signed download URL');
@@ -1009,16 +1006,16 @@ const TheaterQRDetail = () => {
       a.target = '_blank';
       a.style.display = 'none';
       
-      console.log('⬇️ Triggering download with signed URL...');
+      console.log('?? Triggering download with signed URL...');
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       
-      console.log('✅ Download initiated successfully!');
+      console.log('? Download initiated successfully!');
       showSuccess('QR code download started!');
       
     } catch (error) {
-      console.error('❌ Error downloading QR code:', error);
+      console.error('? Error downloading QR code:', error);
       showError('Failed to download QR code: ' + error.message);
     }
   };
@@ -1344,929 +1341,6 @@ const TheaterQRDetail = () => {
             />
           )}
 
-          <style jsx>{`
-            .theater-qr-settings-container {
-              max-width: 100%;
-              margin: 0;
-              background: transparent;
-              border-radius: 0;
-              box-shadow: none;
-              overflow: hidden;
-              display: flex;
-              min-height: 600px;
-              height: 100%;
-            }
-
-            .theater-qr-settings-tabs {
-              display: flex;
-              flex-direction: column;
-              background: #f8f8f5;
-              border-right: 1px solid #e5e5e0;
-              width: 280px;
-              min-width: 280px;
-              height: 100%;
-              min-height: 100%;
-            }
-
-            .theater-qr-settings-tab {
-              padding: 20px 24px;
-              background: none;
-              border: none;
-              cursor: pointer;
-              font-size: 14px;
-              font-weight: 500;
-              color: #64748b;
-              transition: all 0.2s;
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              text-align: left;
-              border-bottom: 1px solid #e2e8f0;
-              position: relative;
-            }
-
-            .theater-qr-settings-tab:hover {
-              background: #f0f0ed;
-              color: #374151;
-              transition: all 0.2s ease;
-            }
-
-            .theater-qr-settings-tab.active {
-              background: #fafaf8;
-              color: #6B0E9B;
-              border-right: 3px solid #6B0E9B;
-              font-weight: 600;
-              box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
-            }
-
-            .theater-qr-settings-tab.active::before {
-              content: '';
-              position: absolute;
-              left: 0;
-              top: 0;
-              bottom: 0;
-              width: 4px;
-              background: #6B0E9B;
-            }
-
-            .theater-qr-tab-icon {
-              font-size: 18px;
-              min-width: 20px;
-            }
-
-            .theater-qr-tab-count {
-              background: #e2e8f0;
-              color: #64748b;
-              font-size: 12px;
-              font-weight: 600;
-              padding: 2px 8px;
-              border-radius: 12px;
-              min-width: 20px;
-              text-align: center;
-              margin-left: auto;
-            }
-
-            .theater-qr-settings-tab.active .theater-qr-tab-count {
-              background: #6B0E9B;
-              color: white;
-            }
-
-            .theater-qr-settings-content {
-              flex: 1;
-              padding: 32px;
-              background: transparent;
-              height: 100%;
-              min-height: 100%;
-            }
-
-            .theater-qr-settings-section {
-              max-width: 1200px;
-            }
-
-            .theater-qr-section-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 24px;
-              padding-bottom: 16px;
-              border-bottom: 1px solid #e2e8f0;
-            }
-
-            .theater-qr-section-header h3 {
-              margin: 0;
-              color: #1e293b;
-              font-size: 20px;
-              font-weight: 600;
-            }
-
-            .theater-qr-section-stats {
-              display: flex;
-              gap: 16px;
-              font-size: 14px;
-              color: #64748b;
-            }
-
-            .theater-qr-section-stats span {
-              font-weight: 500;
-            }
-
-            /* Logo Selection Badge Styles */
-            .logo-selection-text {
-              font-weight: 600;
-              font-size: 12px;
-              padding: 4px 8px;
-              border-radius: 4px;
-              text-transform: uppercase;
-              letter-spacing: 0.025em;
-              display: inline-block;
-              min-width: 60px;
-            }
-
-            .logo-default {
-              background: #e0f2fe;
-              color: #0277bd;
-              border: 1px solid #b3e5fc;
-            }
-
-            .logo-theater {
-              background: #f3e5f5;
-              color: #6B0E9B;
-              border: 1px solid #e1bee7;
-            }
-
-            /* Seat Class Info Styling */
-            .seat-class-info {
-              display: flex;
-              flex-direction: column;
-              gap: 2px;
-            }
-
-            .screen-name {
-              font-weight: 500;
-              color: #374151;
-            }
-
-            .seat-number {
-              color: #64748b;
-              font-size: 0.875rem;
-            }
-
-
-
-            /* CRUD Modal Styles */
-            .crud-modal-overlay {
-              position: fixed;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: rgba(0, 0, 0, 0.75);
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              z-index: 1000;
-              padding: 20px;
-            }
-
-            .crud-modal {
-              background: white;
-              border-radius: 16px;
-              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-              max-width: 600px;
-              width: 100%;
-              max-height: 90vh;
-              overflow: hidden;
-              display: flex;
-              flex-direction: column;
-            }
-
-            .crud-modal-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              padding: 24px 32px;
-              border-bottom: 1px solid #e2e8f0;
-              background: #f8fafc;
-            }
-
-            .crud-modal-header h2 {
-              margin: 0;
-              color: #1e293b;
-              font-size: 20px;
-              font-weight: 600;
-            }
-
-            .crud-modal-close {
-              background: none;
-              border: none;
-              font-size: 24px;
-              color: #64748b;
-              cursor: pointer;
-              padding: 4px;
-              border-radius: 4px;
-              transition: all 0.2s;
-            }
-
-            .crud-modal-close:hover {
-              background: #e2e8f0;
-              color: #374151;
-            }
-
-            .crud-modal-body {
-              padding: 32px;
-              overflow-y: auto;
-              flex: 1;
-            }
-
-            .form-group {
-              margin-bottom: 24px;
-            }
-
-            .form-group:last-child {
-              margin-bottom: 0;
-            }
-
-            .form-group label {
-              display: block;
-              margin-bottom: 8px;
-              color: #374151;
-              font-weight: 500;
-              font-size: 14px;
-            }
-
-            .form-group input,
-            .form-group select {
-              width: 100%;
-              padding: 12px 16px;
-              border: 1px solid #d1d5db;
-              border-radius: 8px;
-              font-size: 14px;
-              transition: all 0.2s;
-            }
-
-            .form-group input:focus,
-            .form-group select:focus {
-              outline: none;
-              border-color: #6B0E9B;
-              box-shadow: 0 0 0 3px rgba(107, 14, 155, 0.1);
-            }
-
-            .form-group input:disabled,
-            .form-group select:disabled {
-              background: #f3f4f6;
-              color: #6b7280;
-              cursor: not-allowed;
-            }
-
-            .checkbox-group {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-            }
-
-            .checkbox-group label {
-              margin: 0;
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              cursor: pointer;
-            }
-
-            .checkbox-group input[type="checkbox"] {
-              width: auto;
-              margin: 0;
-            }
-
-            .qr-preview {
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              padding: 20px;
-              background: #f8fafc;
-              border-radius: 8px;
-              border: 1px solid #e2e8f0;
-              min-height: 170px;
-            }
-
-            .qr-preview-img {
-              width: 150px;
-              height: 150px;
-              border-radius: 8px;
-              border: 1px solid #e2e8f0;
-              object-fit: cover;
-            }
-
-            .qr-image-container {
-              position: relative;
-              width: 150px;
-              height: 150px;
-              margin: 0 auto;
-            }
-
-            .qr-preview-placeholder {
-              text-align: center;
-              color: #64748b;
-              padding: 20px;
-            }
-
-            .qr-preview-placeholder span {
-              display: block;
-              font-size: 48px;
-              margin-bottom: 16px;
-              opacity: 0.6;
-            }
-
-            .qr-preview-placeholder h4 {
-              margin: 0 0 8px 0;
-              color: #374151;
-              font-size: 16px;
-            }
-
-            .qr-preview-placeholder p {
-              margin: 0;
-              font-size: 14px;
-              color: #64748b;
-            }
-
-            .qr-preview-error {
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: #f9fafb;
-              border: 2px dashed #d1d5db;
-              border-radius: 8px;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              padding: 16px;
-            }
-
-            .qr-error-content {
-              max-width: 200px;
-            }
-
-            .qr-error-content span {
-              display: block;
-              font-size: 32px;
-              margin-bottom: 12px;
-              opacity: 0.6;
-            }
-
-            .qr-error-content h4 {
-              margin: 0 0 8px 0;
-              color: #374151;
-              font-size: 14px;
-              font-weight: 600;
-            }
-
-            .qr-error-content p {
-              margin: 0 0 8px 0;
-              font-size: 12px;
-              color: #64748b;
-              line-height: 1.4;
-            }
-
-            .qr-error-content ul {
-              margin: 8px 0 12px 0;
-              padding-left: 16px;
-              font-size: 11px;
-              color: #64748b;
-              text-align: left;
-            }
-
-            .qr-error-content li {
-              margin-bottom: 2px;
-            }
-
-            .qr-error-content button {
-              font-size: 12px;
-              padding: 6px 12px;
-            }
-
-            .stats-group {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 16px;
-              padding: 16px;
-              background: #f8fafc;
-              border-radius: 8px;
-              border: 1px solid #e2e8f0;
-            }
-
-            .stat-item {
-              display: flex;
-              flex-direction: column;
-              gap: 4px;
-            }
-
-            .stat-label {
-              font-size: 12px;
-              color: #64748b;
-              font-weight: 500;
-            }
-
-            .stat-value {
-              font-size: 18px;
-              color: #1e293b;
-              font-weight: 600;
-            }
-
-            .crud-modal-footer {
-              padding: 20px 32px;
-              border-top: 1px solid #e2e8f0;
-              background: #f8fafc;
-            }
-
-            .modal-actions-view,
-            .modal-actions-edit,
-            .modal-actions-create {
-              display: flex;
-              gap: 12px;
-              justify-content: flex-end;
-            }
-
-            .btn {
-              padding: 10px 20px;
-              border: none;
-              border-radius: 8px;
-              font-weight: 500;
-              cursor: pointer;
-              transition: all 0.2s;
-              font-size: 14px;
-              text-transform: none;
-            }
-
-            .btn:disabled {
-              opacity: 0.5;
-              cursor: not-allowed;
-              transform: none;
-            }
-
-            .btn-primary {
-              background: #6B0E9B;
-              color: white;
-            }
-
-            .btn-primary:hover:not(:disabled) {
-              background: #5A0C82;
-              transform: translateY(-1px);
-            }
-
-            .btn-secondary {
-              background: #e5e7eb;
-              color: #374151;
-            }
-
-            .btn-secondary:hover:not(:disabled) {
-              background: #d1d5db;
-              transform: translateY(-1px);
-            }
-
-            .btn-danger {
-              background: #dc2626;
-              color: white;
-            }
-
-            .btn-danger:hover:not(:disabled) {
-              background: #b91c1c;
-              transform: translateY(-1px);
-            }
-
-            .theater-qr-empty-state {
-              grid-column: 1 / -1;
-              text-align: center;
-              padding: 60px 20px;
-              color: #64748b;
-            }
-
-            .theater-qr-empty-state-icon {
-              font-size: 64px;
-              margin-bottom: 16px;
-              opacity: 0.6;
-            }
-
-            .theater-qr-empty-state h4 {
-              font-size: 18px;
-              font-weight: 600;
-              color: #374151;
-              margin: 0 0 8px 0;
-            }
-
-            .theater-qr-empty-state p {
-              font-size: 14px;
-              color: #64748b;
-              margin: 0 0 24px 0;
-              max-width: 400px;
-              margin-left: auto;
-              margin-right: auto;
-              line-height: 1.5;
-            }
-
-            .generate-qr-btn {
-              background: #6B0E9B;
-              color: white;
-              border: none;
-              padding: 12px 24px;
-              border-radius: 8px;
-              font-weight: 500;
-              cursor: pointer;
-              transition: all 0.2s;
-              font-size: 14px;
-            }
-
-            .generate-qr-btn:hover {
-              background: #5A0C82;
-              transform: translateY(-1px);
-            }
-
-            /* QR Detail Cards */
-            .qr-detail-card {
-              background: white;
-              border-radius: 12px;
-              padding: 20px;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-              border: 1px solid #e2e8f0;
-              transition: all 0.2s ease;
-              position: relative;
-              overflow: hidden;
-            }
-
-            .qr-detail-card:hover {
-              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-              transform: translateY(-2px);
-            }
-
-            /* QR Image Section */
-            .qr-image {
-              position: relative;
-              width: 120px;
-              height: 120px;
-              margin: 0 auto 16px auto;
-              border-radius: 8px;
-              overflow: hidden;
-              background: #f8fafc;
-              border: 2px solid #e2e8f0;
-            }
-
-            .qr-img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-              transition: all 0.2s ease;
-            }
-
-            .qr-img.loading {
-              opacity: 0.5;
-              filter: blur(2px);
-            }
-
-            .qr-img.error {
-              background: #fee2e2;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #dc2626;
-              font-size: 24px;
-            }
-
-            /* QR Badges */
-            .qr-type-badge {
-              position: absolute;
-              top: 8px;
-              left: 8px;
-              background: rgba(255, 255, 255, 0.95);
-              padding: 4px 8px;
-              border-radius: 6px;
-              font-size: 14px;
-              font-weight: 600;
-              backdrop-filter: blur(8px);
-              border: 1px solid rgba(0, 0, 0, 0.05);
-            }
-
-            .qr-status-indicator {
-              position: absolute;
-              top: 8px;
-              right: 8px;
-              width: 12px;
-              height: 12px;
-              border-radius: 50%;
-              border: 2px solid white;
-            }
-
-            .qr-status-indicator.active {
-              background: #22c55e;
-            }
-
-            .qr-status-indicator.inactive {
-              background: #ef4444;
-            }
-
-            /* QR Info Section */
-            .qr-info {
-              text-align: center;
-              margin-bottom: 16px;
-            }
-
-            .qr-name {
-              font-size: 16px;
-              font-weight: 600;
-              color: #1e293b;
-              margin: 0 0 4px 0;
-              line-height: 1.4;
-            }
-
-            .qr-seat {
-              font-size: 14px;
-              color: #64748b;
-              margin: 0 0 12px 0;
-            }
-
-            .qr-stats {
-              display: flex;
-              justify-content: space-between;
-              gap: 8px;
-              margin: 12px 0;
-              padding: 8px 12px;
-              background: #f8fafc;
-              border-radius: 6px;
-            }
-
-            .qr-stats span {
-              font-size: 12px;
-              color: #64748b;
-              font-weight: 500;
-            }
-
-            .qr-status {
-              margin-top: 8px;
-            }
-
-            .qr-status .status {
-              display: inline-block;
-              padding: 4px 12px;
-              border-radius: 20px;
-              font-size: 12px;
-              font-weight: 600;
-              text-transform: uppercase;
-              letter-spacing: 0.025em;
-            }
-
-            .qr-status .status.active {
-              background: #dcfce7;
-              color: #166534;
-            }
-
-            .qr-status .status.inactive {
-              background: #fee2e2;
-              color: #dc2626;
-            }
-
-            /* QR Actions */
-            .qr-actions {
-              display: flex;
-              gap: 8px;
-              justify-content: center;
-              padding-top: 12px;
-              border-top: 1px solid #f1f5f9;
-            }
-
-            .action-btn {
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              width: 36px;
-              height: 36px;
-              border: none;
-              border-radius: 8px;
-              cursor: pointer;
-              font-size: 16px;
-              transition: all 0.2s ease;
-              position: relative;
-            }
-
-            .action-btn:hover {
-              transform: translateY(-1px);
-            }
-
-            .action-btn:disabled {
-              opacity: 0.5;
-              cursor: not-allowed;
-              transform: none;
-            }
-
-            /* Action Button Variants */
-            .view-btn {
-              background: #dbeafe;
-              color: #1d4ed8;
-              border: 1px solid #93c5fd;
-            }
-
-            .view-btn:hover:not(:disabled) {
-              background: #93c5fd;
-              color: #1e40af;
-            }
-
-            .download-btn {
-              background: #ecfdf5;
-              color: #059669;
-              border: 1px solid #86efac;
-            }
-
-            .download-btn:hover:not(:disabled) {
-              background: #86efac;
-              color: #047857;
-            }
-
-            .toggle-btn.active {
-              background: #fef3c7;
-              color: #d97706;
-              border: 1px solid #fcd34d;
-            }
-
-            .toggle-btn.active:hover:not(:disabled) {
-              background: #fcd34d;
-              color: #b45309;
-            }
-
-            .toggle-btn.inactive {
-              background: #dcfce7;
-              color: #059669;
-              border: 1px solid #86efac;
-            }
-
-            .toggle-btn.inactive:hover:not(:disabled) {
-              background: #86efac;
-              color: #047857;
-            }
-
-            .delete-btn {
-              background: #fee2e2;
-              color: #dc2626;
-              border: 1px solid #fca5a5;
-            }
-
-            .delete-btn:hover:not(:disabled) {
-              background: #fca5a5;
-              color: #b91c1c;
-            }
-
-            /* Skeleton/Loading States */
-            .qr-loading-placeholder {
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: #f8fafc;
-            }
-
-            .qr-skeleton {
-              width: 80%;
-              height: 80%;
-              background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-              background-size: 200% 100%;
-              animation: skeleton-loading 1.5s infinite;
-              border-radius: 4px;
-            }
-
-            @keyframes skeleton-loading {
-              0% { background-position: 200% 0; }
-              100% { background-position: -200% 0; }
-            }
-
-            .skeleton-card {
-              pointer-events: none;
-              opacity: 0.7;
-            }
-
-            .skeleton-image {
-              background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-              background-size: 200% 100%;
-              animation: skeleton-loading 1.5s infinite;
-            }
-
-            .skeleton-line {
-              height: 12px;
-              background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-              background-size: 200% 100%;
-              animation: skeleton-loading 1.5s infinite;
-              border-radius: 4px;
-              margin-bottom: 8px;
-            }
-
-            .skeleton-title {
-              height: 16px;
-              width: 80%;
-              margin: 0 auto 12px auto;
-            }
-
-            .skeleton-text {
-              height: 12px;
-              width: 60%;
-              margin: 0 auto 8px auto;
-            }
-
-            .skeleton-stats {
-              height: 10px;
-              width: 100%;
-              margin: 12px 0;
-            }
-
-            .skeleton-button {
-              width: 36px;
-              height: 36px;
-              background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-              background-size: 200% 100%;
-              animation: skeleton-loading 1.5s infinite;
-              border-radius: 8px;
-            }
-
-            .lazy-qr-container {
-              position: relative;
-              width: 100%;
-              height: 100%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-
-            @media (max-width: 768px) {
-              .theater-qr-settings-container {
-                flex-direction: column;
-                min-height: auto;
-              }
-
-              .theater-qr-settings-tabs {
-                flex-direction: row;
-                width: 100%;
-                min-width: 100%;
-                border-right: none;
-                border-bottom: 1px solid #e2e8f0;
-                overflow-x: auto;
-              }
-
-              .theater-qr-settings-tab {
-                min-width: 140px;
-                padding: 16px 20px;
-                border-bottom: none;
-                border-right: 1px solid #e2e8f0;
-                justify-content: center;
-              }
-
-              .theater-qr-settings-tab.active {
-                border-right: 1px solid #e2e8f0;
-                border-bottom: 3px solid #6B0E9B;
-              }
-
-              .theater-qr-settings-tab.active::before {
-                display: none;
-              }
-
-              .theater-qr-settings-content {
-                padding: 20px;
-              }
-
-
-
-              .crud-modal {
-                margin: 10px;
-                max-width: none;
-                max-height: 90vh;
-              }
-
-              .crud-modal-body {
-                padding: 24px;
-              }
-
-              .crud-modal-header {
-                padding: 20px 24px;
-              }
-
-              .crud-modal-footer {
-                padding: 16px 24px;
-              }
-
-              .modal-actions-view,
-              .modal-actions-edit,
-              .modal-actions-create {
-                flex-direction: column;
-              }
-
-              .btn {
-                width: 100%;
-              }
-
-              .theater-qr-tab-icon {
-                font-size: 16px;
-              }
-            }
-          `}</style>
         </PageContainer>
         </div>
       </AdminLayout>

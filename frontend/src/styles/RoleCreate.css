@@ -732,8 +732,8 @@
 .modal-content {
   background: var(--white);
   border-radius: 12px;
-  width: 90%;
-  max-width: 900px;
+  width: 95%;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal size */
   max-height: 90vh;
   display: flex;
   flex-direction: column;

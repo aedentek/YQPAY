@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
-import PageContainer from '../components/PageContainer';
 import { useModal } from '../contexts/ModalContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
 import { clearTheaterCache } from '../utils/cacheManager';
 import config from '../config';
 import '../styles/QRGenerate.css';
+import '../styles/TheaterList.css';
 
 // Simple cache utilities
 const getCachedData = (key) => {
@@ -891,9 +891,11 @@ const QRGenerate = React.memo(() => {
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="Generate QR" currentPage="qr-generate">
-        <PageContainer
-          title="Generate QR Codes"
-        >
+        <div className="theater-list-container">
+          <div className="theater-main-container">
+            <div className="theater-list-header">
+              <h1>Generate QR Codes</h1>
+            </div>
           <form onSubmit={handleSubmit} className="qr-generate-form">
           {/* Form Section Header */}
           <div className="form-section">
@@ -1268,7 +1270,8 @@ const QRGenerate = React.memo(() => {
                 Memory: {performanceMetrics.memoryUsage}MB
               </div>
             )}
-        </PageContainer>
+          </div>
+        </div>
       </AdminLayout>
     </ErrorBoundary>
   );

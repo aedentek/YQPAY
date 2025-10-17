@@ -574,8 +574,8 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  max-width: 500px;
-  width: 90%;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal size */
+  width: 95%;
   max-height: 90vh;
   overflow: hidden;
   animation: modalSlideIn 0.3s ease-out;
