@@ -740,14 +740,38 @@
 }
 
 .pos-search-input {
-  padding: 8px 35px 8px 15px;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  background: white;
-  color: #333;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* GLOBAL STANDARD: Order History search bar design */
+  /* Remove default appearance */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  
+  /* Violet theme styling */
   width: 200px;
+  padding: 12px 16px;
+  border: 2px solid #8B5CF6;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
+  color: #1f2937;
+  cursor: text;
+  transition: all 0.3s ease;
+}
+
+.pos-search-input:hover {
+  background: linear-gradient(135deg, #f8f7ff 0%, #f3f1ff 100%);
+  border-color: #7C3AED;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+.pos-search-input:focus {
+  outline: none;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
+  border-color: #6B46C1;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+  transform: translateY(-2px);
 }
 
 .pos-search-icon {
