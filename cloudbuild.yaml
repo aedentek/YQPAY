@@ -18,10 +18,10 @@ steps:
       ]
 
   # Build and deploy frontend
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: 'gcr.io/cloud-builders/Docker'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/yqpay-frontend', './frontend']
 
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: 'gcr.io/cloud-builders/Docker'
     args: ['push', 'gcr.io/$PROJECT_ID/yqpay-frontend']
 
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
