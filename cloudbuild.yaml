@@ -3,7 +3,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-f', 'Dockerfile', '-t', 'gcr.io/$PROJECT_ID/yqpay', '.']
 
-  # Step 2: Push the built image
+  # Step 2: Push built image to GCR
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/yqpay']
 
