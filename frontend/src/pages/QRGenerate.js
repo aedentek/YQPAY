@@ -86,6 +86,7 @@ const QRGenerate = React.memo(() => {
   const [theaters, setTheaters] = useState([]);
   const [theatersLoading, setTheatersLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generatingProgress, setGeneratingProgress] = useState({ current: 0, total: 0, message: '' });
   const [showSeatMap, setShowSeatMap] = useState(false);
   const [allAvailableSeats, setAllAvailableSeats] = useState([]); // Store all generated seat ranges
   const [defaultLogoUrl, setDefaultLogoUrl] = useState(''); // Default logo from settings
@@ -616,6 +617,14 @@ const QRGenerate = React.memo(() => {
     try {
       setGenerating(true);
       
+      // Set initial progress
+      const totalSeats = formData.qrType === 'single' ? 1 : (formData.selectedSeats?.length || 1);
+      setGeneratingProgress({ 
+        current: 0, 
+        total: totalSeats, 
+        message: formData.qrType === 'single' ? 'Generating single QR code...' : `Generating QR codes for ${totalSeats} seats...`
+      });
+      
       // Get authentication token
       const token = config.helpers.getAuthToken();
       
@@ -666,6 +675,12 @@ const QRGenerate = React.memo(() => {
       
       console.log('📤 Request Body being sent:', requestBody);
       
+      // Update progress for API call
+      setGeneratingProgress(prev => ({ 
+        ...prev, 
+        message: 'Sending request to server...' 
+      }));
+      
       const response = await fetch(config.helpers.getApiUrl(endpoint), {
         method: 'POST',
         headers: {
@@ -677,13 +692,33 @@ const QRGenerate = React.memo(() => {
       
       const data = await response.json();
       
+      // Update progress for processing response
+      setGeneratingProgress(prev => ({ 
+        ...prev, 
+        message: 'Processing server response...' 
+      }));
+      
       console.log('Backend response:', data);
       
       if (data.success) {
-        const count = data.data ? data.data.count : data.count;
+        console.log('🔍 Debugging count extraction:', {
+          'data.count': data.count,
+          'data.data': data.data,
+          'data.data?.count': data.data?.count,
+          'typeof data.count': typeof data.count
+        });
+        
+        const count = data.count || (data.data && data.data.count) || 0;
         const message = formData.qrType === 'single' 
           ? 'Single QR code generated and saved successfully!'
           : `${count} screen QR codes generated successfully!`;
+        
+        // Update progress to completion
+        setGeneratingProgress(prev => ({ 
+          ...prev, 
+          current: prev.total,
+          message: 'QR codes generated successfully!' 
+        }));
         
         // Reload QR names to update the dropdown (remove newly generated QR name)
         if (formData.theaterId) {
@@ -703,6 +738,7 @@ const QRGenerate = React.memo(() => {
       showError('Error', 'Failed to generate QR codes. Please try again.');
     } finally {
       setGenerating(false);
+      setGeneratingProgress({ current: 0, total: 0, message: '' });
     }
   }, [formData, validateForm, showSuccess, showError, navigate, loadQRNames]);
 
@@ -1111,11 +1147,8 @@ const QRGenerate = React.memo(() => {
                             onClick={() => handleDeleteRow(row)}
                             title={`Delete Row ${row}`}
                           >
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M10 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M14 11V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: '16px', height: '16px' }}>
+                              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                             </svg>
                           </button>
                         </div>
@@ -1161,6 +1194,61 @@ const QRGenerate = React.memo(() => {
                 </button>
               </div>
             </form>
+            
+            {/* QR Generation Loading Overlay */}
+            {generating && (
+              <div className="qr-generation-overlay">
+                <div className="qr-generation-modal">
+                  <div className="qr-generation-header">
+                    <h3>Generating QR Codes</h3>
+                    <div className="qr-generation-spinner">
+                      <div className="spinner-circle"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="qr-generation-content">
+                    <div className="progress-info">
+                      <div className="progress-message">{generatingProgress.message}</div>
+                      {generatingProgress.total > 1 && (
+                        <div className="progress-counter">
+                          {generatingProgress.current} of {generatingProgress.total} completed
+                        </div>
+                      )}
+                    </div>
+                    
+                    {generatingProgress.total > 1 && (
+                      <div className="progress-bar-container">
+                        <div className="progress-bar">
+                          <div 
+                            className="progress-bar-fill"
+                            style={{ 
+                              width: `${(generatingProgress.current / generatingProgress.total) * 100}%` 
+                            }}
+                          ></div>
+                        </div>
+                        <div className="progress-percentage">
+                          {Math.round((generatingProgress.current / generatingProgress.total) * 100)}%
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="generating-details">
+                      {formData.qrType === 'screen' && formData.selectedSeats && (
+                        <div className="seats-info">
+                          <strong>Selected Seats:</strong> {formData.selectedSeats.join(', ')}
+                        </div>
+                      )}
+                      <div className="theater-info">
+                        <strong>Theater:</strong> {theaters.find(t => t._id === formData.theaterId)?.name || 'Unknown'}
+                      </div>
+                      <div className="class-info">
+                        <strong>Seat Class:</strong> {formData.seatClass}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             
             {/* Performance Monitoring Display */}
             {process.env.NODE_ENV === 'development' && performanceMetrics && (

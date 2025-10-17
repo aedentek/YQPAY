@@ -51,5 +51,5 @@
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2"
   },
-  "proxy": "http://localhost:5000"
+  "proxy": "http://192.168.1.7:5000"
 }

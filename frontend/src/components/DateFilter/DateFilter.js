@@ -15,6 +15,8 @@ const DateFilter = ({
   }
 }) => {
   const [localFilter, setLocalFilter] = useState(initialFilter);
+  const [rangeSelectionMode, setRangeSelectionMode] = useState(false);
+  const [tempStartDate, setTempStartDate] = useState(null);
   
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -85,11 +87,47 @@ const DateFilter = ({
     const dayStr = String(day).padStart(2, '0');
     const selectedDateString = `${year}-${month}-${dayStr}`;
     
-    setLocalFilter(prev => ({
-      ...prev,
-      type: 'date',
-      selectedDate: selectedDateString
-    }));
+    // Handle range selection mode
+    if (rangeSelectionMode) {
+      if (!tempStartDate) {
+        // First click - set start date
+        setTempStartDate(selectedDateString);
+      } else {
+        // Second click - set end date and complete range
+        const start = new Date(tempStartDate);
+        const end = new Date(selectedDateString);
+        
+        // Ensure start is before end
+        if (start <= end) {
+          setLocalFilter(prev => ({
+            ...prev,
+            type: 'range',
+            startDate: tempStartDate,
+            endDate: selectedDateString,
+            selectedDate: null
+          }));
+        } else {
+          setLocalFilter(prev => ({
+            ...prev,
+            type: 'range',
+            startDate: selectedDateString,
+            endDate: tempStartDate,
+            selectedDate: null
+          }));
+        }
+        setTempStartDate(null);
+        setRangeSelectionMode(false);
+      }
+    } else {
+      // Single date selection
+      setLocalFilter(prev => ({
+        ...prev,
+        type: 'date',
+        selectedDate: selectedDateString,
+        startDate: null,
+        endDate: null
+      }));
+    }
   };
   
   const handleApply = () => {
@@ -107,8 +145,24 @@ const DateFilter = ({
       endDate: null
     };
     setLocalFilter(clearedFilter);
+    setRangeSelectionMode(false);
+    setTempStartDate(null);
     onApply(clearedFilter);
     onClose();
+  };
+  
+  const handleReset = () => {
+    const clearedFilter = {
+      type: 'all',
+      month: new Date().getMonth() + 1,
+      year: new Date().getFullYear(),
+      selectedDate: null,
+      startDate: null,
+      endDate: null
+    };
+    setLocalFilter(clearedFilter);
+    setRangeSelectionMode(false);
+    setTempStartDate(null);
   };
   
   if (!isOpen) return null;
@@ -121,12 +175,22 @@ const DateFilter = ({
             <span className="date-filter-modal-icon">📅</span>
             Filter by Date
           </h2>
-          <button 
-            className="date-filter-close-btn"
-            onClick={onClose}
-          >
-            <span className="close-icon">✕</span>
-          </button>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button 
+              className="date-filter-reset-header-btn"
+              onClick={handleReset}
+              title="Reset all filters"
+            >
+              <span className="date-filter-btn-icon">↻</span>
+              Reset
+            </button>
+            <button 
+              className="date-filter-close-btn"
+              onClick={onClose}
+            >
+              <span className="close-icon">✕</span>
+            </button>
+          </div>
         </div>
         
         {/* Current Date Display */}
@@ -221,10 +285,79 @@ const DateFilter = ({
           
           {/* Calendar Selection */}
           <div className="date-filter-form-group">
-            <label>Or Select Specific Date:</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <label>Or Select Specific Date:</label>
+              <button 
+                className={`date-filter-range-toggle-btn ${rangeSelectionMode ? 'active' : ''}`}
+                onClick={() => {
+                  setRangeSelectionMode(!rangeSelectionMode);
+                  setTempStartDate(null);
+                  if (!rangeSelectionMode) {
+                    setLocalFilter(prev => ({
+                      ...prev,
+                      selectedDate: null,
+                      startDate: null,
+                      endDate: null
+                    }));
+                  }
+                }}
+              >
+                <span className="date-filter-btn-icon">📅</span>
+                {rangeSelectionMode ? 'Cancel Range' : 'Select Date Range'}
+              </button>
+            </div>
+            
+            {rangeSelectionMode && (
+              <div className="date-filter-range-info">
+                <div className="date-filter-range-instruction">
+                  {!tempStartDate ? (
+                    <span>📍 Click on a date to set the <strong>From Date</strong></span>
+                  ) : (
+                    <span>📍 Click on a date to set the <strong>To Date</strong> (From: {new Date(tempStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})</span>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {localFilter.type === 'range' && localFilter.startDate && localFilter.endDate && (
+              <div className="date-filter-range-display">
+                <strong>Selected Range:</strong> {new Date(localFilter.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} → {new Date(localFilter.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              </div>
+            )}
+            
             <div className="date-filter-calendar-container">
               <div className="date-filter-calendar-header">
+                <button 
+                  className="date-filter-calendar-nav-btn"
+                  onClick={() => {
+                    const newMonth = localFilter.month === 1 ? 12 : localFilter.month - 1;
+                    const newYear = localFilter.month === 1 ? localFilter.year - 1 : localFilter.year;
+                    setLocalFilter(prev => ({ ...prev, month: newMonth, year: newYear }));
+                  }}
+                  title="Previous month"
+                >
+                  ‹
+                </button>
                 <strong>{months[localFilter.month - 1]} {localFilter.year}</strong>
+                <button 
+                  className="date-filter-calendar-nav-btn"
+                  onClick={() => {
+                    const newMonth = localFilter.month === 12 ? 1 : localFilter.month + 1;
+                    const newYear = localFilter.month === 12 ? localFilter.year + 1 : localFilter.year;
+                    
+                    // Only allow navigation if the new month/year is not in the future
+                    if (isMonthYearValid(newMonth, newYear)) {
+                      setLocalFilter(prev => ({ ...prev, month: newMonth, year: newYear }));
+                    }
+                  }}
+                  disabled={!isMonthYearValid(
+                    localFilter.month === 12 ? 1 : localFilter.month + 1,
+                    localFilter.month === 12 ? localFilter.year + 1 : localFilter.year
+                  )}
+                  title="Next month"
+                >
+                  ›
+                </button>
               </div>
               <div className="date-filter-calendar-grid">
                 <div className="date-filter-calendar-weekdays">
@@ -236,23 +369,39 @@ const DateFilter = ({
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
                     
+                    const currentDateStr = day ? `${localFilter.year}-${String(localFilter.month).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
+                    
                     const isToday = day && 
                       localFilter.year === today.getFullYear() && 
                       localFilter.month === today.getMonth() + 1 && 
                       day === today.getDate();
                     
-                    const isSelected = day && localFilter.selectedDate === `${localFilter.year}-${String(localFilter.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const isSelected = day && localFilter.selectedDate === currentDateStr;
                     
                     // Check if date is in the future
                     const dateObj = day ? new Date(localFilter.year, localFilter.month - 1, day) : null;
                     const isFutureDate = dateObj && dateObj > today;
+                    
+                    // Check if this day is in the selected range
+                    const isInRange = day && localFilter.type === 'range' && localFilter.startDate && localFilter.endDate && currentDateStr >= localFilter.startDate && currentDateStr <= localFilter.endDate;
+                    
+                    // Check if this is the start or end date of range
+                    const isRangeStart = day && currentDateStr === localFilter.startDate;
+                    const isRangeEnd = day && currentDateStr === localFilter.endDate;
+                    
+                    // Check if this is the temporary start date during range selection
+                    const isTempStart = day && tempStartDate === currentDateStr;
                     
                     return (
                       <div 
                         key={index} 
                         className={`date-filter-calendar-day ${day ? 'clickable' : 'empty'} ${
                           isSelected ? 'selected' : ''
-                        } ${isToday ? 'today' : ''} ${isFutureDate ? 'disabled-future' : ''}`}
+                        } ${isToday ? 'today' : ''} ${isFutureDate ? 'disabled-future' : ''} ${
+                          isInRange ? 'in-range' : ''
+                        } ${isRangeStart ? 'range-start' : ''} ${isRangeEnd ? 'range-end' : ''} ${
+                          isTempStart ? 'temp-start' : ''
+                        }`}
                         onClick={() => !isFutureDate && handleDateClick(day)}
                         style={isFutureDate ? { 
                           cursor: 'not-allowed', 
@@ -296,6 +445,17 @@ const DateFilter = ({
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
+              })}`
+            }
+            {localFilter.type === 'range' && localFilter.startDate && localFilter.endDate && 
+              `Date Range: ${new Date(localFilter.startDate).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })} → ${new Date(localFilter.endDate).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
               })}`
             }
           </div>

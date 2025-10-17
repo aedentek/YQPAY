@@ -319,20 +319,37 @@
 }
 
 .search-input {
+  /* Remove default appearance */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  
+  /* Violet theme styling */
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid var(--border-color);
+  border: 2px solid #8B5CF6;
   border-radius: 8px;
   font-size: 1rem;
-  transition: all 0.2s ease;
-  background: var(--background-light);
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
+  color: #1f2937;
+  cursor: text;
+  transition: all 0.3s ease;
+}
+
+.search-input:hover {
+  background: linear-gradient(135deg, #f8f7ff 0%, #f3f1ff 100%);
+  border-color: #7C3AED;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  background: var(--white);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
+  border-color: #6B46C1;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+  transform: translateY(-2px);
 }
 
 .filter-controls {
@@ -342,7 +359,7 @@
 }
 
 .status-filter {
-  /* Remove default appearance */
+  /* Remove default appearance - all browsers */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -363,6 +380,17 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
+}
+
+/* Force remove default arrow in IE/Edge */
+.status-filter::-ms-expand {
+  display: none;
+}
+
+/* Force remove default arrow in Firefox */
+.status-filter:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #1f2937;
 }
 
 .status-filter:hover {
@@ -388,6 +416,13 @@
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
+/* Remove arrow icon from input elements using status-filter class */
+input.status-filter {
+  background-image: none;
+  padding: 12px 16px;
+  cursor: text;
+}
+
 .results-count {
   color: var(--text-gray);
   font-size: 0.9rem;
@@ -409,18 +444,18 @@
 }
 
 .items-select {
-  /* Remove default appearance */
+  /* Remove default appearance - all browsers */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   
   /* Violet theme styling */
-  padding: 8px 32px 8px 12px;
+  padding: 12px 40px 12px 16px;
   border: 2px solid #8B5CF6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
   color: #1f2937;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -428,8 +463,19 @@
   /* Custom arrow icon */
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 14px;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* Force remove default arrow in IE/Edge */
+.items-select::-ms-expand {
+  display: none;
+}
+
+/* Force remove default arrow in Firefox */
+.items-select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #1f2937;
 }
 
 .items-select:hover {
@@ -443,7 +489,7 @@
   outline: none;
   background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
   border-color: #6B46C1;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
   transform: translateY(-2px);
 }
 
@@ -547,15 +593,21 @@
   white-space: nowrap;
 }
 
-/* Order History Table Column Widths */
-.qr-management-table.order-history-table th:nth-child(1) { width: 60px; }  /* S.No */
-.qr-management-table.order-history-table th:nth-child(2) { width: 150px; } /* Order Number */
-.qr-management-table.order-history-table th:nth-child(3) { width: 170px; } /* Customer */
-.qr-management-table.order-history-table th:nth-child(4) { width: 80px; }  /* Items */
-.qr-management-table.order-history-table th:nth-child(5) { width: 110px; } /* Amount */
-.qr-management-table.order-history-table th:nth-child(6) { width: 110px; } /* Status */
-.qr-management-table.order-history-table th:nth-child(7) { width: 150px; } /* Date */
-.qr-management-table.order-history-table th:nth-child(8) { width: 110px; } /* Action - wider for 2 buttons */
+/* Order History Table Column Widths - Optimized */
+.qr-management-table.order-history-table {
+  table-layout: fixed;
+  max-width: 100%;
+}
+
+.qr-management-table.order-history-table th:nth-child(1) { width: 50px; }  /* S.No */
+.qr-management-table.order-history-table th:nth-child(2) { width: 130px; } /* Order Number */
+.qr-management-table.order-history-table th:nth-child(3) { width: 150px; } /* Customer */
+.qr-management-table.order-history-table th:nth-child(4) { width: 70px; }  /* Items */
+.qr-management-table.order-history-table th:nth-child(5) { width: 100px; } /* Amount */
+.qr-management-table.order-history-table th:nth-child(6) { width: 100px; } /* Payment Mode */
+.qr-management-table.order-history-table th:nth-child(7) { width: 100px; } /* Status */
+.qr-management-table.order-history-table th:nth-child(8) { width: 140px; } /* Date */
+.qr-management-table.order-history-table th:nth-child(9) { width: 90px; }  /* Action */
 
 /* Order History Table Cell Alignment */
 .qr-management-table.order-history-table td:nth-child(1) { text-align: center; } /* S.No */
@@ -563,9 +615,36 @@
 .qr-management-table.order-history-table td:nth-child(3) { text-align: left; }   /* Customer */
 .qr-management-table.order-history-table td:nth-child(4) { text-align: center; } /* Items */
 .qr-management-table.order-history-table td:nth-child(5) { text-align: right; }  /* Amount */
-.qr-management-table.order-history-table td:nth-child(6) { text-align: center; } /* Status */
-.qr-management-table.order-history-table td:nth-child(7) { text-align: center; } /* Date */
-.qr-management-table.order-history-table td:nth-child(8) { text-align: center; } /* Action */
+.qr-management-table.order-history-table td:nth-child(6) { text-align: center; } /* Payment Mode */
+.qr-management-table.order-history-table td:nth-child(7) { text-align: center; } /* Status */
+.qr-management-table.order-history-table td:nth-child(8) { text-align: center; } /* Date */
+.qr-management-table.order-history-table td:nth-child(9) { text-align: center; } /* Action */
+
+/* Order History Action Buttons - Proper Sizing */
+.order-history-table .action-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.order-history-table .action-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0;
+}
+
+.order-history-table .action-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
 
 /* Product Management Table Column Widths - Professional Layout */
 .qr-management-table:not(.product-types-table):not(.order-history-table) th:nth-child(1) { width: 60px; min-width: 50px; }   /* S.No */
@@ -1904,6 +1983,31 @@ textarea.form-control {
 .date-filter-btn:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px var(--shadow-primary);
+}
+
+/* Download Excel Button Styling */
+.download-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px !important;
+  font-size: 0.9rem !important;
+  min-width: 160px;
+  justify-content: center;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+  border: none !important;
+}
+
+.download-btn .btn-icon {
+  font-size: 1.1rem;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.download-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+  background: linear-gradient(135deg, #047857 0%, #065f46 100%) !important;
 }
 
 /* Mobile Responsive for Filter Controls */

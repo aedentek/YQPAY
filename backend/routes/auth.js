@@ -14,6 +14,7 @@ const generateToken = (user) => {
     userId: user._id,
     username: user.username,
     role: user.role,
+    userType: user.userType, // ✅ ADD: Include userType for proper role checking
     theaterId: user.theaterId
   };
   

@@ -2,12 +2,12 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import TheaterLayout from '../../components/theater/TheaterLayout';
-import PageContainer from '../../components/PageContainer';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { useModal } from '../../contexts/ModalContext';
 import { usePerformanceMonitoring } from '../../hooks/usePerformanceMonitoring';
 import DateFilter from '../../components/DateFilter';
 import Pagination from '../../components/Pagination';
+import config from '../../config';
 import '../../styles/QRManagementPage.css';
 import '../../styles/TheaterList.css';
 import '../../styles/AddTheater.css';
@@ -105,6 +105,7 @@ const TheaterOrderHistory = () => {
       const params = new URLSearchParams({
         page: page,
         limit: limit,
+        theaterId: theaterId, // Add theater ID to the request
         _cacheBuster: Date.now(),
         _random: Math.random()
       });
@@ -125,10 +126,14 @@ const TheaterOrderHistory = () => {
         params.append('year', currentDateFilter.year);
       } else if (currentDateFilter.type === 'date') {
         params.append('date', currentDateFilter.selectedDate);
+      } else if (currentDateFilter.type === 'range' && currentDateFilter.startDate && currentDateFilter.endDate) {
+        params.append('startDate', currentDateFilter.startDate);
+        params.append('endDate', currentDateFilter.endDate);
       }
 
-      const baseUrl = `/api/orders/theater-nested?${params.toString()}`;
+      const baseUrl = `${config.api.baseUrl}/orders/theater-nested?${params.toString()}`;
       
+      console.log('🎬 Fetching theater orders from:', baseUrl);
       
       const response = await fetch(baseUrl, {
         signal: abortControllerRef.current.signal,
@@ -164,65 +169,36 @@ const TheaterOrderHistory = () => {
       if (!isMountedRef.current) return;
 
       if (data.success) {
-        // Handle nested structure response format
-        let allOrdersData = [];
-        
-        if (Array.isArray(data.data)) {
-          // If data.data is already an array of orders
-          allOrdersData = data.data;
-        } else if (data.data?.orders) {
-          // If data.data has orders property (old format)
-          allOrdersData = data.data.orders;
-        } else if (data.data?.years) {
-          // If data.data is full theater document, extract all orders
-          allOrdersData = [];
-          for (const year of data.data.years) {
-            for (const month of year.months) {
-              allOrdersData.push(...month.orders);
-            }
-          }
-        } else if (data.data?.months) {
-          // If data.data is a year document, extract orders from all months
-          allOrdersData = [];
-          for (const month of data.data.months) {
-            allOrdersData.push(...month.orders);
-          }
-        }
-        
-        // Sort orders by creation date (newest first)
-        allOrdersData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        // Store all orders
-        setAllOrders(allOrdersData);
-        
-        // Calculate pagination for all orders
-        const totalOrders = allOrdersData.length;
-        const itemsPerPageCount = 10;
-        const totalPages = Math.ceil(totalOrders / itemsPerPageCount);
-        
-        setTotalItems(totalOrders);
-        setTotalPages(totalPages);
-        setCurrentPage(page);
-        
-        // Get paginated orders for current page
-        const startIndex = (page - 1) * itemsPerPageCount;
-        const endIndex = startIndex + itemsPerPageCount;
-        const paginatedOrders = allOrdersData.slice(startIndex, endIndex);
-        setOrders(paginatedOrders);
-        
-        // Calculate summary statistics from all orders
-        const confirmedOrders = allOrdersData.filter(order => order.status === 'confirmed').length;
-        const completedOrders = allOrdersData.filter(order => order.status === 'completed').length;
-        const totalRevenue = allOrdersData.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-        
-        const summary = {
-          totalOrders,
-          confirmedOrders,
-          completedOrders,
-          totalRevenue
+        // Handle the new simplified response format
+        const ordersData = data.data || [];
+        const summaryData = data.summary || {
+          totalOrders: 0,
+          confirmedOrders: 0,
+          completedOrders: 0,
+          totalRevenue: 0
         };
         
-        setSummary(summary);
+        console.log('📊 Orders data processed:', {
+          ordersCount: ordersData.length,
+          summary: summaryData,
+          pagination: data.pagination
+        });
+        
+        // Store all orders
+        setAllOrders(ordersData);
+        
+        // Set current page orders (already paginated from backend)
+        setOrders(ordersData);
+        
+        // Update summary
+        setSummary(summaryData);
+        
+        // Update pagination
+        if (data.pagination) {
+          setTotalItems(data.pagination.total);
+          setTotalPages(data.pagination.pages);
+          setCurrentPage(data.pagination.current);
+        }
       } else {
         // Handle case where API returns success but no data
         console.log('⚠️ API returned success but no orders found');
@@ -287,6 +263,70 @@ const TheaterOrderHistory = () => {
     setDateFilter(newDateFilter);
     loadOrdersData(1, itemsPerPage, searchTerm, statusFilter, newDateFilter);
   }, [itemsPerPage, searchTerm, statusFilter, loadOrdersData]);
+
+  // Download Excel Report
+  const handleDownloadExcel = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Build query string based on current date filter
+      const params = new URLSearchParams();
+      
+      if (dateFilter.type === 'date' && dateFilter.selectedDate) {
+        params.append('date', dateFilter.selectedDate);
+      } else if (dateFilter.type === 'month') {
+        params.append('month', dateFilter.month);
+        params.append('year', dateFilter.year);
+      } else if (dateFilter.type === 'range' && dateFilter.startDate && dateFilter.endDate) {
+        params.append('startDate', dateFilter.startDate);
+        params.append('endDate', dateFilter.endDate);
+      }
+      
+      // Add status filter if not 'all'
+      if (statusFilter && statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+
+      const response = await fetch(
+        `${config.api.baseUrl}/orders/excel/${theaterId}?${params.toString()}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (response.ok) {
+        // Download Excel file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Generate filename with date info
+        let dateStr = '';
+        if (dateFilter.type === 'date' && dateFilter.selectedDate) {
+          dateStr = `_${dateFilter.selectedDate.replace(/-/g, '')}`;
+        } else if (dateFilter.type === 'month') {
+          dateStr = `_${dateFilter.year}${String(dateFilter.month).padStart(2, '0')}`;
+        } else if (dateFilter.type === 'range' && dateFilter.startDate && dateFilter.endDate) {
+          dateStr = `_${dateFilter.startDate.replace(/-/g, '')}_to_${dateFilter.endDate.replace(/-/g, '')}`;
+        }
+        
+        a.download = `Order_History${dateStr}_${Date.now()}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        showError('✅ Excel report downloaded successfully!');
+      } else {
+        const errorData = await response.json();
+        showError(errorData.error || 'Failed to download Excel report');
+      }
+    } catch (error) {
+      console.error('Error downloading Excel report:', error);
+      showError('Failed to download Excel report. Please try again.');
+    }
+  };
 
   // Pagination handlers
   const handleItemsPerPageChange = useCallback((e) => {
@@ -540,26 +580,18 @@ const TheaterOrderHistory = () => {
 
   return (
     <ErrorBoundary>
-      <style>
-        {`
-          .calendar-container { margin: 20px 0; }
-          .calendar-header { text-align: center; margin-bottom: 15px; color: #8B5CF6; }
-          .calendar-grid { max-width: 300px; margin: 0 auto; }
-          .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-bottom: 10px; font-weight: bold; color: #666; text-align: center; }
-          .calendar-weekdays > div { padding: 5px; }
-          .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-          .calendar-day { padding: 8px; text-align: center; border-radius: 4px; cursor: pointer; border: 1px solid #e0e0e0; background: #fff; }
-          .calendar-day.empty { cursor: default; border: none; background: transparent; }
-          .calendar-day.clickable:hover { background: #f3f0ff; border-color: #8B5CF6; }
-          .calendar-day.selected { background: #8B5CF6; color: white; border-color: #8B5CF6; }
-        `}
-      </style>
       <TheaterLayout pageTitle="Order History" currentPage="order-history">
-        <PageContainer
-          title="Order History"
-        >
-        
-        {/* Stats Section */}
+        <div className="theater-list-container">
+          {/* Main Order History Container */}
+          <div className="theater-main-container">
+            {/* Header */}
+            <div className="theater-list-header">
+              <div className="header-content">
+                <h1>Order History</h1>
+              </div>
+            </div>
+
+            {/* Stats Section */}
         <div className="qr-stats">
           <div className="stat-card">
             <div className="stat-number">{summary.totalOrders || 0}</div>
@@ -587,7 +619,7 @@ const TheaterOrderHistory = () => {
               placeholder="Search orders by order number or customer name..."
               value={searchTerm}
               onChange={handleSearch}
-              className="search-input"
+              className="status-filter"
             />
           </div>
           <div className="filter-controls">
@@ -612,6 +644,14 @@ const TheaterOrderHistory = () => {
                dateFilter.type === 'month' ? `${new Date(dateFilter.year, dateFilter.month - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` :
                'Date Filter'}
             </button>
+            <button 
+              className="submit-btn download-btn"
+              onClick={handleDownloadExcel}
+              title="Download Excel Report"
+            >
+              <span className="btn-icon">📥</span>
+              Download Excel
+            </button>
             <div className="items-per-page">
               <label>Items per page:</label>
               <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
@@ -624,16 +664,19 @@ const TheaterOrderHistory = () => {
           </div>
         </div>
 
-        {/* Management Table */}
-        <div className="page-table-container">
-          <table className="qr-management-table order-history-table">
-            <thead>
+            {/* Table Container */}
+            <div className="table-container">
+              {/* Management Table */}
+              <div className="page-table-container">
+                <table className="qr-management-table order-history-table">
+                  <thead>
               <tr>
                 <th>S.No</th>
                 <th>Order Number</th>
                 <th>Customer</th>
                 <th>Items</th>
                 <th>Amount</th>
+                <th>Payment Mode</th>
                 <th>Status</th>
                 <th>Date</th>
                 <th>Action</th>
@@ -653,7 +696,6 @@ const TheaterOrderHistory = () => {
                       <td className="order-number-cell">
                         <div className="order-info">
                           <div className="order-number">{order.orderNumber}</div>
-                          <div className="payment-method">{order.paymentMethod}</div>
                         </div>
                       </td>
                       <td className="customer-cell">
@@ -666,7 +708,10 @@ const TheaterOrderHistory = () => {
                         {(order.products?.length || order.items?.length || 0)} items
                       </td>
                       <td className="amount-cell">
-                        <div className="amount">{formatCurrency(order.totalAmount)}</div>
+                        <div className="amount">{formatCurrency(order.pricing?.total ?? order.totalAmount ?? 0)}</div>
+                      </td>
+                      <td className="payment-mode-cell">
+                        <div className="payment-mode">{order.payment?.method ? order.payment.method.charAt(0).toUpperCase() + order.payment.method.slice(1) : 'N/A'}</div>
                       </td>
                       <td className="status-cell">
                         <span className={getStatusBadgeClass(order.status)}>
@@ -717,40 +762,40 @@ const TheaterOrderHistory = () => {
                 </tr>
               )}
             </tbody>
-          </table>
-        </div>
-
-        {/* Professional Pagination - Always Show */}
-        <Pagination 
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={itemsPerPage}
-          onPageChange={handlePageChange}
-          itemType="orders"
-        />
-
-        {/* View Modal */}
-        {showViewModal && selectedOrder && (
-          <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Order Details</h2>
-                <button 
-                  className="close-btn"
-                  onClick={() => setShowViewModal(false)}
-                >
-                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                  </svg>
-                </button>
+                </table>
               </div>
+            </div>
+
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={handlePageChange}
+              itemType="orders"
+            />
+
+            {/* View Modal */}
+            {showViewModal && selectedOrder && (
+              <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h2>Order Details</h2>
+                    <button 
+                      className="close-btn"
+                      onClick={() => setShowViewModal(false)}
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                      </svg>
+                    </button>
+                  </div>
               
-              <div className="modal-body">
-                <div className="order-details">
-                  <div className="detail-section">
-                    <h3>Order Information</h3>
-                    <div className="detail-grid">
+                  <div className="modal-body">
+                    <div className="order-details">
+                      <div className="detail-section">
+                        <h3>Order Information</h3>
+                        <div className="detail-grid">
                       <div className="detail-item">
                         <label>Order Number:</label>
                         <span>{selectedOrder.orderNumber}</span>
@@ -766,8 +811,8 @@ const TheaterOrderHistory = () => {
                         <span>{formatDate(selectedOrder.createdAt)}</span>
                       </div>
                       <div className="detail-item">
-                        <label>Payment Method:</label>
-                        <span>{selectedOrder.paymentMethod}</span>
+                        <label>Payment Mode:</label>
+                        <span>{selectedOrder.payment?.method ? selectedOrder.payment.method.charAt(0).toUpperCase() + selectedOrder.payment.method.slice(1) : 'N/A'}</span>
                       </div>
                     </div>
                   </div>
@@ -813,34 +858,35 @@ const TheaterOrderHistory = () => {
                         <p>No items found</p>
                       )}
                     </div>
-                    <div className="order-total">
+                    <div class="order-total">
                       <div className="total-row">
-                        <strong>Total Amount: {formatCurrency(selectedOrder.totalAmount)}</strong>
+                        <strong>Total Amount: {formatCurrency(selectedOrder.pricing?.total ?? selectedOrder.totalAmount ?? 0)}</strong>
                       </div>
                     </div>
                   </div>
 
-                  {selectedOrder.notes && (
-                    <div className="detail-section">
-                      <h3>Order Notes</h3>
-                      <p>{selectedOrder.notes}</p>
+                      {selectedOrder.notes && (
+                        <div className="detail-section">
+                          <h3>Order Notes</h3>
+                          <p>{selectedOrder.notes}</p>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Date Filter Modal */}
+            <DateFilter 
+              isOpen={showDateFilterModal}
+              onClose={() => setShowDateFilterModal(false)}
+              initialFilter={dateFilter}
+              onApply={handleDateFilterApply}
+            />
+
           </div>
-        )}
-
-        {/* Date Filter Modal */}
-        <DateFilter 
-          isOpen={showDateFilterModal}
-          onClose={() => setShowDateFilterModal(false)}
-          initialFilter={dateFilter}
-          onApply={handleDateFilterApply}
-        />
-
-        </PageContainer>
+        </div>
       </TheaterLayout>
     </ErrorBoundary>
   );

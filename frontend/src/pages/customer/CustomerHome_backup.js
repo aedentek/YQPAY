@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-import ProductModal from '../../components/customer/ProductModal';
-import ProductCollectionModal from '../../components/customer/ProductCollectionModal';
-import OptimizedImage from '../../components/common/OptimizedImage';
-import { 
-  groupProductsIntoCollections, 
-  filterCollections,
-  getDefaultVariant 
-} from '../../utils/productCollections';
 import config from '../../config';
 import './../../styles/customer/CustomerHome.css';
 
@@ -20,18 +12,11 @@ const CustomerHome = () => {
   const [theaterId, setTheaterId] = useState(null);
   const [theater, setTheater] = useState(null);
   const [products, setProducts] = useState([]);
-  const [productCollections, setProductCollections] = useState([]);
-  const [filteredCollections, setFilteredCollections] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [qrName, setQrName] = useState(null);
   const [seat, setSeat] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCollection, setSelectedCollection] = useState(null);
-  const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -85,12 +70,6 @@ const CustomerHome = () => {
         });
         console.log('✅ Mapped products:', mappedProducts);
         setProducts(mappedProducts);
-        
-        // Group products into collections
-        const collections = groupProductsIntoCollections(mappedProducts);
-        console.log('✅ Product collections:', collections);
-        setProductCollections(collections);
-        setFilteredCollections(collections);
       }
     } catch (err) {
       console.error('Error loading products:', err);
@@ -132,45 +111,6 @@ const CustomerHome = () => {
     addItem({ id: product._id, name: product.name, price: product.price, image: product.image });
   };
 
-  // Filter collections based on search query and selected category
-  const filterProductCollections = useCallback(() => {
-    const filtered = filterCollections(productCollections, searchQuery, selectedCategory);
-    setFilteredCollections(filtered);
-  }, [productCollections, selectedCategory, searchQuery]);
-
-  // Update filtered collections when filters change
-  useEffect(() => {
-    filterProductCollections();
-  }, [filterProductCollections]);
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId);
-  };
-
-  const handleProductClick = (product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
-  };
-
-  const handleCollectionClick = (collection) => {
-    setSelectedCollection(collection);
-    setIsCollectionModalOpen(true);
-  };
-
-  const handleCollectionModalClose = () => {
-    setIsCollectionModalOpen(false);
-    setSelectedCollection(null);
-  };
-
   if (loading) return <div className="customer-loading"><div className="spinner"></div></div>;
 
   const totalItems = getTotalItems();
@@ -205,8 +145,8 @@ const CustomerHome = () => {
             )}
           </div>
           <div className="header-actions">
-            <button className="profile-btn" aria-label="User profile">
-              <svg className="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <button className="profile-btn">
+              <svg className="profile-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
@@ -215,20 +155,13 @@ const CustomerHome = () => {
         </div>
 
         <div className="search-container">
-          <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" />
           </svg>
-          <input 
-            type="text" 
-            className="search-input" 
-            placeholder="Search for products..." 
-            value={searchQuery}
-            onChange={handleSearchChange}
-            aria-label="Search products"
-          />
-          <button className="mic-btn" aria-label="Voice search">
-            <svg className="mic-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <input type="text" className="search-input" placeholder="Search for " />
+          <button className="mic-btn">
+            <svg className="mic-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
               <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
             </svg>
@@ -239,17 +172,12 @@ const CustomerHome = () => {
         <div className="categories-section">
           <button
             className={`category-chip ${selectedCategory === 'all' ? 'active' : ''}`}
-            onClick={() => handleCategoryChange('all')}
-            aria-label="All categories"
+            onClick={() => setSelectedCategory('all')}
           >
             <div className="category-icon-large">
-              <OptimizedImage
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100&h=100&fit=crop"
+              <img 
+                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100&h=100&fit=crop" 
                 alt="All Categories"
-                width={48}
-                height={48}
-                className="category-img"
-                lazy={true}
               />
             </div>
           </button>
@@ -292,18 +220,15 @@ const CustomerHome = () => {
               <button
                 key={category._id}
                 className={`category-chip ${selectedCategory === category._id ? 'active' : ''}`}
-                onClick={() => handleCategoryChange(category._id)}
-                aria-label={`Filter by ${category.name}`}
+                onClick={() => setSelectedCategory(category._id)}
               >
                 <div className="category-icon-large">
-                  <OptimizedImage
-                    src={categoryImgUrl}
+                  <img 
+                    src={categoryImgUrl} 
                     alt={category.name}
-                    width={48}
-                    height={48}
-                    className="category-img"
-                    fallback="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop"
-                    lazy={true}
+                    onError={(e) => { 
+                      e.target.src = 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop';
+                    }}
                   />
                 </div>
               </button>
@@ -313,99 +238,77 @@ const CustomerHome = () => {
       </header>
       <main className="customer-main">
        
-        {/* Products List - Collection Design */}
+        {/* Products List - Card Design */}
         <section className="products-section">
           <div className="products-list">
-            {filteredCollections.length > 0 ? (
-              filteredCollections.map((collection) => {
-                const defaultVariant = getDefaultVariant(collection);
-                const imgUrl = defaultVariant?.image || collection.baseImage;
-                
-                return (
-                  <div 
-                    key={collection.isCollection ? `collection-${collection.name}` : defaultVariant?._id} 
-                    className={`product-card ${collection.isCollection ? 'collection-card' : 'single-product-card'}`}
-                    onClick={() => {
-                      if (collection.isCollection) {
-                        handleCollectionClick(collection);
-                      } else {
-                        handleProductClick(defaultVariant?.originalProduct || defaultVariant);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={
-                      collection.isCollection 
-                        ? `View ${collection.name} collection with ${collection.variants.length} variants`
-                        : `View details for ${collection.name}, price ₹${defaultVariant?.price}`
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        if (collection.isCollection) {
-                          handleCollectionClick(collection);
-                        } else {
-                          handleProductClick(defaultVariant?.originalProduct || defaultVariant);
-                        }
-                      }
-                    }}
-                  >
-                    {/* Collection Select Button */}
-                    {collection.isCollection && (
-                      <div className="collection-select-btn">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="collection-select-icon">
-                          <circle cx="12" cy="12" r="3"/>
-                          <circle cx="12" cy="5" r="2"/>
-                          <circle cx="12" cy="19" r="2"/>
-                        </svg>
+            {products.map((product) => {
+              const imgUrl = product.image && typeof product.image === 'string' 
+                ? (product.image.startsWith('http') ? product.image : `${config.api.baseUrl}${product.image}`) 
+                : null;
+              console.log(`Product: ${product.name}, Image: ${product.image}, Final URL: ${imgUrl}`);
+              const cartItem = cart.items?.find(item => item._id === product._id);
+              const quantity = cartItem?.quantity || 0;
+              
+              return (
+                <div key={product._id} className="product-card">
+                  <div className="product-image">
+                    {imgUrl ? (
+                      <img 
+                        src={imgUrl} 
+                        alt={product.name}
+                        onError={(e) => { 
+                          e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
+                        }}
+                      />
+                    ) : (
+                      <div className="product-placeholder">
+                        <span>🍽️</span>
                       </div>
                     )}
-
-                    <div className="product-image">
-                      {imgUrl ? (
-                        <OptimizedImage
-                          src={imgUrl && typeof imgUrl === 'string' 
-                            ? (imgUrl.startsWith('http') ? imgUrl : `${config.api.baseUrl}${imgUrl}`) 
-                            : null
-                          }
-                          alt={collection.name}
-                          width={80}
-                          height={80}
-                          className="product-img"
-                          fallback="https://via.placeholder.com/80x80?text=No+Image"
-                          lazy={true}
-                        />
-                      ) : (
-                        <div className="product-placeholder">
-                          <span>🍽️</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="product-details">
-                      <h3 className="product-name">{collection.name}</h3>
-                      {collection.isCollection ? (
-                        <>
-                          <p className="product-collection-info">
-                            {collection.variants.length} sizes available
-                          </p>
-                          <p className="product-price-range">
-                            From ₹{collection.basePrice.toFixed(2)}
-                          </p>
-                        </>
-                      ) : (
-                        <p className="product-price">₹{defaultVariant?.price?.toFixed(2)}</p>
-                      )}
-                      {/* <p className="tap-to-view">Tap to view details</p> */}
-                    </div>
                   </div>
-                );
-              })
-            ) : (
-              <div className="empty-products">
-                <p>No products found {searchQuery ? `for "${searchQuery}"` : 'in this category'}</p>
-              </div>
-            )}
+                  <div className="product-details">
+                    <h3 className="product-name">{product.name}</h3>
+                    <p className="product-quantity">{quantity > 0 ? `${quantity}pcs` : '1pcs'}</p>
+                  </div>
+                  <div className="product-actions">
+                    {quantity > 0 ? (
+                      <>
+                        <button 
+                          className="quantity-btn minus"
+                          onClick={() => removeItem(product._id)}
+                        >
+                          −
+                        </button>
+                        <span className="quantity-display">{quantity}</span>
+                        <button 
+                          className="quantity-btn plus"
+                          onClick={() => addItem({ 
+                            _id: product._id, 
+                            name: product.name, 
+                            price: product.price, 
+                            image: product.image 
+                          })}
+                        >
+                          +
+                        </button>
+                      </>
+                    ) : (
+                      <button 
+                        className="quantity-btn plus-only"
+                        onClick={() => addItem({ 
+                          _id: product._id, 
+                          name: product.name, 
+                          price: product.price, 
+                          image: product.image 
+                        })}
+                      >
+                        +
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       </main>
@@ -429,22 +332,6 @@ const CustomerHome = () => {
           <span className="cart-count">{cart.items.length}</span>
         </button>
       )}
-
-      {/* Product Details Modal */}
-      <ProductModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onAddToCart={handleAddToCart}
-        cartQuantity={selectedProduct ? cart.items?.find(item => item._id === selectedProduct._id)?.quantity || 0 : 0}
-      />
-
-      {/* Product Collection Modal */}
-      <ProductCollectionModal
-        collection={selectedCollection}
-        isOpen={isCollectionModalOpen}
-        onClose={handleCollectionModalClose}
-      />
     </div>
   );
 };

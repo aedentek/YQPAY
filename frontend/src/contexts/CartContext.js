@@ -16,13 +16,17 @@ const CART_ACTIONS = {
 const cartReducer = (state, action) => {
   switch (action.type) {
     case CART_ACTIONS.ADD_ITEM: {
-      const existingItem = state.items.find(item => item._id === action.payload._id);
+      const existingItem = state.items.find(item => 
+        item._id === action.payload._id || 
+        (item.variant?.id === action.payload.variant?.id && item.variant?.id)
+      );
       
       if (existingItem) {
         return {
           ...state,
           items: state.items.map(item =>
-            item._id === action.payload._id
+            (item._id === action.payload._id || 
+             (item.variant?.id === action.payload.variant?.id && item.variant?.id))
               ? { ...item, quantity: item.quantity + 1 }
               : item
           )
@@ -194,6 +198,24 @@ export const CartProvider = ({ children }) => {
     return item ? item.quantity : 0;
   };
 
+  // Variant-specific utility functions
+  const getVariantQuantity = (variantId) => {
+    const item = state.items.find(item => 
+      item._id === variantId || item.variant?.id === variantId
+    );
+    return item ? item.quantity : 0;
+  };
+
+  const getCollectionQuantity = (collectionName) => {
+    return state.items
+      .filter(item => item.name.includes(collectionName))
+      .reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const getVariantsByCollection = (collectionName) => {
+    return state.items.filter(item => item.name.includes(collectionName));
+  };
+
   const getTotalItems = () => {
     return state.items.reduce((total, item) => total + item.quantity, 0);
   };
@@ -280,6 +302,9 @@ export const CartProvider = ({ children }) => {
     
     // Getters
     getItemQuantity,
+    getVariantQuantity,
+    getCollectionQuantity,
+    getVariantsByCollection,
     getTotalItems,
     getTotalPrice,
     getSubtotal,

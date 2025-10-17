@@ -44,8 +44,8 @@
 /* HOME PAGE SPECIFIC - HEADER STYLES */
 /* This header is unique to the Home page and overrides global header */
 .customer-header {
-  padding: 8px 15px 16px 5px; /* Reduced padding for compact header */
-  padding-top: calc(env(safe-area-inset-top) + 12px); /* Optimized top spacing */
+  padding: 10px 15px 20px 5px;
+  padding-top: calc(env(safe-area-inset-top) + 15px);
   color: white;
   border-bottom: none;
   position: fixed;
@@ -64,12 +64,12 @@
 /* Theater Name Row - First Line */
 .theater-name-row {
   text-align: center;
-  margin-bottom: 8px; /* Reduced margin for compact layout */
+  margin-bottom: 12px;
 }
 
 .theater-name {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  font-size: 20px; /* Reduced from 24px for compact header */
+  font-size: 24px;
   font-weight: 700;
   margin: 0;
   color: white;
@@ -82,7 +82,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px; /* Reduced margin for compact layout */
+  margin-bottom: 8px;
 }
 
 .balance-info {
@@ -572,10 +572,10 @@
 /* Categories Section - Premium Classic Design */
 .categories-section {
   display: flex;
-  gap: 10px; /* Reduced gap for compact layout */
+  gap: 12px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 8px 0 8px; /* Reduced padding */
+  padding: 12px 0 12px;
   margin: 0 -20px;
   padding-left: 20px;
   padding-right: 20px;
@@ -593,14 +593,14 @@
   justify-content: center;
   background: var(--customer-bg-white);
   border: 2px solid var(--customer-border);
-  padding: 4px; /* Reduced padding for compact layout */
+  padding: 6px;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
   flex-shrink: 0;
   box-shadow: var(--customer-shadow-sm);
-  width: 56px; /* Reduced from 64px */
-  height: 56px; /* Reduced from 64px */
+  width: 64px;
+  height: 64px;
 }
 
 .category-chip:hover {
@@ -618,8 +618,8 @@
 }
 
 .category-icon-large {
-  width: 48px; /* Reduced from 52px */
-  height: 48px; /* Reduced from 52px */
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
@@ -732,7 +732,7 @@
 
 /* MAIN CONTENT - Add margin for fixed header */
 .customer-main {
-  padding-top: 200px; /* Optimized header space for better content ratio */
+  padding-top: 270px; /* Space for fixed header - reduced to eliminate gap */
   padding-bottom: calc(100px + env(safe-area-inset-bottom)); /* Space for fixed button + safe area */
   background: #ffffff;
   min-height: 100vh;
@@ -760,19 +760,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   gap: 12px;
-  cursor: pointer; /* Make it clear the card is clickable */
-  border: 1px solid transparent; /* Add border for hover effect */
 }
 
 .product-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
-  border-color: var(--customer-primary-light); /* Add colored border on hover */
-}
-
-.product-card:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .product-image {
@@ -793,28 +785,6 @@
   object-fit: cover;
 }
 
-.product-img,
-.category-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: inherit;
-}
-
-.image-loading {
-  opacity: 0.7;
-  filter: blur(1px);
-}
-
-.image-loaded {
-  opacity: 1;
-  filter: none;
-}
-
-.image-error {
-  opacity: 0.5;
-}
-
 .product-placeholder {
   width: 100%;
   height: 100%;
@@ -833,7 +803,6 @@
   min-width: 0;
   align-items: flex-start;
   text-align: left;
-  padding-right: 12px; /* Add some spacing since no actions on the right */
 }
 
 .product-name {
@@ -911,117 +880,7 @@
   text-align: center;
 }
 
-/* Collection Card Specific Styles */
-.collection-card {
-  position: relative;
-  border: 2px solid transparent;
-  background: linear-gradient(white, white) padding-box,
-              linear-gradient(45deg, #6B0E9B, #8B4513) border-box;
-}
-
-.collection-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(107, 14, 155, 0.15);
-}
-
-.collection-select-btn {
-  position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, #6B0E9B 0%, #8B4513 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(107, 14, 155, 0.3);
-  z-index: 1;
-}
-
-.collection-select-icon {
-  width: 16px;
-  height: 16px;
-  color: white;
-}
-
-.single-product-card {
-  /* Regular product card styling */
-  margin-left: 8px; /* Align with collection cards that have select button */
-}
-
-.product-collection-info {
-  font-size: 12px;
-  color: #666;
-  margin: 2px 0;
-  font-weight: 500;
-}
-
-.product-price-range {
-  font-size: 14px;
-  color: var(--customer-primary);
-  margin: 2px 0;
-  font-weight: 600;
-}
-
-.product-price {
-  font-size: 14px;
-  color: var(--customer-primary);
-  margin: 2px 0;
-  font-weight: 600;
-}
-
-.tap-to-view {
-  font-size: 11px;
-  color: #999;
-  margin: 4px 0 0 0;
-  font-weight: 400;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-
-.product-card:hover .tap-to-view {
-  opacity: 1;
-  color: var(--customer-primary);
-}
-
-/* Focus styles for accessibility */
-.product-card:focus {
-  outline: 2px solid var(--customer-primary);
-  outline-offset: 2px;
-}
-
-.quantity-btn:focus,
-.profile-btn:focus,
-.mic-btn:focus,
-.category-chip:focus {
-  outline: 2px solid var(--customer-primary);
-  outline-offset: 2px;
-}
-
-.search-input:focus {
-  outline: none; /* Already handled by container focus */
-}
-
-/* Screen reader only text */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.empty-products p {
-  font-size: 16px;
-  margin: 0;
-}
-
+/* Empty state */
 .products-list:empty::after {
   content: 'No products available';
   display: block;

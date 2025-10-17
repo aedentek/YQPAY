@@ -191,7 +191,7 @@
 }
 
 .status-filter {
-  /* Remove default appearance */
+  /* Remove default appearance - all browsers */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -212,6 +212,17 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
+}
+
+/* Force remove default arrow in IE/Edge */
+.status-filter::-ms-expand {
+  display: none;
+}
+
+/* Force remove default arrow in Firefox */
+.status-filter:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #1f2937;
 }
 
 .status-filter:hover {
@@ -1660,18 +1671,18 @@ select.form-control:disabled {
 }
 
 .items-select {
-  /* Remove default appearance */
+  /* Remove default appearance - all browsers */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
   
   /* Violet theme styling */
-  padding: 8px 32px 8px 12px;
+  padding: 12px 40px 12px 16px;
   border: 2px solid #8B5CF6;
-  border-radius: 6px;
+  border-radius: 8px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
   color: #1f2937;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1679,8 +1690,19 @@ select.form-control:disabled {
   /* Custom arrow icon */
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 14px;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* Force remove default arrow in IE/Edge */
+.items-select::-ms-expand {
+  display: none;
+}
+
+/* Force remove default arrow in Firefox */
+.items-select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #1f2937;
 }
 
 .items-select:hover {
@@ -1694,7 +1716,7 @@ select.form-control:disabled {
   outline: none;
   background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
   border-color: #6B46C1;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
   transform: translateY(-2px);
 }
 

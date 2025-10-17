@@ -720,3 +720,195 @@ select.form-control:disabled {
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
   }
 }
+
+/* ===================================== */
+/* QR GENERATION LOADING OVERLAY STYLES */
+/* ===================================== */
+
+.qr-generation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOverlay 0.3s ease-out;
+}
+
+.qr-generation-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  animation: slideInModal 0.4s ease-out;
+}
+
+.qr-generation-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.qr-generation-header h3 {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.qr-generation-spinner {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.spinner-circle {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #8b5cf6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.qr-generation-content {
+  text-align: center;
+}
+
+.progress-info {
+  margin-bottom: 20px;
+}
+
+.progress-message {
+  font-size: 1.1rem;
+  color: #374151;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.progress-counter {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.progress-bar-container {
+  margin-bottom: 24px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8b5cf6, #a855f7);
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+.progress-percentage {
+  font-size: 0.9rem;
+  color: #8b5cf6;
+  font-weight: 600;
+}
+
+.generating-details {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: left;
+}
+
+.generating-details > div {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.generating-details > div:last-child {
+  margin-bottom: 0;
+}
+
+.generating-details strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.seats-info {
+  word-break: break-all;
+}
+
+/* Animations */
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes progressPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .qr-generation-modal {
+    padding: 24px 20px;
+    margin: 20px;
+  }
+  
+  .qr-generation-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .progress-message {
+    font-size: 1rem;
+  }
+  
+  .generating-details {
+    padding: 12px;
+  }
+  
+  .generating-details > div {
+    font-size: 0.85rem;
+  }
+}

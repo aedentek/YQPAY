@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
 const mongoose = require('mongoose');
+const ExcelJS = require('exceljs');
 const Order = require('../models/Order');
 const TheaterOrders = require('../models/TheaterOrders');  // ✅ New array-based model
 const Product = require('../models/Product');
@@ -322,18 +323,43 @@ router.get('/my-orders', [
 
 /**
  * GET /api/orders/theater-nested
- * Get nested order data for a theater
+ * Get nested order data for a theater from TheaterOrders collection
  */
 router.get('/theater-nested', [
   authenticateToken,
   query('theaterId').optional().isMongoId(),
   query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 100 })
+  query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('search').optional().trim(),
+  query('status').optional().isIn(['pending', 'confirmed', 'completed', 'cancelled']),
+  query('date').optional().isISO8601(),
+  query('startDate').optional().isISO8601(),
+  query('endDate').optional().isISO8601(),
+  query('month').optional().isInt({ min: 1, max: 12 }),
+  query('year').optional().isInt({ min: 2020, max: 2030 })
 ], async (req, res) => {
+  console.log('🎬 theater-nested endpoint HIT!', req.query);
   try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      console.log('❌ Validation errors in theater-nested:', errors.array());
+      return res.status(400).json({
+        error: 'Invalid request parameters',
+        details: errors.array()
+      });
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+    const search = req.query.search;
+    const statusFilter = req.query.status;
+    const dateFilter = req.query.date;
+    const startDateFilter = req.query.startDate;
+    const endDateFilter = req.query.endDate;
+    const monthFilter = req.query.month;
+    const yearFilter = req.query.year;
 
     let theaterId = req.query.theaterId;
     
@@ -349,31 +375,168 @@ router.get('/theater-nested', [
       });
     }
 
-    const orders = await Order.find({ theaterId })
-      .populate('items.productId', 'name images')
-      .populate('customerId', 'username firstName lastName')
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    // Enforce theater user restriction
+    if (req.user && (req.user.role === 'theater_user' || req.user.userType === 'theater_user')) {
+      if (req.user.theaterId && theaterId !== req.user.theaterId) {
+        return res.status(403).json({
+          error: 'Access denied: You can only view orders for your assigned theater',
+          code: 'THEATER_ACCESS_DENIED'
+        });
+      }
+      // Always use user's theaterId for theater users
+      theaterId = req.user.theaterId;
+    }
 
-    const total = await Order.countDocuments({ theaterId });
+    console.log('🎬 Fetching theater orders for:', { theaterId, page, limit, search, statusFilter, dateFilter, monthFilter, yearFilter });
+
+    // Find the theater orders document
+    const theaterOrders = await TheaterOrders.findOne({ theater: theaterId })
+      .populate('theater', 'name location')
+      .lean();
+
+    if (!theaterOrders || !theaterOrders.orderList || theaterOrders.orderList.length === 0) {
+      return res.json({
+        success: true,
+        data: [],
+        pagination: {
+          current: page,
+          limit,
+          total: 0,
+          pages: 0
+        },
+        summary: {
+          totalOrders: 0,
+          confirmedOrders: 0,
+          completedOrders: 0,
+          totalRevenue: 0
+        }
+      });
+    }
+
+    // Filter orders based on criteria
+    let filteredOrders = theaterOrders.orderList;
+
+    // Role-based filtering
+    if (req.user) {
+      // ✅ FIX: Prioritize userType over role for proper role detection
+      const userType = req.user.userType || req.user.role;
+      const isSuperAdmin = userType === 'super_admin' || userType === 'admin';
+      const isTheaterAdmin = userType === 'theater_admin';
+      const isTheaterUser = userType === 'theater_user';
+      
+      console.log('🔐 Role-based filtering:', {
+        role: req.user.role,
+        userType: req.user.userType,
+        effectiveType: userType,
+        isSuperAdmin,
+        isTheaterAdmin,
+        isTheaterUser,
+        userId: req.user.userId
+      });
+      
+      // Super Admin and Theater Admin see ALL orders
+      if (isSuperAdmin || isTheaterAdmin) {
+        console.log('✅ Admin access - showing all orders');
+        // No filtering needed
+      } 
+      // Theater User (staff) only sees their own orders
+      else if (isTheaterUser && req.user.userId) {
+        console.log('👤 Staff access - filtering to own orders only');
+        filteredOrders = filteredOrders.filter(order => 
+          order.staffInfo && String(order.staffInfo.staffId) === String(req.user.userId)
+        );
+        console.log(`📊 Filtered from ${theaterOrders.orderList.length} to ${filteredOrders.length} orders`);
+      }
+    }
+
+    // Apply date filtering
+    if (dateFilter) {
+      const targetDate = new Date(dateFilter);
+      const startOfDay = new Date(targetDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(targetDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      filteredOrders = filteredOrders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= startOfDay && orderDate <= endOfDay;
+      });
+    } else if (startDateFilter && endDateFilter) {
+      // Date range filtering
+      const startDate = new Date(startDateFilter);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(endDateFilter);
+      endDate.setHours(23, 59, 59, 999);
+      
+      filteredOrders = filteredOrders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= startDate && orderDate <= endDate;
+      });
+    } else if (monthFilter && yearFilter) {
+      filteredOrders = filteredOrders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate.getMonth() + 1 === parseInt(monthFilter) && 
+               orderDate.getFullYear() === parseInt(yearFilter);
+      });
+    }
+
+    // Apply status filtering
+    if (statusFilter) {
+      filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
+    }
+
+    // Apply search filtering
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filteredOrders = filteredOrders.filter(order => 
+        (order.orderNumber && order.orderNumber.toLowerCase().includes(searchLower)) ||
+        (order.customerName && order.customerName.toLowerCase().includes(searchLower)) ||
+        (order.customerPhone && order.customerPhone.includes(search))
+      );
+    }
+
+    // Calculate summary statistics
+    const summary = {
+      totalOrders: filteredOrders.length,
+      confirmedOrders: filteredOrders.filter(order => order.status === 'confirmed').length,
+      completedOrders: filteredOrders.filter(order => order.status === 'completed').length,
+      totalRevenue: filteredOrders
+        .filter(order => order.status === 'completed')
+        .reduce((sum, order) => sum + (order.totalAmount || 0), 0)
+    };
+
+    // Sort orders by creation date (newest first)
+    filteredOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Apply pagination
+    const paginatedOrders = filteredOrders.slice(skip, skip + limit);
+    const totalPages = Math.ceil(filteredOrders.length / limit);
+
+    console.log('📊 Theater orders summary:', {
+      total: filteredOrders.length,
+      page,
+      limit,
+      returned: paginatedOrders.length,
+      summary
+    });
 
     res.json({
       success: true,
-      data: orders,
+      data: paginatedOrders,
       pagination: {
         current: page,
         limit,
-        total,
-        pages: Math.ceil(total / limit)
-      }
+        total: filteredOrders.length,
+        pages: totalPages
+      },
+      summary,
+      theater: theaterOrders.theater
     });
-
   } catch (error) {
-    console.error('Get theater orders error:', error);
+    console.error('❌ Get theater orders error:', error);
     res.status(500).json({
       error: 'Failed to fetch theater orders',
-      message: 'Internal server error'
+      message: error.message || 'Internal server error'
     });
   }
 });
@@ -527,5 +690,281 @@ router.put('/:orderId/status', [
     });
   }
 });
+
+/**
+ * GET /api/orders/excel/:theaterId
+ * Export orders to Excel based on filters
+ */
+router.get('/excel/:theaterId',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const { theaterId } = req.params;
+      const { date, month, year, startDate, endDate, status } = req.query;
+
+      console.log(`📊 Generating Excel report for theater: ${theaterId}`);
+      console.log(`   Filters:`, { date, month, year, startDate, endDate, status });
+
+      // Get theater orders document - FIX: Use 'theater' field not 'theaterId'
+      const theaterOrders = await TheaterOrders.findOne({ theater: new mongoose.Types.ObjectId(theaterId) });
+      
+      console.log(`🔍 Theater Orders Found:`, theaterOrders ? `Yes (${theaterOrders.orderList?.length || 0} orders)` : 'No');
+      
+      if (!theaterOrders || !theaterOrders.orderList || theaterOrders.orderList.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'No orders found for this theater'
+        });
+      }
+
+      let filteredOrders = [...theaterOrders.orderList];
+      console.log(`📝 Initial orders count: ${filteredOrders.length}`);
+
+      // Apply date filters
+      if (date) {
+        // Single date filter
+        const selectedDate = new Date(date);
+        selectedDate.setHours(0, 0, 0, 0);
+        const nextDay = new Date(selectedDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        console.log(`📅 Date filter: ${selectedDate.toISOString()} to ${nextDay.toISOString()}`);
+
+        const beforeFilter = filteredOrders.length;
+        filteredOrders = filteredOrders.filter(order => {
+          const orderDate = new Date(order.createdAt);
+          const matches = orderDate >= selectedDate && orderDate < nextDay;
+          if (!matches) {
+            console.log(`  ❌ Order ${order.orderNumber} excluded - Date: ${orderDate.toISOString()}`);
+          }
+          return matches;
+        });
+        console.log(`  Filtered from ${beforeFilter} to ${filteredOrders.length} orders by date`);
+      } else if (startDate && endDate) {
+        // Date range filter
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        filteredOrders = filteredOrders.filter(order => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate >= start && orderDate <= end;
+        });
+      } else if (month && year) {
+        // Month filter
+        const selectedMonth = parseInt(month) - 1;
+        const selectedYear = parseInt(year);
+
+        filteredOrders = filteredOrders.filter(order => {
+          const orderDate = new Date(order.createdAt);
+          return orderDate.getMonth() === selectedMonth && orderDate.getFullYear() === selectedYear;
+        });
+      }
+
+      // Apply status filter
+      if (status && status !== 'all') {
+        filteredOrders = filteredOrders.filter(order => order.status === status);
+      }
+
+      // ✅ APPLY ROLE-BASED FILTERING (same as UI)
+      const userType = req.user.userType || req.user.role;
+      const isSuperAdmin = userType === 'super_admin' || userType === 'admin';
+      const isTheaterAdmin = userType === 'theater_admin';
+      const isTheaterUser = userType === 'theater_user';
+      
+      console.log(`👤 User: ${req.user.username}, Type: ${userType}, Role: ${req.user.role}`);
+      console.log(`📊 Before role filtering: ${filteredOrders.length} orders`);
+
+      // Super Admin and Theater Admin see ALL orders
+      if (isSuperAdmin || isTheaterAdmin) {
+        console.log('✅ Admin access - showing all orders in Excel');
+      } 
+      // Theater User (staff) only sees their own orders
+      else if (isTheaterUser && req.user.userId) {
+        console.log(`👤 Staff access - filtering to own orders only (userId: ${req.user.userId})`);
+        const beforeFilter = filteredOrders.length;
+        filteredOrders = filteredOrders.filter(order => 
+          order.staffInfo && String(order.staffInfo.staffId) === String(req.user.userId)
+        );
+        console.log(`   Filtered from ${beforeFilter} to ${filteredOrders.length} orders for staff member`);
+      }
+
+      console.log(`✅ Found ${filteredOrders.length} orders for Excel export`);
+
+      // Create Excel workbook
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = req.user.username || 'System';
+      workbook.created = new Date();
+
+      // Add worksheet
+      const worksheet = workbook.addWorksheet('Order History');
+
+      // Style definitions
+      const headerStyle = {
+        font: { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF8B5CF6' } },
+        alignment: { horizontal: 'center', vertical: 'middle' },
+        border: {
+          top: { style: 'thin' },
+          left: { style: 'thin' },
+          bottom: { style: 'thin' },
+          right: { style: 'thin' }
+        }
+      };
+
+      const titleStyle = {
+        font: { bold: true, size: 16, color: { argb: 'FF8B5CF6' } },
+        alignment: { horizontal: 'center' }
+      };
+
+      // Add title
+      worksheet.mergeCells('A1:J1');
+      worksheet.getCell('A1').value = 'Order History Report';
+      worksheet.getCell('A1').style = titleStyle;
+      worksheet.getRow(1).height = 25;
+
+      // Add metadata
+      worksheet.getCell('A2').value = `Generated By: ${req.user.username}`;
+      worksheet.getCell('A3').value = `Generated At: ${new Date().toLocaleString('en-IN')}`;
+      
+      let filterInfo = 'Filter: ';
+      if (date) {
+        filterInfo += `Date: ${new Date(date).toLocaleDateString('en-IN')}`;
+      } else if (startDate && endDate) {
+        filterInfo += `Date Range: ${new Date(startDate).toLocaleDateString('en-IN')} to ${new Date(endDate).toLocaleDateString('en-IN')}`;
+      } else if (month && year) {
+        filterInfo += `Month: ${new Date(year, month - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}`;
+      } else {
+        filterInfo += 'All Records';
+      }
+      if (status && status !== 'all') {
+        filterInfo += ` | Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+      }
+      worksheet.getCell('A4').value = filterInfo;
+
+      // Add headers (row 6) - WITH STAFF NAME ONLY
+      const headers = ['S.No', 'Order No', 'Date', 'Time', 'Customer', 'Phone', 'Staff Name', 'Items', 'Quantity', 'Amount', 'Payment', 'Status'];
+      worksheet.getRow(6).values = headers;
+      worksheet.getRow(6).eachCell((cell) => {
+        cell.style = headerStyle;
+      });
+      worksheet.getRow(6).height = 20;
+
+      // Set column widths
+      worksheet.columns = [
+        { key: 'sno', width: 8 },
+        { key: 'orderNo', width: 18 },
+        { key: 'date', width: 15 },
+        { key: 'time', width: 12 },
+        { key: 'customer', width: 20 },
+        { key: 'phone', width: 15 },
+        { key: 'staffName', width: 20 },     // Staff Name column
+        { key: 'items', width: 40 },
+        { key: 'quantity', width: 10 },
+        { key: 'amount', width: 15 },
+        { key: 'payment', width: 12 },
+        { key: 'status', width: 12 }
+      ];
+
+      // Add data rows
+      let rowIndex = 7;
+      let totalRevenue = 0;
+      let totalOrders = filteredOrders.length;
+
+      filteredOrders.forEach((order, index) => {
+        const orderDate = new Date(order.createdAt);
+        const items = order.products?.map(i => `${i.productName || i.name} (${i.quantity})`).join(', ') || 
+                     order.items?.map(i => `${i.name} (${i.quantity})`).join(', ') || 'N/A';
+        const totalQty = order.products?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 
+                        order.items?.reduce((sum, i) => sum + (i.quantity || 0), 0) || 0;
+        const amount = order.pricing?.total || order.totalAmount || 0;
+        totalRevenue += amount;
+
+        // Extract staff username - CORRECTED to use the right field
+        const staffName = order.staffInfo?.username || 'N/A';
+
+        const row = worksheet.getRow(rowIndex);
+        row.values = [
+          index + 1,
+          order.orderNumber || order._id?.toString().slice(-8) || 'N/A',
+          orderDate.toLocaleDateString('en-IN'),
+          orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+          order.customerName || order.customerInfo?.name || 'Guest',
+          order.customerPhone || order.customerInfo?.phone || 'N/A',
+          staffName,      // Staff Name only
+          items,
+          totalQty,
+          amount,
+          order.payment?.method || order.paymentMethod || 'N/A',
+          order.status || 'pending'
+        ];
+
+        // Style data rows
+        row.eachCell((cell, colNumber) => {
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+            left: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+            bottom: { style: 'thin', color: { argb: 'FFD3D3D3' } },
+            right: { style: 'thin', color: { argb: 'FFD3D3D3' } }
+          };
+          
+          // Items column (col 8) left-aligned, others centered
+          cell.alignment = { vertical: 'middle', horizontal: colNumber === 8 ? 'left' : 'center' };
+          
+          // Format currency (Amount column is now column 10)
+          if (colNumber === 10) {
+            cell.numFmt = '₹#,##0.00';
+          }
+          
+          // Status color coding (Status column is now column 12)
+          if (colNumber === 12) {
+            const status = order.status || 'pending';
+            if (status === 'completed') {
+              cell.font = { color: { argb: 'FF059669' }, bold: true };
+            } else if (status === 'confirmed') {
+              cell.font = { color: { argb: 'FF3B82F6' }, bold: true };
+            } else if (status === 'cancelled') {
+              cell.font = { color: { argb: 'FFDC2626' }, bold: true };
+            } else if (status === 'pending') {
+              cell.font = { color: { argb: 'FFF59E0B' }, bold: true };
+            }
+          }
+        });
+
+        rowIndex++;
+      });
+
+      // Add summary rows
+      rowIndex++;
+      const summaryRow = worksheet.getRow(rowIndex);
+      summaryRow.values = ['', '', '', '', '', '', '', 'TOTAL:', totalOrders, totalRevenue, '', ''];
+      summaryRow.getCell(8).font = { bold: true, size: 12 };
+      summaryRow.getCell(9).font = { bold: true, size: 12 };
+      summaryRow.getCell(10).font = { bold: true, size: 12 };
+      summaryRow.getCell(10).numFmt = '₹#,##0.00';
+      summaryRow.getCell(10).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB9C' } };
+      summaryRow.height = 25;
+
+      // Set response headers for file download
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="Order_History_${Date.now()}.xlsx"`);
+
+      // Write to response
+      await workbook.xlsx.write(res);
+      res.end();
+
+      console.log(`✅ Excel file generated successfully with ${totalOrders} orders`);
+
+    } catch (error) {
+      console.error('❌ Excel export error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to generate Excel report',
+        message: error.message
+      });
+    }
+  }
+);
 
 module.exports = router;

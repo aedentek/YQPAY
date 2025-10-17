@@ -100,6 +100,53 @@ function TheaterReports() {
     }
   };
 
+  // ✅ NEW: Download Excel Report
+  const handleDownloadExcel = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = localStorage.getItem('authToken');
+      
+      // Build query string
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+
+      const response = await fetch(
+        `${config.api.baseUrl}/reports/excel/${theaterId}?${params.toString()}`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+
+      if (response.ok) {
+        // Download Excel file
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const dateStr = startDate ? `_${startDate.replace(/-/g, '')}` : '';
+        a.download = `Sales_Report${dateStr}_${Date.now()}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        setSuccess('✅ Excel report downloaded successfully!');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to download Excel report');
+      }
+    } catch (error) {
+      console.error('Error downloading Excel report:', error);
+      setError('Failed to download Excel report. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ✅ Download My Sales Report (All roles)
   const handleDownloadMySales = async () => {
     setLoading(true);
@@ -291,6 +338,27 @@ function TheaterReports() {
           <h3 style={{ marginTop: 0 }}>📥 Download Reports</h3>
           
           <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+            {/* Excel Report Button (All users) */}
+            <button
+              onClick={handleDownloadExcel}
+              disabled={loading}
+              style={{
+                padding: '12px 24px',
+                backgroundColor: loading ? '#9ca3af' : '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '16px',
+                fontWeight: '500',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {loading ? '⏳ Downloading...' : '📊 Download Excel Report'}
+            </button>
+
             {/* Theater Admin - Full Report Button */}
             {isTheaterAdmin && (
               <button
@@ -310,7 +378,7 @@ function TheaterReports() {
                   gap: '8px'
                 }}
               >
-                {loading ? '⏳ Downloading...' : '📊 Download Full Report (All Data)'}
+                {loading ? '⏳ Downloading...' : '� Download CSV (All Data)'}
               </button>
             )}
 
@@ -320,7 +388,7 @@ function TheaterReports() {
               disabled={loading}
               style={{
                 padding: '12px 24px',
-                backgroundColor: loading ? '#9ca3af' : isTheaterAdmin ? '#10b981' : '#3b82f6',
+                backgroundColor: loading ? '#9ca3af' : isTheaterAdmin ? '#6366f1' : '#3b82f6',
                 color: 'white',
                 border: 'none',
                 borderRadius: '6px',
@@ -332,7 +400,7 @@ function TheaterReports() {
                 gap: '8px'
               }}
             >
-              {loading ? '⏳ Downloading...' : isTheaterAdmin ? '📈 Download via My Sales Endpoint' : '📈 Download My Sales'}
+              {loading ? '⏳ Downloading...' : isTheaterAdmin ? '📈 CSV (My Sales Endpoint)' : '📈 Download My Sales (CSV)'}
             </button>
           </div>
         </div>
@@ -376,7 +444,7 @@ function TheaterReports() {
             {isTheaterAdmin ? '✅ Theater Admin Access' : '⚠️ User-Specific Access'}
           </h3>
           {isTheaterAdmin ? (
-            <div>
+           <div>
               <p style={{ marginBottom: '10px' }}>
                 As Theater Admin, you have full access to:
               </p>
@@ -386,7 +454,7 @@ function TheaterReports() {
                 <li>✅ Data from all categories and products</li>
                 <li>✅ Two download options: Full Report or My Sales endpoint</li>
               </ul>
-            </div>
+            </div> 
           ) : (
             <div>
               <p style={{ marginBottom: '10px' }}>
