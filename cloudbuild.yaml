@@ -1,7 +1,7 @@
 steps:
-  # Step 1: Build full app using root Dockerfile
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-f', 'Dockerfile', '-t', 'gcr.io/$PROJECT_ID/yqpay', '.']
+    args: ['build', '-f', '../Dockerfile', '-t', 'gcr.io/$PROJECT_ID/yqpay', '..']
+    dir: 'backend'  # or whatever folder your trigger is pointed at
 
   # Step 2: Push built image to GCR
   - name: 'gcr.io/cloud-builders/docker'
