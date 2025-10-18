@@ -8,7 +8,7 @@ import Pagination from '../components/Pagination';
 import { useModal } from '../contexts/ModalContext';
 import { clearTheaterCache, addCacheBuster } from '../utils/cacheManager';
 import { usePerformanceMonitoring, preventLayoutShift } from '../hooks/usePerformanceMonitoring';
-import { extractPagesFromAppJS } from '../utils/pageExtractor';
+import { extractPagesFromAppJS, getPagesByRole } from '../utils/pageExtractor';
 import '../styles/QRManagementPage.css'; // Using same CSS as QR Code Types
 import '../styles/TheaterList.css'; // Theater List design styling
 
@@ -27,10 +27,19 @@ const PageAccessManagement = () => {
   const [pageAccessConfigs, setPageAccessConfigs] = useState([]);
   const [activeRoles, setActiveRoles] = useState([]);
   
-  // Dynamic frontend pages configuration extracted from App.js
-  const dynamicFrontendPages = useMemo(() => extractPagesFromAppJS(), []);
+  // Filter pages to show only theater admin related pages
+  const theaterAdminPages = useMemo(() => {
+    const allPages = extractPagesFromAppJS();
+    return allPages.filter(page => {
+      // Include pages that have theater-admin or theater_user roles (theater admin related)
+      return page.roles && (
+        page.roles.includes('theater-admin') || 
+        page.roles.includes('theater_user')
+      );
+    });
+  }, []);
   
-  const [frontendPages, setFrontendPages] = useState(dynamicFrontendPages);
+  const [frontendPages, setFrontendPages] = useState(theaterAdminPages);
   const [loading, setLoading] = useState(true);
   const [selectedPageAccess, setSelectedPageAccess] = useState(null);
   const [pageToggleStates, setPageToggleStates] = useState({});
@@ -49,10 +58,10 @@ const PageAccessManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Form data for page access - initialized with dynamic permissions
+  // Form data for page access - initialized with theater admin pages only
   const [formData, setFormData] = useState({
     roleId: '',
-    pages: dynamicFrontendPages.map(page => ({
+    pages: theaterAdminPages.map(page => ({
       page: page.page,
       pageName: page.pageName,
       route: page.route,
@@ -109,7 +118,7 @@ const PageAccessManagement = () => {
           setSummary({
             activePageAccess: activeCount,
             inactivePageAccess: inactiveCount,
-            totalPageAccess: dynamicFrontendPages.length
+            totalPageAccess: theaterAdminPages.length
           });
           
           console.log('📊 Summary updated - Active:', activeCount, 'Inactive:', inactiveCount);
@@ -124,7 +133,7 @@ const PageAccessManagement = () => {
       return false; // Failed to load
     }
     return false;
-  }, [dynamicFrontendPages.length]);
+  }, [theaterAdminPages.length]);
 
   // Load page data - mirror frontend pages and load existing toggle states
   const loadPageAccessData = useCallback(async () => {
@@ -133,8 +142,8 @@ const PageAccessManagement = () => {
     setLoading(true);
 
     try {
-      // Always set the pages from App.js immediately - don't wait for backend
-      setFrontendPages(dynamicFrontendPages);
+      // Always set the theater admin pages from App.js immediately - don't wait for backend
+      setFrontendPages(theaterAdminPages);
       
       // Try to load existing page access states (don't block on this)
       loadExistingPageAccess().then(backendAvailable => {
@@ -147,8 +156,8 @@ const PageAccessManagement = () => {
       
     } catch (error) {
       console.error('Error loading page data:', error);
-      // Even if there's an error, still show the pages
-      setFrontendPages(dynamicFrontendPages);
+      // Even if there's an error, still show the theater admin pages
+      setFrontendPages(theaterAdminPages);
     } finally {
       // Always set loading to false
       console.log('📄 Setting loading to false');
@@ -156,7 +165,7 @@ const PageAccessManagement = () => {
         setLoading(false);
       }
     }
-  }, [dynamicFrontendPages, loadExistingPageAccess]);
+  }, [theaterAdminPages, loadExistingPageAccess]);
 
   // Load active roles - just use static data for now
   const loadActiveRoles = useCallback(() => {
@@ -394,7 +403,7 @@ const PageAccessManagement = () => {
           // Reset form
           setFormData({
             roleId: '',
-            pages: dynamicFrontendPages.map(page => ({
+            pages: theaterAdminPages.map(page => ({
               page: page.page,
               pageName: page.pageName,
               route: page.route,
@@ -478,7 +487,7 @@ const PageAccessManagement = () => {
 
   // Update summary when toggle states change
   useEffect(() => {
-    const totalAvailablePages = dynamicFrontendPages.length;
+    const totalAvailablePages = theaterAdminPages.length;
     const enabledPages = Object.values(pageToggleStates).filter(Boolean).length;
     
     setSummary({
@@ -486,7 +495,7 @@ const PageAccessManagement = () => {
       inactivePageAccess: totalAvailablePages - enabledPages,
       totalPageAccess: totalAvailablePages
     });
-  }, [pageToggleStates, dynamicFrontendPages.length]);
+  }, [pageToggleStates, theaterAdminPages.length]);
 
   // Cleanup effect
   useEffect(() => {

@@ -117,6 +117,11 @@ const RolesList = () => {
         const paginationData = result.data.pagination || {};
         setTotalPages(paginationData.totalPages || 0);
         setTotalItems(paginationData.totalItems || 0);
+        
+        // Update theater info from response if available
+        if (result.data.theater) {
+          setTheater(result.data.theater);
+        }
       }
       
     } catch (error) {
@@ -155,7 +160,7 @@ const RolesList = () => {
 
   const confirmDelete = async () => {
     try {
-      const response = await fetch(`${config.api.baseUrl}/roles/${confirmModal.roleId}`, {
+      const response = await fetch(`${config.api.baseUrl}/roles/${confirmModal.roleId}?permanent=true`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -169,7 +174,7 @@ const RolesList = () => {
         alert('Role deleted successfully');
         fetchRoles();
       } else {
-        alert(result.error || 'Failed to delete role');
+        alert(result.message || result.error || 'Failed to delete role');
       }
     } catch (error) {
       console.error('Delete role error:', error);

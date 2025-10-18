@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import config from '../config';
 
 const PageDiagnostic = ({ pageName }) => {
   const { user, userType, isAuthenticated } = useAuth();
@@ -9,7 +10,7 @@ const PageDiagnostic = ({ pageName }) => {
     // Test API connectivity
     const testAPI = async () => {
       try {
-        const response = await fetch('/api/health');
+        const response = await fetch(`${config.api.baseUrl}/health`);
         const data = await response.json();
         setApiStatus(data.success ? 'connected' : 'error');
       } catch (error) {

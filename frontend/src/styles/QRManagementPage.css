@@ -76,11 +76,27 @@
 /* Stats Section */
 .qr-stats {
   background: var(--white);
-  padding: 24px 40px;
+  padding: 24px 30px;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 24px;
   border-bottom: 1px solid var(--border-color);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* Ensure stats work properly within page-content wrapper */
+.page-content .qr-stats {
+  margin: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* Ensure stats container has proper positioning */
+.qr-stats .stat-card:first-child {
+  margin-left: 0;
+  padding-left: 0;
 }
 
 /* More specific selector to override TheaterList.css !important rules */
@@ -314,14 +330,135 @@
   padding: 30px;
   border-bottom: 1px solid var(--border-color);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start !important; /* Start from left */
   align-items: center;
   gap: 20px;
+  flex-wrap: nowrap; /* Prevent wrapping */
 }
 
+/* AGGRESSIVE OVERRIDE: Maximum specificity to force left alignment */
+html body div.theater-filters,
+html body .theater-filters,
+body .theater-filters,
+.theater-filters {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 20px !important;
+}
+
+/* AGGRESSIVE OVERRIDE: Search box positioning with maximum specificity */
+html body div.theater-filters .search-box,
+html body .theater-filters .search-box,
+body .theater-filters .search-box,
+.theater-filters .search-box {
+  flex: 0 0 300px !important;
+  margin-right: auto !important;
+  margin-left: 0 !important;
+  order: -1 !important;
+}
+
+/* AGGRESSIVE OVERRIDE: Filter elements positioning */
+html body div.theater-filters .status-filter,
+html body .theater-filters .status-filter,
+body .theater-filters .status-filter,
+.theater-filters .status-filter {
+  flex-shrink: 0 !important;
+  margin-left: 0 !important;
+}
+
+html body div.theater-filters .results-count,
+html body .theater-filters .results-count,
+body .theater-filters .results-count,
+.theater-filters .results-count {
+  flex-shrink: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* SPECIFIC FIX FOR THEATER USERS PAGE */
+.theater-users-page .theater-filters {
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
+.theater-users-page .search-box {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.theater-users-page .filter-controls {
+  margin-left: auto !important;
+}
+
+/* UNIVERSAL SEARCH BAR FIX - HIGH SPECIFICITY */
+.theater-list-container .theater-filters,
+.theater-users-page .theater-filters,
+.role-management-list-page .theater-filters,
+.role-access-management-page .theater-filters,
+div[class*="theater"] .theater-filters {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
+.theater-list-container .search-box,
+.theater-users-page .search-box,
+.role-management-list-page .search-box,
+.role-access-management-page .search-box,
+div[class*="theater"] .search-box {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  flex: 1 !important;
+  max-width: 400px !important;
+}
+
+.theater-list-container .filter-controls,
+.theater-users-page .filter-controls,
+.role-management-list-page .filter-controls,
+.role-access-management-page .filter-controls,
+div[class*="theater"] .filter-controls {
+  margin-left: auto !important;
+}
+
+/* CACHE BUSTER AND ALIGNMENT FIX - v3.0 */
 .search-box {
   flex: 1;
   max-width: 400px;
+  margin-left: 0 !important; /* FIXED: Align search to left */
+  padding-left: 0 !important;
+}
+
+/* ADDITIONAL FIX: Force container alignment */
+.theater-filters .search-box {
+  margin-right: auto !important; /* Push search to absolute left */
+}
+
+/* ADDITIONAL FIX: Ensure parent container starts from left edge */
+.filter-controls {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end !important; /* FIXED: Push everything to RIGHT by default */
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* SPECIFIC FIX: Search box ONLY to left, everything else to right */
+.filter-controls .search-box {
+  margin-right: auto !important; /* Push search to LEFT, others stay RIGHT */
+  order: -1 !important; /* Ensure search comes first */
+}
+
+/* SPECIFIC FIX: Product Management page alignment */
+.theater-product-list .theater-filters,
+.theater-product-list .filter-controls {
+  display: flex;
+  justify-content: flex-end !important; /* Push everything to RIGHT by default */
+}
+
+.theater-product-list .theater-filters .search-box,
+.theater-product-list .filter-controls .search-box {
+  margin-right: auto !important; /* Push search to LEFT, others stay RIGHT */
+  order: -1 !important; /* Ensure search comes first */
 }
 
 .search-input {
@@ -345,6 +482,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-left: auto !important; /* FIXED: Push filter controls to right */
 }
 
 .status-filter {
@@ -354,7 +492,7 @@
   -moz-appearance: none;
   
   /* Violet theme styling */
-  padding: 12px 40px 12px 16px;
+  padding: 12px 16px 12px 16px;
   border: 2px solid #8B5CF6;
   border-radius: 8px;
   font-size: 1rem;
@@ -363,12 +501,6 @@
   color: #1f2937;
   cursor: pointer;
   transition: all 0.3s ease;
-  
-  /* Custom arrow icon */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
 }
 
 .status-filter:hover {
@@ -391,7 +523,6 @@
   border-color: #d1d5db;
   color: #9ca3af;
   cursor: not-allowed;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .results-count {
@@ -421,7 +552,7 @@
   -moz-appearance: none;
   
   /* Violet theme styling */
-  padding: 8px 32px 8px 12px;
+  padding: 8px 12px 8px 12px;
   border: 2px solid #8B5CF6;
   border-radius: 6px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
@@ -430,12 +561,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  
-  /* Custom arrow icon */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 14px;
 }
 
 .items-select:hover {
@@ -1218,12 +1343,14 @@
     flex-direction: column;
     gap: 16px;
     padding: 20px;
+    justify-content: flex-start !important; /* FIXED: Maintain left alignment on mobile */
   }
 
   .filter-controls {
     width: 100%;
     flex-direction: column;
     gap: 12px;
+    margin-left: 0 !important; /* FIXED: Reset margin on mobile */
   }
 
   .results-count {
@@ -1264,6 +1391,7 @@
 @media (max-width: 480px) {
   .qr-stats {
     grid-template-columns: 1fr;
+    padding: 16px;
   }
 
   .qr-stats .stat-card,
@@ -1930,16 +2058,20 @@ textarea.form-control {
     flex-direction: column;
     gap: 16px;
     padding: 20px;
+    justify-content: flex-start !important; /* FIXED: Maintain left alignment on mobile */
   }
   
   .search-box {
     width: 100%;
+    margin-left: 0 !important; /* FIXED: Align search to left on mobile */
+    padding-left: 0 !important;
   }
   
   .filter-controls {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
+    margin-left: 0 !important; /* FIXED: Reset margin on mobile */
   }
   
   .date-filter-btn {

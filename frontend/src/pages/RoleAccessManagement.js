@@ -578,75 +578,83 @@ const RoleAccessManagement = () => {
         pageTitle={theaterId ? `Role Management ` : "Role Management"} 
         currentPage="role-access"
       >
-        <div className="role-management-details-page">
-        <PageContainer
-          hasHeader={false}
-          className="role-management-vertical"
-        >
-          {/* Global Vertical Header Component */}
-          <VerticalPageHeader
-            title={theaterId ? `${theater?.name || 'Loading...'}` : "Role Management"}
-            backButtonText="Back to Role Access List"
-            backButtonPath="/role-access"
-            actionButton={headerButton}
-          />
-        
-        {/* Stats Section */}
-        <div className="qr-stats">
-          <div className="stat-card">
-            <div className="stat-number">{summary.activeRolePermissions || 0}</div>
-            <div className="stat-label">Active Role Access</div>
+        <div className="theater-list-page">
+          {/* Header */}
+          <div className="page-header-section">
+            <div className="header-content">
+              <h1 className="page-title">
+                {theaterId ? `${theater?.name || 'Loading...'}` : "Role Access Management"}
+              </h1>
+              {headerButton}
+            </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-number">{summary.inactiveRolePermissions || 0}</div>
-            <div className="stat-label">Inactive Role Access</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-number">{summary.totalRolePermissions || 0}</div>
-            <div className="stat-label">Total Role Access</div>
-          </div>
-        </div>
 
-        {/* Filters Section */}
-        <div className="theater-filters">
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search role access by role name..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="search-input"
-            />
-          </div>
-          <div className="filter-controls">
-            <select value="all" className="status-filter" disabled>
-              <option value="all">All Status</option>
-            </select>
-            <div className="results-count">
-              Showing {sortedRolePermissions.length} of {totalItems} role access (Page {currentPage} of {totalPages})
+          {/* Statistics */}
+          <div className="theater-stats">
+            <div className="stat-card">
+              <div className="stat-info">
+                <div className="stat-number">{summary.activeRolePermissions || 0}</div>
+                <div className="stat-label">Active Role Access</div>
+              </div>
             </div>
-            <div className="items-per-page">
-              <label>Items per page:</label>
-              <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
+            <div className="stat-card">
+              <div className="stat-info">
+                <div className="stat-number">{summary.inactiveRolePermissions || 0}</div>
+                <div className="stat-label">Inactive Role Access</div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-info">
+                <div className="stat-number">{summary.totalRolePermissions || 0}</div>
+                <div className="stat-label">Total Role Access</div>
+              </div>
             </div>
           </div>
-        </div>
+
+          {/* Filters */}
+          <div className="theater-list-section">
+            <div className="filters-section">
+              <div className="theater-filters">
+                <div className="search-box">
+                  <input
+                    type="text"
+                    placeholder="Search role access by role name..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    className="search-input"
+                  />
+                </div>
+              </div>
+
+              <div className="pagination-info">
+                Showing {sortedRolePermissions.length > 0 ? ((currentPage - 1) * itemsPerPage + 1) : 0}
+                {' - '}
+                {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} role access
+                {' (Page '}{currentPage} of {totalPages || 1}{')'}
+              </div>
+
+              <div className="items-per-page">
+                <label>Items per page:</label>
+                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+            {/* End filters-section */}
 
         {/* Management Table */}
-        <div className="page-table-container">
-          <table className="qr-management-table">
+        <div className="theater-table-container">
+          <table className="theater-table">
             <thead>
               <tr>
-                <th>S.NO</th>
+                <th className="sno-cell">S.NO</th>
                 <th>ICON</th>
-                <th>ROLE NAME</th>
-                <th>STATUS</th>
-                <th>ACTION</th>
+                <th className="name-cell">ROLE NAME</th>
+                <th className="status-cell">STATUS</th>
+                <th className="actions-cell">ACTION</th>
               </tr>
             </thead>
             <tbody>
@@ -730,18 +738,23 @@ const RoleAccessManagement = () => {
             </tbody>
           </table>
         </div>
+        {/* End theater-table-container */}
 
-        {/* Pagination - Global Component */}
-        {!loading && (
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-            itemType="role access"
-          />
-        )}
+            {/* Pagination */}
+            {totalPages > 1 && !loading && (
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={handlePageChange}
+                itemType="role access"
+              />
+            )}
+          </div>
+          {/* End theater-list-section */}
+        </div>
+        {/* End theater-list-page */}
 
         {/* Create Modal */}
         {showCreateModal && (
@@ -1023,8 +1036,6 @@ const RoleAccessManagement = () => {
           </div>
         )}
 
-        </PageContainer>
-        </div>
       </AdminLayout>
     </ErrorBoundary>
   );

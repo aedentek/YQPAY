@@ -148,6 +148,13 @@
   overflow: hidden;
 }
 
+/* Ensure alignment between qr-stats and theater-filters */
+.qr-stats,
+.theater-filters {
+  box-sizing: border-box;
+}
+
+/* CACHE BUSTER: v2.0 - Updated search alignment rules */
 /* Filters Section */
 .theater-filters {
   background: transparent;
@@ -156,15 +163,75 @@
   box-shadow: none;
   padding: 30px;
   border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
+  display: flex !important;
+  justify-content: flex-start !important; /* Force align items to the left */
   align-items: center;
   gap: 20px;
+}
+
+/* SPECIFIC FIX for Theater Users page */
+.theater-users-page .theater-filters,
+.theater-list-container .theater-filters {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+}
+
+.theater-users-page .search-box,
+.theater-list-container .search-box {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  flex: 1 !important;
+  max-width: 400px !important;
+}
+
+/* UNIVERSAL OVERRIDE - FORCE SEARCH ALIGNMENT */
+body .theater-filters {
+  justify-content: flex-start !important;
+}
+
+body .search-box {
+  margin-left: 0 !important;
+}
+
+body .filter-controls {
+  margin-left: auto !important;
+}
+
+/* Force exact alignment with stats container above */
+.qr-stats + .theater-content .theater-filters {
+  padding-left: 30px;
+  padding-right: 30px;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Reset search box to remove all offsets */
+.qr-stats + .theater-content .search-box {
+  margin-left: 0 !important; /* Force align with stat card edge */
+  padding-left: 0 !important;
+}
+
+/* ADDITIONAL ALIGNMENT FIX - Target specific pages */
+.theater-users-page .qr-stats + .theater-content .search-box,
+.theater-list-container .qr-stats + .theater-content .search-box {
+  margin-left: -2px !important; /* Adjust for perfect alignment with stat cards */
+  padding-left: 0 !important;
+}
+
+/* Reset search input to align with stats cards */
+.qr-stats + .theater-content .search-input {
+  margin-left: 0 !important;
+  padding-left: 16px;
+  border: 2px solid var(--border-color);
+  box-sizing: border-box;
 }
 
 .search-box {
   flex: 1;
   max-width: 400px;
+  margin: 0; /* Remove any default margins */
+  padding-left: 0; /* Ensure no extra left padding */
 }
 
 .search-input {
@@ -175,6 +242,8 @@
   font-size: 1rem;
   transition: all 0.2s ease;
   background: var(--background-light);
+  margin: 0; /* Remove any default margins */
+  box-sizing: border-box; /* Ensure padding is included in width */
 }
 
 .search-input:focus {
@@ -188,6 +257,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-left: auto !important; /* Force push filter controls to the right */
 }
 
 .status-filter {
@@ -197,7 +267,7 @@
   -moz-appearance: none;
   
   /* Violet theme styling */
-  padding: 12px 40px 12px 16px;
+  padding: 12px 16px 12px 16px;
   border: 2px solid #8B5CF6;
   border-radius: 8px;
   font-size: 1rem;
@@ -206,12 +276,6 @@
   color: #1f2937;
   cursor: pointer;
   transition: all 0.3s ease;
-  
-  /* Custom arrow icon */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px;
 }
 
 .status-filter:hover {
@@ -234,7 +298,6 @@
   border-color: #d1d5db;
   color: #9ca3af;
   cursor: not-allowed;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
 }
 
 .results-count {
@@ -1056,6 +1119,24 @@
     padding: 20px;
   }
 
+  .search-box {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding-left: 0;
+  }
+
+  /* Ensure alignment consistency on tablet */
+  .qr-stats + .theater-content .theater-filters {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .qr-stats + .theater-content .search-box {
+    margin-left: 0 !important; /* Force align with stat cards on tablet */
+    padding-left: 0 !important;
+  }
+
   .filter-controls {
     width: 100%;
     justify-content: space-between;
@@ -1102,6 +1183,22 @@
 
   .theater-filters {
     padding: 16px;
+  }
+
+  /* Ensure alignment consistency on mobile */
+  .qr-stats + .theater-content .theater-filters {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .search-box {
+    padding-left: 0;
+    margin-left: 0;
+  }
+
+  .qr-stats + .theater-content .search-box {
+    margin-left: 0 !important; /* Force align with stat cards on mobile */
+    padding-left: 0 !important;
   }
 
   .theater-table {
@@ -1666,7 +1763,7 @@ select.form-control:disabled {
   -moz-appearance: none;
   
   /* Violet theme styling */
-  padding: 8px 32px 8px 12px;
+  padding: 8px 12px 8px 12px;
   border: 2px solid #8B5CF6;
   border-radius: 6px;
   background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
@@ -1675,12 +1772,6 @@ select.form-control:disabled {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  
-  /* Custom arrow icon */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 14px;
 }
 
 .items-select:hover {

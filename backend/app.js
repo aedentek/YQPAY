@@ -168,7 +168,10 @@ app.use('/api/single-qrcodes', singleQRCodeRoutes);
 console.log('✅ singleQRCodeRoutes mounted successfully');
 app.use('/api/sync', syncRoutes);
 app.use('/api/roles', rolesRoutes);
-app.use('/api/theater-users', require('./routes/theaterUsers'));
+app.use('/api/theater-users', require('./routes/theaterUsersArray')); // USING ARRAY-BASED ROUTES
+
+// Theater Users Array Routes - REMOVED (now using original endpoint)
+
 app.use('/api/reports', reportsRoutes); // ✅ NEW
 
 // Default API route
@@ -191,6 +194,9 @@ app.get('/api', (req, res) => {
       singleQRCodes: '/api/single-qrcodes',
       qrcodenames: '/api/qrcodenames',
       sync: '/api/sync',
+      roles: '/api/roles',
+      theaterUsers: '/api/theater-users', // ARRAY-BASED ROUTES
+      reports: '/api/reports',
       health: '/api/health'
     }
   });

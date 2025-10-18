@@ -190,8 +190,8 @@ const TheaterList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deleteModal, setDeleteModal] = useState({ show: false, theater: null });
-  const [viewModal, setViewModal] = useState({ show: false, theater: null, currentIndex: 0 });
-  const [editModal, setEditModal] = useState({ show: false, theater: null, currentIndex: 0 });
+  const [viewModal, setViewModal] = useState({ show: false, theater: null });
+  const [editModal, setEditModal] = useState({ show: false, theater: null });
   const [editFormData, setEditFormData] = useState({});
   const [uploadFiles, setUploadFiles] = useState({
     theaterPhoto: null,
@@ -399,7 +399,6 @@ const TheaterList = () => {
 
   const handleEditClick = useCallback((theater) => {
     console.log('Theater data:', theater); // Debug log
-    const currentIndex = sortedTheaters.findIndex(t => t._id === theater._id);
     setEditFormData({
       theaterName: theater.name || '',
       ownerName: theater.ownerDetails?.name || '',
@@ -423,56 +422,12 @@ const TheaterList = () => {
       agreementDocument: null
     });
     setUploadProgress({});
-    setEditModal({ show: true, theater, currentIndex });
-  }, [sortedTheaters]);
+    setEditModal({ show: true, theater });
+  }, []);
 
   const handleViewClick = useCallback((theater) => {
-    const currentIndex = sortedTheaters.findIndex(t => t._id === theater._id);
-    setViewModal({ show: true, theater, currentIndex });
-  }, [sortedTheaters]);
-
-  // Navigation functions for modals
-  const navigateModal = useCallback((direction, modalType) => {
-    const isEdit = modalType === 'edit';
-    const currentModal = isEdit ? editModal : viewModal;
-    const setModal = isEdit ? setEditModal : setViewModal;
-    
-    if (!currentModal.show || sortedTheaters.length === 0) return;
-    
-    let newIndex;
-    if (direction === 'next') {
-      newIndex = (currentModal.currentIndex + 1) % sortedTheaters.length;
-    } else {
-      newIndex = (currentModal.currentIndex - 1 + sortedTheaters.length) % sortedTheaters.length;
-    }
-    
-    const newTheater = sortedTheaters[newIndex];
-    
-    if (isEdit) {
-      setEditFormData({
-        theaterName: newTheater.name || '',
-        ownerName: newTheater.ownerDetails?.name || '',
-        ownerContactNumber: newTheater.ownerDetails?.contactNumber || '',
-        phone: newTheater.phone || '',
-        email: newTheater.email || '',
-        businessType: newTheater.businessType || '',
-        address: newTheater.address?.street || '',
-        city: newTheater.address?.city || '',
-        state: newTheater.address?.state || '',
-        pincode: newTheater.address?.pincode || newTheater.address?.zipCode || ''
-      });
-    }
-    
-    setModal({ show: true, theater: newTheater, currentIndex: newIndex });
-  }, [sortedTheaters, editModal, viewModal]);
-
-  const handleNextTheater = useCallback((modalType) => {
-    navigateModal('next', modalType);
-  }, [navigateModal]);
-
-  const handlePrevTheater = useCallback((modalType) => {
-    navigateModal('prev', modalType);
-  }, [navigateModal]);
+    setViewModal({ show: true, theater });
+  }, []);
 
   const handleEditFormChange = useCallback((field, value) => {
     setEditFormData(prev => ({
@@ -992,38 +947,11 @@ const TheaterList = () => {
           <div className="modal-overlay" onClick={() => setViewModal({ show: false, theater: null })}>
             <div className="modal-content theater-view-modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <div className="modal-nav-left">
-                  <button 
-                    className="nav-btn prev-btn" 
-                    onClick={() => handlePrevTheater('view')}
-                    disabled={sortedTheaters.length <= 1}
-                    title="Previous Theater"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                  </button>
-                </div>
-                
                 <div className="modal-title-section">
                   <h2>Theater Details</h2>
-                  <span className="theater-counter">
-                    {viewModal.currentIndex + 1} of {sortedTheaters.length}
-                  </span>
                 </div>
                 
                 <div className="modal-nav-right">
-                  <button 
-                    className="nav-btn next-btn" 
-                    onClick={() => handleNextTheater('view')}
-                    disabled={sortedTheaters.length <= 1}
-                    title="Next Theater"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                  </button>
-                  
                   <button 
                     className="close-btn" 
                     onClick={() => setViewModal({ show: false, theater: null })}
@@ -1397,38 +1325,11 @@ const TheaterList = () => {
           <div className="modal-overlay" onClick={closeEditModal}>
             <div className="modal-content theater-edit-modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <div className="modal-nav-left">
-                  <button 
-                    className="nav-btn prev-btn" 
-                    onClick={() => handlePrevTheater('edit')}
-                    disabled={sortedTheaters.length <= 1}
-                    title="Previous Theater"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                  </button>
-                </div>
-                
                 <div className="modal-title-section">
                   <h2>Edit Theater</h2>
-                  <span className="theater-counter">
-                    {editModal.currentIndex + 1} of {sortedTheaters.length}
-                  </span>
                 </div>
                 
                 <div className="modal-nav-right">
-                  <button 
-                    className="nav-btn next-btn" 
-                    onClick={() => handleNextTheater('edit')}
-                    disabled={sortedTheaters.length <= 1}
-                    title="Next Theater"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                  </button>
-                  
                   <button 
                     className="close-btn"
                     onClick={closeEditModal}

@@ -1,7 +1,7 @@
 console.log('Setting fresh auth token...');
 
 // Fresh token from backend (valid for 24 hours)
-const validToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDY0ZTliMzE0NWE0NWUzN2ZiMGUyMyIsInVzZXJUeXBlIjoidGhlYXRlcl91c2VyIiwidGhlYXRlciI6IjY4ZDM3ZWE2NzY3NTJiODM5OTUyYWY4MSIsInRoZWF0ZXJJZCI6IjY4ZDM3ZWE2NzY3NTJiODM5OTUyYWY4MSIsInBlcm1pc3Npb25zIjpbXSwiaWF0IjoxNzU5Mjk3NDc4LCJleHAiOjE3NTkzODM4Nzh9.W70K7iR9R3w3pAFlnrlYxOp-wD2KCLZoAAVcesi6dFA";
+const validToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGVkMjVlNjk2MmNiM2U5OTdhY2MxNjMiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6IkFkbWluIiwiaWF0IjoxNzYwODEwNjQ0LCJleHAiOjE3NjA4OTcwNDR9.nFhkKGcjde3DajA7ab6GNalHWOMfw5QKYzKAVS9V3RY";
 
 localStorage.setItem('authToken', validToken);
 console.log('✅ Fresh token set in localStorage');

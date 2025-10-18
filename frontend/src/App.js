@@ -5,7 +5,6 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import { ModalProvider } from './contexts/ModalContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
-import ProtectedRoute from './components/ProtectedRoute';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import config from './config';
 import './styles/App.css';
@@ -21,6 +20,7 @@ const AddTheater = React.lazy(() => import('./pages/AddTheater'));
 const TheaterList = React.lazy(() => import('./pages/TheaterList'));
 const TheaterUserManagement = React.lazy(() => import('./pages/TheaterUserManagement'));
 const TheaterUserDetails = React.lazy(() => import('./pages/TheaterUserDetails'));
+const TheaterUsersArray = React.lazy(() => import('./components/TheaterUsersArray'));
 const QRGenerate = React.lazy(() => import('./pages/QRGenerate'));
 
 const QRManagement = React.lazy(() => import('./pages/QRManagement'));
@@ -66,7 +66,7 @@ const AddProduct = React.lazy(() => import('./pages/theater/AddProduct'));
 const TestAddProductDropdowns = React.lazy(() => import('./components/TestAddProductDropdowns'));
 const AuthDebugPage = React.lazy(() => import('./pages/AuthDebugPage'));
 // const AuthTokenTest = React.lazy(() => import('./pages/AuthTokenTest')); // File not found
-const StockDataTest = React.lazy(() => import('./pages/StockDataTest'));
+// const StockDataTest = React.lazy(() => import('./pages/StockDataTest')); // Unused
 // const DirectStockTest = React.lazy(() => import('./pages/DirectStockTest')); // File not found
 // const AddCategory = React.lazy(() => import('./pages/theater/AddCategory'));
 // const EditCategory = React.lazy(() => import('./pages/theater/EditCategory'));
@@ -120,6 +120,7 @@ function App() {
                 <Route path="/add-theater" element={<RoleBasedRoute allowedRoles={['super_admin']}><AddTheater /></RoleBasedRoute>} />
                 <Route path="/theaters" element={<RoleBasedRoute allowedRoles={['super_admin']}><TheaterList /></RoleBasedRoute>} />
                 <Route path="/theater-users" element={<RoleBasedRoute allowedRoles={['super_admin']}><TheaterUserManagement /></RoleBasedRoute>} />
+                <Route path="/theater-users-array" element={<RoleBasedRoute allowedRoles={['super_admin']}><TheaterUsersArray /></RoleBasedRoute>} />
                 <Route path="/theater-users/:theaterId" element={<RoleBasedRoute allowedRoles={['super_admin']}><TheaterUserDetails /></RoleBasedRoute>} />
                 <Route path="/roles" element={<RoleBasedRoute allowedRoles={['super_admin']}><RoleManagementList /></RoleBasedRoute>} />
                 <Route path="/roles/:theaterId" element={<RoleBasedRoute allowedRoles={['super_admin']}><RoleCreate /></RoleBasedRoute>} />

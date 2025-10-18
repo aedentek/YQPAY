@@ -194,39 +194,45 @@ const RoleAccessManagementList = () => {
   // Main component render
   return (
     <AdminLayout pageTitle="Role Access Management" currentPage="role-access">
-        <div className="theater-list-container role-access-management-list-page">
-          {/* Main Theater Management Container */}
-          <div className="theater-main-container">
-            {/* Header */}
-            <div className="theater-list-header">
-              <div className="header-content">
-                <h1>Role Access Management</h1>
-              </div>
+        <div className="theater-list-page">
+          {/* Header */}
+          <div className="page-header-section">
+            <div className="header-content">
+              <h1 className="page-title">Role Access Management</h1>
             </div>
+          </div>
 
-            {/* Statistics Section */}
-            <div className="qr-stats">
-              <div className="stat-card">
+          {/* Statistics */}
+          <div className="theater-stats">
+            <div className="stat-card">
+              <div className="stat-info">
                 <div className="stat-number">{totalItems || 0}</div>
                 <div className="stat-label">Total Active Theaters</div>
               </div>
-              <div className="stat-card">
+            </div>
+            <div className="stat-card">
+              <div className="stat-info">
                 <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && theater.isActive).length : 0}</div>
                 <div className="stat-label">Currently Active</div>
               </div>
-              <div className="stat-card">
+            </div>
+            <div className="stat-card">
+              <div className="stat-info">
                 <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && (theater.contact)).length : 0}</div>
                 <div className="stat-label">With Contact Info</div>
               </div>
-              <div className="stat-card">
+            </div>
+            <div className="stat-card">
+              <div className="stat-info">
                 <div className="stat-number">{Array.isArray(theaters) ? theaters.length : 0}</div>
                 <div className="stat-label">Displayed on Page</div>
               </div>
             </div>
+          </div>
 
-            {/* Theater Content Container */}
-            <div className="theater-content">
-              {/* Filters and Search */}
+          {/* Filters */}
+          <div className="theater-list-section">
+            <div className="filters-section">
               <div className="theater-filters">
                 <div className="search-box">
                   <input
@@ -237,42 +243,46 @@ const RoleAccessManagementList = () => {
                     className="search-input"
                   />
                 </div>
-                <div className="filter-controls">
-                  <div className="results-count">
-                    Showing {Array.isArray(sortedTheaters) ? sortedTheaters.length : 0} of {totalItems || 0} theaters (Page {currentPage || 1} of {totalPages || 1})
-                  </div>
-                  <div className="items-per-page">
-                    <label>Items per page:</label>
-                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
-                      <option value="5">5</option>
-                      <option value="10">10</option>
-                      <option value="20">20</option>
-                      <option value="50">50</option>
-                    </select>
-                  </div>
-                </div>
               </div>
 
-              {/* Theater Table */}
-              {sortedTheaters.length === 0 && !loading ? (
-                <div className="empty-state">
-                  <div className="empty-icon">
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '48px', height: '48px', color: 'var(--text-gray)'}}>
-                      <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1V3H9V1L3 7V9H1V11H3V19C3 20.1 3.9 21 5 21H11V19H5V11H3V9H21M16 12C14.9 12 14 12.9 14 14S14.9 16 16 16 18 15.1 18 14 17.1 12 16 12M24 20V18H18V20C18 21.1 18.9 22 20 22H22C23.1 22 24 21.1 24 20Z"/>
-                    </svg>
-                  </div>
-                  <h3>No Theaters Found</h3>
-                  <p>There are no theaters available for role access management at the moment.</p>
-                  {debouncedSearchTerm && (
-                    <p className="search-hint">
-                      Try adjusting your search terms or <button type="button" onClick={() => setSearchTerm('')} className="clear-search-btn">clear the search</button>.
-                    </p>
-                  )}
+              <div className="pagination-info">
+                Showing {Array.isArray(sortedTheaters) ? (sortedTheaters.length > 0 ? ((currentPage - 1) * itemsPerPage + 1) : 0) : 0}
+                {' - '}
+                {Math.min(currentPage * itemsPerPage, totalItems || 0)} of {totalItems || 0} theaters
+                {' (Page '}{currentPage || 1} of {totalPages || 1}{')'}
+              </div>
+
+              <div className="items-per-page">
+                <label>Items per page:</label>
+                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+            </div>
+            {/* End filters-section */}
+
+            {/* Theater Table */}
+            {sortedTheaters.length === 0 && !loading ? (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '48px', height: '48px', color: 'var(--text-gray)'}}>
+                    <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1V3H9V1L3 7V9H1V11H3V19C3 20.1 3.9 21 5 21H11V19H5V11H3V9H21M16 12C14.9 12 14 12.9 14 14S14.9 16 16 16 18 15.1 18 14 17.1 12 16 12M24 20V18H18V20C18 21.1 18.9 22 20 22H22C23.1 22 24 21.1 24 20Z"/>
+                  </svg>
                 </div>
-              ) : (
-                <div className="table-container">
-                  <div className="table-wrapper">
-                    <table className="theater-table">
+                <h3>No Theaters Found</h3>
+                <p>There are no theaters available for role access management at the moment.</p>
+                {debouncedSearchTerm && (
+                  <p className="search-hint">
+                    Try adjusting your search terms or <button type="button" onClick={() => setSearchTerm('')} className="clear-search-btn">clear the search</button>.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="theater-table-container">
+                <table className="theater-table">
                     <thead>
                       <tr>
                         <th className="sno-col">S NO</th>
@@ -362,12 +372,11 @@ const RoleAccessManagementList = () => {
                       )}
                     </tbody>
                   </table>
-                  </div>
                 </div>
               )}
 
-              {/* Pagination - Global Component */}
-              {!loading && (
+              {/* Pagination */}
+              {totalPages > 1 && !loading && (
                 <Pagination 
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -377,9 +386,10 @@ const RoleAccessManagementList = () => {
                   itemType="theaters"
                 />
               )}
-            </div>
           </div>
+          {/* End theater-list-section */}
         </div>
+        {/* End theater-list-page */}
     </AdminLayout>
   );
 };

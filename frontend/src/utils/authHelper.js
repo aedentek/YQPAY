@@ -1,3 +1,5 @@
+import config from '../config';
+
 // Auth helper for theater staff
 export const getAuthToken = () => {
   return localStorage.getItem('authToken');
@@ -14,7 +16,7 @@ export const clearAuthToken = () => {
 // Auto-login for demo purposes
 export const autoLogin = async () => {
   try {
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch(`${config.api.baseUrl}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

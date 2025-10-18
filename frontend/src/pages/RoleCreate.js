@@ -255,9 +255,18 @@ const RoleCreate = () => {
       const data = await response.json();
       
       if (data.success) {
-        // PERFORMANCE OPTIMIZATION: Direct state update without expensive comparison
+        // PERFORMANCE OPTIMIZATION: Direct state update with sorting by ID
         const newData = data.data?.roles || [];
-        setRoles(newData);
+        
+        // Sort roles by ID in ascending order
+        const sortedRoles = newData.sort((a, b) => {
+          // Convert IDs to strings for consistent comparison
+          const idA = a._id ? a._id.toString() : '';
+          const idB = b._id ? b._id.toString() : '';
+          return idA.localeCompare(idB);
+        });
+        
+        setRoles(sortedRoles);
         
         // PERFORMANCE OPTIMIZATION: Batch pagination state updates
         const paginationData = data.data?.pagination || {};
@@ -354,7 +363,7 @@ const RoleCreate = () => {
       // Include theaterId in the form data when creating/editing roles
       const roleData = {
         ...formData,
-        ...(theaterId && { theater: theaterId }) // Add theater field if theaterId exists
+        ...(theaterId && { theaterId: theaterId }) // Add theaterId field for array-based structure
       };
       
       console.log('📤 Request:', method, url);
@@ -403,7 +412,7 @@ const RoleCreate = () => {
         return;
       }
       
-      const response = await fetch(`${config.api.baseUrl}/roles/${selectedRole._id}`, {
+      const response = await fetch(`${config.api.baseUrl}/roles/${selectedRole._id}?permanent=true`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

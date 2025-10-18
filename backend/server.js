@@ -41,7 +41,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration - Use environment variable and fallbacks
-const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.1.7:3001';
+const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.1.6:3001';
 app.use(cors({
   origin: [
     frontendUrl,
@@ -49,11 +49,10 @@ app.use(cors({
     'http://localhost:3001',
     'https://localhost:3001',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    'https://127.0.0.1:3001',
-    'http://192.168.1.7:3000',
-    'http://192.168.1.7:3001',
-    'https://192.168.1.7:3001'
+    'http://127.0.0.1:3001', 
+    'http://192.168.1.6:3000',
+    'http://192.168.1.6:3001',
+    'https://192.168.1.6:3001'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -114,10 +113,10 @@ const uploadRoutes = require('./routes/upload');
 const stockRoutes = require('./routes/stock');
 const pageAccessRoutes = require('./routes/pageAccess');
 const qrCodeRoutes = require('./routes/qrcodes');
-const qrCodeNameRoutes = require('./routes/qrcodenames');
+const qrCodeNameRoutes = require('./routes/qrcodenamesArray'); // Use array-based structure
 const singleQRCodeRoutes = require('./routes/singleqrcodes');
 const syncRoutes = require('./routes/sync');
-const rolesRoutes = require('./routes/roles');
+const rolesRoutes = require('./routes/rolesArray'); // Use array-based structure
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -146,7 +145,7 @@ app.use('/api/qrcodenames', qrCodeNameRoutes);
 app.use('/api/single-qrcodes', singleQRCodeRoutes);
 app.use('/api/sync', syncRoutes);
 app.use('/api/roles', rolesRoutes);
-app.use('/api/theater-users', require('./routes/theaterUsers'));
+app.use('/api/theater-users', require('./routes/theaterUsersArray'));
 app.use('/api/theater-dashboard', require('./routes/theater-dashboard'));
 
 // Default API route
@@ -228,15 +227,15 @@ app.use((error, req, res, next) => {
 // ==============================================
 
 // const PORT = process.env.PORT || 5000;
-const PORT = process.env.PORT;
-const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || 5000;
+const HOST = '127.0.0.1'; // Use localhost for better compatibility
 
 app.listen(PORT, HOST, () => {
   console.log(`🚀 YQPayNow Backend Server running on port ${PORT}`);
   console.log(`📍 API Base URL: http://${HOST}:${PORT}/api`);
   console.log(`🏥 Health Check: http://${HOST}:${PORT}/api/health`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Server accessible at: http://192.168.1.7:${PORT}/api`);
+  console.log(`🌐 Server accessible at: http://192.168.1.6:${PORT}/api`);
 });
 
 module.exports = app;

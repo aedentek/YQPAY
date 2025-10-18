@@ -558,7 +558,7 @@ const TheaterQRDetail = () => {
     try {
       console.log('ðŸ” Loading QR names for theater:', theaterId);
       setQrNamesLoading(true);
-      const url = `/api/qrcodenames?theaterId=${theaterId}&status=active&limit=100`;
+      const url = `${config.api.baseUrl}/qrcodenames?theaterId=${theaterId}&isActive=true&limit=100`;
       console.log('ðŸŒ Fetching from URL:', url);
       
       const response = await fetch(url, { headers: getAuthHeaders() });
@@ -908,7 +908,7 @@ const TheaterQRDetail = () => {
         
         console.log('ðŸ“¤ Creating QR code with payload:', payload);
 
-        const response = await fetch('/api/qrcodes/generate', {
+        const response = await fetch(`${config.api.baseUrl}/qrcodes/generate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

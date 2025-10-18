@@ -81,7 +81,7 @@ const TableRowSkeleton = React.memo(() => (
 const QRCodeNameManagement = () => {
   const navigate = useNavigate();
   const { theaterId } = useParams(); // Get theaterId from URL
-  const { showSuccess, showError, showConfirm } = useModal();
+  const { showSuccess, showError, confirm } = useModal();
   
   // PERFORMANCE MONITORING: Track page performance metrics
   usePerformanceMonitoring('QRCodeNameManagement');
@@ -350,7 +350,7 @@ const QRCodeNameManagement = () => {
         return;
       }
 
-      const confirmed = await showConfirm({
+      const confirmed = await confirm({
         title: 'Delete QR Code Name',
         message: `Are you sure you want to delete the QR code name "${qrCodeName.qrName}" with seat class "${qrCodeName.seatClass}"? This action cannot be undone.`,
         type: 'danger',
@@ -360,8 +360,10 @@ const QRCodeNameManagement = () => {
 
       if (confirmed) {
         console.log('🗑️ Deleting QR Code Name:', qrCodeName._id);
+        console.log('🔗 DELETE URL:', `${config.api.baseUrl}/qrcodenames/${qrCodeName._id}?permanent=true`);
+        console.log('🔑 Token:', token ? 'Present' : 'Missing');
         
-        const response = await fetch(`${config.api.baseUrl}/qrcodenames/${qrCodeName._id}`, {
+        const response = await fetch(`${config.api.baseUrl}/qrcodenames/${qrCodeName._id}?permanent=true`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -369,7 +371,7 @@ const QRCodeNameManagement = () => {
           }
         });
         
-        console.log('📡 DELETE response:', response.status);
+        console.log('📡 DELETE response:', response.status, response.statusText);
         
         if (response.ok) {
           const data = await response.json();
@@ -379,7 +381,16 @@ const QRCodeNameManagement = () => {
         } else {
           const errorData = await response.json();
           console.error('❌ Delete failed:', errorData);
-          showError(errorData.message || 'Failed to delete QR code name');
+          
+          // Enhanced error handling for array-based operations
+          if (errorData.message && errorData.message.includes('Theater QR names not found')) {
+            showError('Theater not found. Please refresh the page and try again.');
+          } else if (errorData.message && errorData.message.includes('QR name not found')) {
+            showError('QR code name not found. It may have been already deleted.');
+            loadQRCodeNameData(); // Refresh to show current state
+          } else {
+            showError(errorData.message || 'Failed to delete QR code name');
+          }
         }
       }
     } catch (error) {
@@ -398,6 +409,11 @@ const QRCodeNameManagement = () => {
 
       console.log(isEdit ? '📝 Updating QR Code Name' : '➕ Creating QR Code Name');
       
+        if (!theaterId && !isEdit) {
+          showError('Theater ID is required for creating QR code names. Please navigate from the theater list.');
+          return;
+        }
+      
       const url = isEdit 
         ? `${config.api.baseUrl}/qrcodenames/${selectedQRCodeName._id}` 
         : `${config.api.baseUrl}/qrcodenames`;
@@ -405,7 +421,10 @@ const QRCodeNameManagement = () => {
       
       // Include theaterId in the form data when creating/editing QR code names
       const qrCodeNameData = {
-        ...formData,
+        qrName: formData.qrName,
+        seatClass: formData.seatClass,
+        description: formData.description,
+        isActive: formData.isActive,
         ...(theaterId && { theaterId }) // Add theater field if theaterId exists
       };
       
@@ -422,6 +441,8 @@ const QRCodeNameManagement = () => {
       });
       
       console.log('📡 Response:', response.status);
+      console.log('📡 Response Headers:', response.headers);
+      console.log('📡 Response URL:', response.url);
       
       if (response.ok) {
         const result = await response.json();
@@ -437,13 +458,30 @@ const QRCodeNameManagement = () => {
           isActive: true
         });
       } else {
-        const errorData = await response.json();
-        console.error('❌ Error:', errorData);
-        showError(errorData.message || 'Failed to save QR Code Name');
+        const errorData = await response.json().catch(() => ({ message: 'No error details available' }));
+        console.error('❌ Save failed - Status:', response.status);
+        console.error('❌ Save failed - Status Text:', response.statusText);
+        console.error('❌ Save failed - Error Data:', errorData);
+        console.error('❌ Save failed - Response URL:', response.url);
+        
+        // Enhanced error handling for array-based operations
+        if (errorData.message && errorData.message.includes('Theater QR names not found')) {
+          showError('Theater not found. Please refresh the page and try again.');
+        } else if (errorData.message && errorData.message.includes('QR name not found')) {
+          showError('QR code name not found. Please refresh and try again.');
+        } else if (errorData.message && errorData.message.includes('already exists')) {
+          showError('A QR code name with this name already exists in this theater.');
+        } else {
+          showError(errorData.message || 'Failed to save QR Code Name');
+        }
       }
     } catch (error) {
-      console.error('❌ Exception:', error);
-      showError('An error occurred while saving the QR Code Name');
+      console.error('❌ Exception during CRUD operation:');
+      console.error('❌ Error Type:', error.name);
+      console.error('❌ Error Message:', error.message);
+      console.error('❌ Error Stack:', error.stack);
+      console.error('❌ Full Error Object:', error);
+      showError('An error occurred while saving the QR Code Name. Check console for details.');
     }
   };
 

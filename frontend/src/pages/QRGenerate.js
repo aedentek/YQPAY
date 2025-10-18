@@ -72,7 +72,7 @@ const QRGenerate = React.memo(() => {
   // Form state
   const [formData, setFormData] = useState({
     theaterId: '',
-    qrType: 'single',
+    qrType: '',
     name: '',
     seatStart: '',
     seatEnd: '',
@@ -190,6 +190,7 @@ const QRGenerate = React.memo(() => {
 
   const loadQRNames = useCallback(async (theaterId) => {
     console.log('🎬 ==> loadQRNames CALLED with theaterId:', theaterId);
+    console.log('🕐 Timestamp:', new Date().toISOString());
     
     if (!theaterId) {
       console.log('❌ No theater ID provided, clearing QR names');
@@ -203,7 +204,7 @@ const QRGenerate = React.memo(() => {
       setQrNamesLoading(true);
       
       // Fetch available QR code names from qrcodenames collection
-      const apiUrl = config.helpers.getApiUrl(`/qrcodenames?theaterId=${theaterId}&limit=100`);
+      const apiUrl = config.helpers.getApiUrl(`/qrcodenames?theaterId=${theaterId}&limit=100&_t=${Date.now()}`); // Cache buster
       console.log('🌐 Full API URL:', apiUrl);
       
       const response = await fetch(apiUrl, {
@@ -230,51 +231,89 @@ const QRGenerate = React.memo(() => {
       if (data.success && data.data && data.data.qrCodeNames) {
         console.log('✅ QR Names found:', data.data.qrCodeNames.length, data.data.qrCodeNames);
         
-        // Try to fetch already generated QR codes for this theater (to filter duplicates)
+        // Try to fetch already generated QR codes from singleqrcodes database for this theater (to filter duplicates)
         let existingQRNames = [];
+        console.log('🔍 About to fetch existing QR codes for theater:', theaterId);
+        
         try {
           const token = config.helpers.getAuthToken();
-          const existingQRsUrl = config.helpers.getApiUrl(`/qrcodes/${theaterId}`);
-          console.log('🔍 Fetching existing QR codes from:', existingQRsUrl);
+          console.log('🔑 Auth token for single QR codes request:', token ? `Present (${token.substring(0, 20)}...)` : 'Missing');
           
-          const existingQRsResponse = await fetch(existingQRsUrl, {
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (existingQRsResponse.ok) {
-            const existingQRsData = await existingQRsResponse.json();
-            console.log('📊 Existing QR Codes Response:', existingQRsData);
-            
-            if (existingQRsData.success && existingQRsData.data) {
-              // Extract unique QR names that already have generated QR codes
-              existingQRNames = [...new Set(existingQRsData.data.map(qr => qr.qrName))];
-              console.log('🚫 Already generated QR names:', existingQRNames);
-            }
+          if (!token) {
+            console.warn('⚠️ No authentication token available - cannot fetch existing QR codes, showing all QR names');
+            existingQRNames = [];
           } else {
-            console.warn('⚠️ Could not fetch existing QR codes (status:', existingQRsResponse.status, ') - showing all QR names');
+            const existingQRsUrl = config.helpers.getApiUrl(`/single-qrcodes/theater/${theaterId}?_t=${Date.now()}`); // Cache buster
+            console.log('🔍 Fetching existing single QR codes from:', existingQRsUrl);
+            
+            const existingQRsResponse = await fetch(existingQRsUrl, {
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            });
+            
+            console.log('📡 Single QR codes API response status:', existingQRsResponse.status, existingQRsResponse.statusText);
+            
+            if (existingQRsResponse.ok) {
+              const existingQRsData = await existingQRsResponse.json();
+              console.log('📊 Existing Single QR Codes Response:', existingQRsData);
+              
+              if (existingQRsData.success && existingQRsData.data) {
+                // Extract unique QR names that already have generated QR codes in singleqrcodes
+                // This checks both single and screen type QR codes in the unified collection
+                existingQRNames = [...new Set(existingQRsData.data.map(qr => qr.name))]; // Using 'name' field from transformed response
+                console.log('🚫 Already generated QR names (from singleqrcodes - both single & screen types):', existingQRNames);
+                console.log('🔍 Raw API data for debugging:', existingQRsData.data);
+                console.log('🔍 Number of existing QR records found:', existingQRsData.data.length);
+              } else {
+                console.warn('⚠️ API responded OK but success=false or no data:', existingQRsData);
+                existingQRNames = [];
+              }
+            } else {
+              const responseText = await existingQRsResponse.text();
+              console.warn('⚠️ Could not fetch existing single QR codes (status:', existingQRsResponse.status, ') - showing all QR names');
+              console.warn('⚠️ Response text:', responseText);
+              existingQRNames = [];
+            }
           }
         } catch (fetchError) {
           // Silently handle error - if we can't fetch existing QRs, just show all QR names
-          console.warn('⚠️ Error fetching existing QR codes:', fetchError.message, '- showing all QR names');
+          console.warn('⚠️ Error fetching existing single QR codes:', fetchError.message, '- showing all QR names');
+          console.warn('⚠️ This might be due to authentication issues or API errors');
+          
+          // In case of error, set existingQRNames to empty array (showing all QR names)
+          existingQRNames = [];
         }
         
         // Filter out QR names that already have generated QR codes
         const availableQRNames = data.data.qrCodeNames.filter(
-          qrName => !existingQRNames.includes(qrName.qrName)
+          qrName => {
+            const isAlreadyGenerated = existingQRNames.includes(qrName.qrName);
+            console.log(`🔍 Checking QR name "${qrName.qrName}": Already generated? ${isAlreadyGenerated}`);
+            return !isAlreadyGenerated;
+          }
         );
         
-        console.log('✅ Available QR Names (filtered):', availableQRNames.length, availableQRNames);
+        console.log('🔍 Validation Results:', {
+          totalQRNames: data.data.qrCodeNames.length,
+          totalQRNamesArray: data.data.qrCodeNames.map(qr => qr.qrName),
+          existingQRNamesCount: existingQRNames.length,
+          existingQRNamesArray: existingQRNames,
+          availableQRNamesCount: availableQRNames.length,
+          availableQRNamesArray: availableQRNames.map(qr => qr.qrName),
+          databaseSource: 'singleqrcodes'
+        });
+        
+        console.log('✅ Available QR Names (filtered by singleqrcodes):', availableQRNames.length, availableQRNames);
         setQrNames(availableQRNames);
         console.log('✅ State updated - qrNames set to:', availableQRNames);
         
         if (availableQRNames.length === 0 && data.data.qrCodeNames.length > 0) {
-          console.log('ℹ️ All QR names have already been generated for this theater');
+          console.log('ℹ️ All QR names have already been generated in singleqrcodes for this theater');
         } else if (existingQRNames.length === 0) {
-          console.log('ℹ️ No existing QR codes found - all QR names are available');
+          console.log('ℹ️ No existing QR codes found in singleqrcodes - all QR names are available');
         }
       } else {
         console.log('⚠️ No QR names in response or success=false');
@@ -622,30 +661,15 @@ const QRGenerate = React.memo(() => {
       setGeneratingProgress({ 
         current: 0, 
         total: totalSeats, 
-        message: formData.qrType === 'single' ? 'Generating single QR code...' : `Generating QR codes for ${totalSeats} seats...`
+        message: formData.qrType === 'single' ? 'Generating single QR code...' : `Preparing to generate ${totalSeats} QR codes...`
       });
       
-      // Simulate incremental progress for better UX
-      let progressInterval;
-      if (totalSeats > 1) {
-        let simulatedProgress = 0;
-        progressInterval = setInterval(() => {
-          simulatedProgress += 1;
-          if (simulatedProgress <= Math.floor(totalSeats * 0.8)) { // Go up to 80% while waiting
-            setGeneratingProgress(prev => ({
-              ...prev,
-              current: simulatedProgress,
-              message: `Generating QR code ${simulatedProgress} of ${totalSeats}...`
-            }));
-          }
-        }, 150); // Update every 150ms for smooth animation
-      }
+      // No simulated progress - we'll only update based on real backend responses
       
       // Get authentication token
       const token = config.helpers.getAuthToken();
       
       if (!token) {
-        if (progressInterval) clearInterval(progressInterval);
         showError('Authentication Error', 'Please login to generate QR codes');
         setGenerating(false);
         return;
@@ -709,9 +733,6 @@ const QRGenerate = React.memo(() => {
       
       const data = await response.json();
       
-      // Clear the progress simulation interval
-      if (progressInterval) clearInterval(progressInterval);
-      
       // Update progress for processing response
       setGeneratingProgress(prev => ({ 
         ...prev, 
@@ -733,39 +754,34 @@ const QRGenerate = React.memo(() => {
           ? 'Single QR code generated and saved successfully!'
           : `${count} screen QR codes generated successfully!`;
         
-        // Animate progress to completion
-        let finalProgress = 0;
-        const completeAnimation = setInterval(() => {
-          finalProgress += 1;
-          setGeneratingProgress({
-            current: finalProgress,
-            total: totalSeats,
-            message: finalProgress >= totalSeats ? 'QR codes generated successfully!' : `Generating QR code ${finalProgress} of ${totalSeats}...`
-          });
+        // Directly set progress to completion since QR codes are already created
+        setGeneratingProgress({
+          current: totalSeats,
+          total: totalSeats,
+          message: 'QR codes generated successfully!'
+        });
+        
+        // Keep the completion visible for 1 second before showing success modal
+        setTimeout(() => {
+          setGenerating(false);
           
-          if (finalProgress >= totalSeats) {
-            clearInterval(completeAnimation);
-            
-            // Keep the completion visible for 1 second before showing success modal
+          // Reload QR names to update the dropdown (with delay to ensure DB update)
+          if (formData.theaterId) {
+            console.log('🔄 Reloading QR names after successful generation');
             setTimeout(() => {
-              setGenerating(false);
-              
-              // Reload QR names to update the dropdown
-              if (formData.theaterId) {
-                console.log('🔄 Reloading QR names after successful generation');
-                loadQRNames(formData.theaterId);
-              }
-              
-              // Show success and auto-navigate after 2 seconds
-              showSuccess('Success', message);
-              
-              // Auto-navigate to QR Management page after 2 seconds
-              setTimeout(() => {
-                navigate('/qr-management');
-              }, 2000);
-            }, 1000);
+              console.log('🔄 Executing delayed QR names reload...');
+              loadQRNames(formData.theaterId);
+            }, 500); // 500ms delay to ensure database is updated
           }
-        }, 50); // Fast completion animation
+          
+          // Show success and auto-navigate after 2 seconds
+          showSuccess('Success', message);
+          
+          // Auto-navigate to QR Management page after 2 seconds
+          setTimeout(() => {
+            navigate('/qr-management');
+          }, 2000);
+        }, 1000);
       } else {
         console.error('Backend returned error:', data);
         showError('Error', data.message || 'Failed to generate QR codes');
@@ -910,7 +926,7 @@ const QRGenerate = React.memo(() => {
   const handleReset = useCallback(() => {
     setFormData({
       theaterId: '',
-      qrType: 'canteen',
+      qrType: '',
       name: '',
       seatStart: '',
       seatEnd: '',
@@ -1043,7 +1059,7 @@ const QRGenerate = React.memo(() => {
                       </div>
                     ) : qrNames.length === 0 ? (
                       <div className="form-control disabled-dropdown" style={{ color: '#e74c3c' }}>
-                        <span>⚠️ All QR names have already been generated for this theater</span>
+                        <span>⚠️ All QR names have already been generated for this theater (checked against singleqrcodes database)</span>
                       </div>
                     ) : (
                       <select
@@ -1057,10 +1073,15 @@ const QRGenerate = React.memo(() => {
                         <option value="">Select QR Code Name</option>
                         {qrNames.map(qrName => (
                           <option key={qrName._id} value={qrName.qrName}>
-                            {qrName.qrName} - {qrName.seatClass}
+                            {qrName.qrName}
                           </option>
                         ))}
                       </select>
+                    )}
+                    {formData.theaterId && !qrNamesLoading && qrNames.length > 0 && (
+                      <p className="form-help-text">
+                        ✅ {qrNames.length} QR name(s) available for generation (filtered by singleqrcodes database)
+                      </p>
                     )}
                   </div>
 
@@ -1254,7 +1275,7 @@ const QRGenerate = React.memo(() => {
                       )}
                     </div>
                     
-                    {generatingProgress.total > 1 && (
+                    {generatingProgress.total > 1 ? (
                       <div className="progress-bar-container">
                         <div className="progress-bar-wrapper">
                           <div className="progress-bar">
@@ -1275,6 +1296,13 @@ const QRGenerate = React.memo(() => {
                           <span className="progress-current">{generatingProgress.current}/{generatingProgress.total} QR Codes</span>
                           <span className="progress-speed">Generating...</span>
                         </div>
+                      </div>
+                    ) : (
+                      <div className="simple-loading">
+                        <div className="simple-progress-bar">
+                          <div className="simple-progress-fill"></div>
+                        </div>
+                        <div className="loading-text">Creating QR code...</div>
                       </div>
                     )}
                     

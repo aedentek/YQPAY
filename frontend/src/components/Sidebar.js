@@ -198,7 +198,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, sidebarCollapsed, currentPage = 
               key={item.id}
               className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
               onClick={() => handleNavigation(item)}
-              title={item.tooltip}
               data-tooltip={item.tooltip}
             >
               <span className="nav-icon">{getIcon(item.icon)}</span>
