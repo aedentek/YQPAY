@@ -276,7 +276,13 @@ singleQRCodeSchema.methods.deactivateQRDetail = function(qrDetailId) {
 
 // Method to delete a specific QR detail
 singleQRCodeSchema.methods.deleteQRDetail = function(qrDetailId) {
-  this.qrDetails.id(qrDetailId).remove();
+  const qrDetail = this.qrDetails.id(qrDetailId);
+  if (!qrDetail) {
+    throw new Error('QR detail not found');
+  }
+  
+  // Use pull() instead of remove() for subdocument deletion
+  this.qrDetails.pull(qrDetailId);
   this.metadata.totalQRs = this.qrDetails.length;
   this.metadata.activeQRs = this.qrDetails.filter(qr => qr.isActive).length;
   return this.save();

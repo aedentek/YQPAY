@@ -14,6 +14,19 @@ import '../styles/buttons.css';
 import { clearTheaterCache, addCacheBuster } from '../utils/cacheManager';
 import { usePerformanceMonitoring, preventLayoutShift } from '../hooks/usePerformanceMonitoring';
 
+// Helper function to get authenticated headers
+const getAuthHeaders = () => {
+  const authToken = localStorage.getItem('authToken');
+  return {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    'Accept': 'application/json',
+    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+  };
+};
+
 // Enhanced Lazy Loading QR Image Component with Intersection Observer (matching QRManagement)
 const LazyQRImage = React.memo(({ src, alt, className, style }) => {
   const [imageSrc, setImageSrc] = useState('/placeholder-qr.png');
@@ -538,12 +551,6 @@ const TheaterQRDetail = () => {
   // Display image URL state for signed URL
   const [displayImageUrl, setDisplayImageUrl] = useState(null);
 
-  // Load theater and QR data
-  useEffect(() => {
-    loadTheaterData();
-    loadQRNames();
-  }, [theaterId]);
-
   // Load QR Names for dynamic sidebar
   const loadQRNames = useCallback(async () => {
     if (!theaterId) return;
@@ -554,7 +561,7 @@ const TheaterQRDetail = () => {
       const url = `/api/qrcodenames?theaterId=${theaterId}&status=active&limit=100`;
       console.log('ðŸŒ Fetching from URL:', url);
       
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: getAuthHeaders() });
       const data = await response.json();
       
       console.log('ðŸ“¡ QR Names API Response:', data);
@@ -578,13 +585,16 @@ const TheaterQRDetail = () => {
 
   // Set active category to first QR name when QR names are loaded
   useEffect(() => {
-    console.log('ðŸŽ¯ QR Names effect - qrNames:', qrNames.length, 'activeCategory:', activeCategory);
-    if (qrNames.length > 0 && !activeCategory) {
-      const firstQRName = qrNames[0].qrName;
-      console.log('ðŸŽ¯ Setting active category to:', firstQRName);
-      setActiveCategory(firstQRName);
+    console.log('🎯 QR Names effect - qrNames:', qrNames.length, 'activeCategory:', activeCategory);
+    if (qrNames.length > 0) {
+      // Set activeCategory if it's null OR if current activeCategory is not in the list
+      if (!activeCategory || !qrNames.find(qr => qr.qrName === activeCategory)) {
+        const firstQRName = qrNames[0].qrName;
+        console.log('🎯 Setting active category to:', firstQRName);
+        setActiveCategory(firstQRName);
+      }
     }
-  }, [qrNames, activeCategory]);
+  }, [qrNames]); // Removed activeCategory from dependencies to prevent loops
 
   const loadTheaterData = useCallback(async () => {
     try {
@@ -598,12 +608,7 @@ const TheaterQRDetail = () => {
       setLoading(true);
       
       const signal = abortControllerRef.current.signal;
-      const headers = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate', // Force fresh data
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        'Accept': 'application/json'
-      };
+      const headers = getAuthHeaders();
       
       if (!theater) {
         const theaterUrl = addCacheBuster(`/api/theaters/${theaterId}`);
@@ -702,12 +707,12 @@ const TheaterQRDetail = () => {
         console.log('TheaterQRDetail request was cancelled');
         return;
       }
-      console.error('Error loading theater data:', error);
+      console.log('Error loading theater data:', error);
       showError('Failed to load theater QR codes');
     } finally {
       setLoading(false);
     }
-  }, [theaterId, theater, showError]);
+  }, [theaterId, showError]); // Removed 'theater' to prevent circular dependency
 
   // Fetch signed URL for QR code image display
   const fetchDisplayImageUrl = useCallback(async (qrCodeId) => {
@@ -717,9 +722,7 @@ const TheaterQRDetail = () => {
       console.log('??? Fetching display image URL for QR code:', qrCodeId);
       
       const response = await fetch(`${config.api.baseUrl}/qrcodes/${qrCodeId}/image-url`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: getAuthHeaders()
       });
       
       if (!response.ok) {
@@ -740,6 +743,24 @@ const TheaterQRDetail = () => {
       return null;
     }
   }, []);
+
+  // Load theater and QR data - MUST be after function declarations
+  useEffect(() => {
+    loadTheaterData();
+    loadQRNames();
+    
+    // Cleanup on unmount to prevent stale data
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // Reset state to prevent displaying stale data on remount
+      setQrCodesByName({});
+      setActiveCategory(null);
+      setQrNames([]);
+      setLoading(true);
+    };
+  }, [theaterId, loadTheaterData, loadQRNames]);
 
   // Memoized computations for better performance - now based on QR names
   const currentQRs = useMemo(() => {
@@ -801,16 +822,15 @@ const TheaterQRDetail = () => {
       mode
     });
     
-    // Fetch display image URL for the QR code
-    if (qrCode && qrCode._id) {
-      console.log('?? openCrudModal: Fetching display image for QR:', qrCode._id);
-      setDisplayImageUrl(null); // Reset previous image
-      const imageUrl = await fetchDisplayImageUrl(qrCode._id);
-      console.log('??? openCrudModal: Got image URL:', imageUrl);
-      setDisplayImageUrl(imageUrl);
-      console.log('? openCrudModal: Set displayImageUrl state');
+    // Set display image URL directly from qrCode data
+    if (qrCode && qrCode.qrImageUrl) {
+      console.log('🖼️ openCrudModal: Using QR image URL from data:', qrCode.qrImageUrl);
+      setDisplayImageUrl(qrCode.qrImageUrl);
+    } else {
+      console.warn('⚠️ openCrudModal: No qrImageUrl found in QR code data');
+      setDisplayImageUrl(null);
     }
-  }, [fetchDisplayImageUrl]);
+  }, []);
 
   const closeCrudModal = useCallback(() => {
     setCrudModal({
@@ -828,33 +848,36 @@ const TheaterQRDetail = () => {
       const isEditing = crudModal.mode === 'edit';
       
       if (isEditing) {
-        // Update existing QR code
-        const response = await fetch(`/api/qrcodes/${formData._id}`, {
+        // Update existing QR code using single-qrcodes detail endpoint
+        if (!formData.parentDocId) {
+          showError('Cannot update QR code: Missing parent document reference');
+          setActionLoading(prev => ({ ...prev, [formData._id]: false }));
+          return;
+        }
+
+        // Prepare update payload with all fields needed for QR regeneration
+        const updatePayload = {
+          qrName: formData.name,           // QR code name
+          seatClass: formData.seatClass,   // Seat class (e.g., 'screen-1')
+          seat: formData.seat || null,     // Seat number (for screen QR codes)
+          logoUrl: formData.logoUrl,       // Logo overlay URL
+          logoType: formData.logoType || 'default',
+          isActive: formData.isActive
+        };
+
+        console.log('📤 Sending update payload:', updatePayload);
+
+        const response = await fetch(`${config.api.baseUrl}/single-qrcodes/${formData.parentDocId}/details/${formData._id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            name: formData.name,
-            location: formData.location,
-            isActive: formData.isActive,
-            orderingEnabled: formData.orderingEnabled || false
-          })
+          headers: getAuthHeaders(),
+          body: JSON.stringify(updatePayload)
         });
         
         const data = await response.json();
         
         if (data.success) {
-          // Update existing QR code in state
-          setQrCodesByName(prev => {
-            const updated = { ...prev };
-            Object.keys(updated).forEach(name => {
-              updated[name] = updated[name].map(qr => 
-                qr._id === formData._id ? { ...qr, ...formData } : qr
-              );
-            });
-            return updated;
-          });
+          // Reload theater data to get updated QR codes
+          await loadTheaterData();
           showSuccess('QR code updated successfully');
           closeCrudModal();
         } else {
@@ -919,20 +942,33 @@ const TheaterQRDetail = () => {
       
       setActionLoading(prev => ({ ...prev, [qrCodeId]: true }));
       
-      const response = await fetch(config.helpers.getApiUrl(`/qrcodes/${qrCodeId}`), {
-        method: 'DELETE'
+      // Find the QR code to get its parentDocId
+      let qrToDelete = null;
+      let parentDocId = null;
+      
+      Object.keys(qrCodesByName).forEach(name => {
+        const qr = qrCodesByName[name].find(q => q._id === qrCodeId);
+        if (qr) {
+          qrToDelete = qr;
+          parentDocId = qr.parentDocId;
+        }
+      });
+      
+      if (!parentDocId) {
+        showError('Cannot delete QR code: Missing parent document reference');
+        return;
+      }
+      
+      const response = await fetch(`${config.api.baseUrl}/single-qrcodes/${parentDocId}/details/${qrCodeId}?permanent=true`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
       });
       
       const data = await response.json();
       
       if (data.success) {
-        setQrCodesByName(prev => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach(name => {
-            updated[name] = updated[name].filter(qr => qr._id !== qrCodeId);
-          });
-          return updated;
-        });
+        // Reload theater data to get updated list
+        await loadTheaterData();
         showSuccess('QR code deleted successfully');
         closeCrudModal();
       } else {
@@ -944,7 +980,7 @@ const TheaterQRDetail = () => {
     } finally {
       setActionLoading(prev => ({ ...prev, [qrCodeId]: false }));
     }
-  }, [confirmDelete, showSuccess, showError, closeCrudModal]);
+  }, [confirmDelete, showSuccess, showError, closeCrudModal, qrCodesByName, loadTheaterData]);
 
   const viewQRCode = (qrCode) => {
     const details = [
@@ -986,7 +1022,9 @@ const TheaterQRDetail = () => {
       // Since GCS bucket is private, use backend to get signed URL
       console.log('?? Getting signed download URL from backend...');
       
-      const response = await fetch(`${config.api.baseUrl}/qrcodes/${qrCode._id}/signed-url`);
+      const response = await fetch(`${config.api.baseUrl}/qrcodes/${qrCode._id}/signed-url`, {
+        headers: getAuthHeaders()
+      });
       
       if (!response.ok) {
         throw new Error(`Failed to get signed URL: ${response.status}`);
@@ -1023,27 +1061,34 @@ const TheaterQRDetail = () => {
     try {
       setActionLoading(prev => ({ ...prev, [qrCodeId]: true }));
       
-      const response = await fetch(`/api/qrcodes/${qrCodeId}`, {
+      // Find the QR code to get its parentDocId
+      let qrToUpdate = null;
+      let parentDocId = null;
+      
+      Object.keys(qrCodesByName).forEach(name => {
+        const qr = qrCodesByName[name].find(q => q._id === qrCodeId);
+        if (qr) {
+          qrToUpdate = qr;
+          parentDocId = qr.parentDocId;
+        }
+      });
+      
+      if (!parentDocId) {
+        showError('Cannot update QR code: Missing parent document reference');
+        return;
+      }
+      
+      const response = await fetch(`${config.api.baseUrl}/single-qrcodes/${parentDocId}/details/${qrCodeId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ isActive: !currentStatus })
       });
       
       const data = await response.json();
       
       if (data.success) {
-        // Update in qrCodesByName object
-        setQrCodesByName(prev => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach(name => {
-            updated[name] = updated[name].map(qr => 
-              qr._id === qrCodeId ? { ...qr, isActive: !currentStatus } : qr
-            );
-          });
-          return updated;
-        });
+        // Reload theater data to get updated QR codes
+        await loadTheaterData();
         showSuccess(`QR code ${!currentStatus ? 'activated' : 'deactivated'} successfully`);
       } else {
         showError(data.message || 'Failed to update QR code status');
@@ -1064,21 +1109,33 @@ const TheaterQRDetail = () => {
     try {
       setActionLoading(prev => ({ ...prev, [qrCodeId]: true }));
       
-      const response = await fetch(`/api/qrcodes/${qrCodeId}`, {
-        method: 'DELETE'
+      // Find the QR code to get its parentDocId
+      let qrToDelete = null;
+      let parentDocId = null;
+      
+      Object.keys(qrCodesByName).forEach(name => {
+        const qr = qrCodesByName[name].find(q => q._id === qrCodeId);
+        if (qr) {
+          qrToDelete = qr;
+          parentDocId = qr.parentDocId;
+        }
+      });
+      
+      if (!parentDocId) {
+        showError('Cannot delete QR code: Missing parent document reference');
+        return;
+      }
+      
+      const response = await fetch(`${config.api.baseUrl}/single-qrcodes/${parentDocId}/details/${qrCodeId}?permanent=true`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
       });
       
       const data = await response.json();
       
       if (data.success) {
-        // Remove from qrCodesByName object
-        setQrCodesByName(prev => {
-          const updated = { ...prev };
-          Object.keys(updated).forEach(name => {
-            updated[name] = updated[name].filter(qr => qr._id !== qrCodeId);
-          });
-          return updated;
-        });
+        // Reload theater data to get updated list
+        await loadTheaterData();
         showSuccess('QR code deleted successfully');
       } else {
         showError(data.message || 'Failed to delete QR code');
@@ -1205,8 +1262,17 @@ const TheaterQRDetail = () => {
                 <div className="theater-qr-section-header">
                   <h3>{activeCategory ? `${activeCategory} QR Codes` : 'QR Codes'}</h3>
                   <div className="theater-qr-section-stats">
-                    <span>Total: {currentQRs.length}</span>
-                    <span>Active: {currentQRs.filter(qr => qr.isActive).length}</span>
+                    {loading ? (
+                      <>
+                        <span>Total: <span className="loading-dots">...</span></span>
+                        <span>Active: <span className="loading-dots">...</span></span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Total: {currentQRs.length}</span>
+                        <span>Active: {currentQRs.filter(qr => qr.isActive).length}</span>
+                      </>
+                    )}
                   </div>
                 </div>
                 
@@ -1217,10 +1283,10 @@ const TheaterQRDetail = () => {
                       <thead>
                         <tr>
                           <th className="sno-col">S NO</th>
-                          <th className="photo-col">LOGO SELECTION</th>
                           <th className="name-col">QR CODE NAME</th>
                           <th className="owner-col">SEAT CLASS</th>
                           <th className="status-col">STATUS</th>
+                          <th className="access-status-col">ACCESS STATUS</th>
                           <th className="actions-col">ACTION</th>
                         </tr>
                       </thead>
@@ -1250,13 +1316,6 @@ const TheaterQRDetail = () => {
                                 <div className="sno-number">{index + 1}</div>
                               </td>
 
-                              {/* Logo Selection Column */}
-                              <td className="theater-logo-cell">
-                                <span className={`logo-selection-text ${qrCode.logoType === 'theater' ? 'logo-theater' : 'logo-default'}`}>
-                                  {qrCode.logoType === 'theater' ? 'THEATER' : 'DEFAULT'}
-                                </span>
-                              </td>
-
                               {/* QR Name Column */}
                               <td className="theater-name-cell">
                                 <div className="theater-name-full">{qrCode.name}</div>
@@ -1282,6 +1341,56 @@ const TheaterQRDetail = () => {
                                   {qrCode.isActive ? 'Active' : 'Inactive'}
                                 </span>
                               </td>
+
+                              {/* Access Status Column - Toggle Button */}
+                              <td className="access-status-cell">
+                                <div className="toggle-wrapper">
+                                  <label className="switch" style={{
+                                    position: 'relative',
+                                    display: 'inline-block',
+                                    width: '50px',
+                                    height: '24px'
+                                  }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={qrCode.isActive}
+                                      onChange={() => toggleQRStatus(qrCode._id, qrCode.isActive)}
+                                      disabled={actionLoading[qrCode._id]}
+                                      style={{
+                                        opacity: 0,
+                                        width: 0,
+                                        height: 0
+                                      }}
+                                    />
+                                    <span className="slider" style={{
+                                      position: 'absolute',
+                                      cursor: actionLoading[qrCode._id] ? 'not-allowed' : 'pointer',
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      backgroundColor: qrCode.isActive ? 'var(--primary-dark, #6D28D9)' : '#ccc',
+                                      transition: '.4s',
+                                      borderRadius: '24px',
+                                      opacity: actionLoading[qrCode._id] ? 0.5 : 1
+                                    }}>
+                                      <span style={{
+                                        position: 'absolute',
+                                        content: '""',
+                                        height: '18px',
+                                        width: '18px',
+                                        left: qrCode.isActive ? '26px' : '3px',
+                                        bottom: '3px',
+                                        backgroundColor: 'white',
+                                        transition: '.4s',
+                                        borderRadius: '50%',
+                                        display: 'block'
+                                      }}></span>
+                                    </span>
+                                  </label>
+                                </div>
+                              </td>
+
                               {/* Actions Column */}
                               <td className="actions-cell">
                                 <ActionButtons>
@@ -1296,13 +1405,6 @@ const TheaterQRDetail = () => {
                                     type="download"
                                     onClick={() => downloadQRCode(qrCode)}
                                     title="Download QR Code"
-                                  />
-                                  
-                                  <ActionButton 
-                                    type={qrCode.isActive ? "deactivate" : "activate"}
-                                    onClick={() => toggleQRStatus(qrCode._id, qrCode.isActive)}
-                                    disabled={actionLoading[qrCode._id]}
-                                    title={qrCode.isActive ? 'Deactivate QR' : 'Activate QR'}
                                   />
                                   
                                   <ActionButton 
@@ -1349,3 +1451,4 @@ const TheaterQRDetail = () => {
 };
 
 export default TheaterQRDetail;
+

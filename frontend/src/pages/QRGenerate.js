@@ -625,10 +625,27 @@ const QRGenerate = React.memo(() => {
         message: formData.qrType === 'single' ? 'Generating single QR code...' : `Generating QR codes for ${totalSeats} seats...`
       });
       
+      // Simulate incremental progress for better UX
+      let progressInterval;
+      if (totalSeats > 1) {
+        let simulatedProgress = 0;
+        progressInterval = setInterval(() => {
+          simulatedProgress += 1;
+          if (simulatedProgress <= Math.floor(totalSeats * 0.8)) { // Go up to 80% while waiting
+            setGeneratingProgress(prev => ({
+              ...prev,
+              current: simulatedProgress,
+              message: `Generating QR code ${simulatedProgress} of ${totalSeats}...`
+            }));
+          }
+        }, 150); // Update every 150ms for smooth animation
+      }
+      
       // Get authentication token
       const token = config.helpers.getAuthToken();
       
       if (!token) {
+        if (progressInterval) clearInterval(progressInterval);
         showError('Authentication Error', 'Please login to generate QR codes');
         setGenerating(false);
         return;
@@ -692,6 +709,9 @@ const QRGenerate = React.memo(() => {
       
       const data = await response.json();
       
+      // Clear the progress simulation interval
+      if (progressInterval) clearInterval(progressInterval);
+      
       // Update progress for processing response
       setGeneratingProgress(prev => ({ 
         ...prev, 
@@ -708,39 +728,55 @@ const QRGenerate = React.memo(() => {
           'typeof data.count': typeof data.count
         });
         
-        const count = data.count || (data.data && data.data.count) || 0;
+        const count = data.count || (data.data && data.data.count) || totalSeats;
         const message = formData.qrType === 'single' 
           ? 'Single QR code generated and saved successfully!'
           : `${count} screen QR codes generated successfully!`;
         
-        // Update progress to completion
-        setGeneratingProgress(prev => ({ 
-          ...prev, 
-          current: prev.total,
-          message: 'QR codes generated successfully!' 
-        }));
-        
-        // Reload QR names to update the dropdown (remove newly generated QR name)
-        if (formData.theaterId) {
-          console.log('🔄 Reloading QR names after successful generation');
-          loadQRNames(formData.theaterId);
-        }
+        // Animate progress to completion
+        let finalProgress = 0;
+        const completeAnimation = setInterval(() => {
+          finalProgress += 1;
+          setGeneratingProgress({
+            current: finalProgress,
+            total: totalSeats,
+            message: finalProgress >= totalSeats ? 'QR codes generated successfully!' : `Generating QR code ${finalProgress} of ${totalSeats}...`
+          });
           
-        showSuccess('Success', message, () => {
-          navigate('/qr-management');
-        });
+          if (finalProgress >= totalSeats) {
+            clearInterval(completeAnimation);
+            
+            // Keep the completion visible for 1 second before showing success modal
+            setTimeout(() => {
+              setGenerating(false);
+              
+              // Reload QR names to update the dropdown
+              if (formData.theaterId) {
+                console.log('🔄 Reloading QR names after successful generation');
+                loadQRNames(formData.theaterId);
+              }
+              
+              // Show success and auto-navigate after 2 seconds
+              showSuccess('Success', message);
+              
+              // Auto-navigate to QR Management page after 2 seconds
+              setTimeout(() => {
+                navigate('/qr-management');
+              }, 2000);
+            }, 1000);
+          }
+        }, 50); // Fast completion animation
       } else {
         console.error('Backend returned error:', data);
         showError('Error', data.message || 'Failed to generate QR codes');
+        setGenerating(false);
       }
     } catch (error) {
       console.error('Error generating QR codes:', error);
       showError('Error', 'Failed to generate QR codes. Please try again.');
-    } finally {
       setGenerating(false);
-      setGeneratingProgress({ current: 0, total: 0, message: '' });
     }
-  }, [formData, validateForm, showSuccess, showError, navigate, loadQRNames]);
+  }, [formData, validateForm, showSuccess, showError, navigate, loadQRNames, defaultLogoUrl]);
 
   // Add button click handler to generate seat map
   const handleGenerateSeatMap = useCallback(() => {
@@ -1220,16 +1256,24 @@ const QRGenerate = React.memo(() => {
                     
                     {generatingProgress.total > 1 && (
                       <div className="progress-bar-container">
-                        <div className="progress-bar">
-                          <div 
-                            className="progress-bar-fill"
-                            style={{ 
-                              width: `${(generatingProgress.current / generatingProgress.total) * 100}%` 
-                            }}
-                          ></div>
+                        <div className="progress-bar-wrapper">
+                          <div className="progress-bar">
+                            <div 
+                              className="progress-bar-fill"
+                              style={{ 
+                                width: `${(generatingProgress.current / generatingProgress.total) * 100}%` 
+                              }}
+                            >
+                              <div className="progress-bar-shine"></div>
+                            </div>
+                          </div>
+                          <div className="progress-percentage-overlay">
+                            {Math.round((generatingProgress.current / generatingProgress.total) * 100)}%
+                          </div>
                         </div>
-                        <div className="progress-percentage">
-                          {Math.round((generatingProgress.current / generatingProgress.total) * 100)}%
+                        <div className="progress-stats">
+                          <span className="progress-current">{generatingProgress.current}/{generatingProgress.total} QR Codes</span>
+                          <span className="progress-speed">Generating...</span>
                         </div>
                       </div>
                     )}

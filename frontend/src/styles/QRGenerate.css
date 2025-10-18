@@ -799,23 +799,97 @@ select.form-control:disabled {
 
 .progress-bar-container {
   margin-bottom: 24px;
+  width: 100%;
+}
+
+.progress-bar-wrapper {
+  position: relative;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .progress-bar {
   width: 100%;
-  height: 8px;
-  background: #e5e7eb;
-  border-radius: 4px;
+  height: 36px; /* Increased from 8px for better visibility */
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 18px;
   overflow: hidden;
-  margin-bottom: 8px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 2px solid #e5e7eb;
+  position: relative;
 }
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8b5cf6, #a855f7);
-  border-radius: 4px;
-  transition: width 0.5s ease-in-out;
-  animation: progressPulse 2s ease-in-out infinite;
+  background: linear-gradient(90deg, #8b5cf6 0%, #a855f7 50%, #c084fc 100%);
+  border-radius: 18px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+/* Animated shine effect */
+.progress-bar-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: shine 2s infinite;
+}
+
+/* Percentage overlay inside the progress bar */
+.progress-percentage-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-shadow: 
+    1px 1px 2px rgba(255, 255, 255, 0.8),
+    -1px -1px 2px rgba(255, 255, 255, 0.8),
+    1px -1px 2px rgba(255, 255, 255, 0.8),
+    -1px 1px 2px rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+
+/* Progress statistics below the bar */
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 0.875rem;
+}
+
+.progress-current {
+  color: #8b5cf6;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.progress-current::before {
+  content: "📊";
+  font-size: 1rem;
+}
+
+.progress-speed {
+  color: #6b7280;
+  font-weight: 500;
+  animation: pulse 1.5s ease-in-out infinite;
 }
 
 .progress-percentage {
@@ -889,6 +963,27 @@ select.form-control:disabled {
   }
 }
 
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .qr-generation-modal {
@@ -902,6 +997,21 @@ select.form-control:disabled {
   
   .progress-message {
     font-size: 1rem;
+  }
+  
+  .progress-bar {
+    height: 32px; /* Slightly smaller on mobile */
+  }
+  
+  .progress-percentage-overlay {
+    font-size: 0.9rem;
+  }
+  
+  .progress-stats {
+    font-size: 0.8rem;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
   }
   
   .generating-details {

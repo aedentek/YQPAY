@@ -194,106 +194,33 @@ const RoleAccessManagementList = () => {
   // Main component render
   return (
     <AdminLayout pageTitle="Role Access Management" currentPage="role-access">
-        <div className="theater-list-container">
+        <div className="theater-list-container role-access-management-list-page">
           {/* Main Theater Management Container */}
           <div className="theater-main-container">
             {/* Header */}
             <div className="theater-list-header">
-              <h1>Role Access Management</h1>
+              <div className="header-content">
+                <h1>Role Access Management</h1>
+              </div>
             </div>
 
-            {/* Stats Section with inline styles matching QRManagement */}
-            <div className="theater-stats-section" style={{
-              background: 'var(--white)',
-              padding: '24px 40px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '24px',
-              borderBottom: '1px solid var(--border-color)'
-            }}>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{totalItems || 0}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Total Theaters</div>
+            {/* Statistics Section */}
+            <div className="qr-stats">
+              <div className="stat-card">
+                <div className="stat-number">{totalItems || 0}</div>
+                <div className="stat-label">Total Active Theaters</div>
               </div>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{Array.isArray(theaters) ? theaters.filter(theater => theater && theater.isActive).length : 0}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Active Theaters</div>
+              <div className="stat-card">
+                <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && theater.isActive).length : 0}</div>
+                <div className="stat-label">Currently Active</div>
               </div>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{Array.isArray(theaters) ? theaters.filter(theater => theater && !theater.isActive).length : 0}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Inactive Theaters</div>
+              <div className="stat-card">
+                <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && (theater.contact)).length : 0}</div>
+                <div className="stat-label">With Contact Info</div>
               </div>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{Array.isArray(theaters) ? theaters.length : 0}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>On Current Page</div>
+              <div className="stat-card">
+                <div className="stat-number">{Array.isArray(theaters) ? theaters.length : 0}</div>
+                <div className="stat-label">Displayed on Page</div>
               </div>
             </div>
 
@@ -381,22 +308,22 @@ const RoleAccessManagementList = () => {
                               </td>
                               
                               <td className="photo-cell">
-                                <div className="theater-photo-thumb">
-                                  {(theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? (
-                                    <img
-                                      src={theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl}
-                                      alt={theater.name}
-                                      onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'flex';
-                                      }}
-                                    />
-                                  ) : null}
-                                  <div className="no-photo" style={{display: (theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? 'none' : 'flex'}}>
-                                    <svg viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
-                                    </svg>
-                                  </div>
+                                {/* Fixed: Use branding.logoUrl like in TheaterList (not media.logoUrl) */}
+                                {(theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? (
+                                  <img
+                                    src={theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl}
+                                    alt={theater.name}
+                                    className="theater-logo"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="no-logo" style={{display: (theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? 'none' : 'flex'}}>
+                                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '24px', height: '24px', color: '#8b5cf6'}}>
+                                    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
+                                  </svg>
                                 </div>
                               </td>
                               
@@ -405,11 +332,10 @@ const RoleAccessManagementList = () => {
                                   <div className="theater-name">
                                     {theaterName}
                                   </div>
-                                  {(theaterCity || theaterState) && (
-                                    <div className="theater-location">
-                                      {theaterCity}{theaterCity && theaterState && ', '}{theaterState}
-                                    </div>
-                                  )}
+                                  <div className="theater-location">
+                                    {/* Fixed: Check both address and city for better location display */}
+                                    {(theater.location?.address || theater.location?.city) ? `${theaterCity}, ${theaterState}` : 'Location not specified'}
+                                  </div>
                                 </div>
                               </td>
                               

@@ -4,6 +4,7 @@ const Theater = require('../models/Theater');
 const { authenticateToken } = require('../middleware/auth');
 const { body, param, validationResult } = require('express-validator');
 const { generateSingleQRCode } = require('../utils/singleQRGenerator');
+const { deleteFile } = require('../utils/gcsUploadUtil');
 
 const router = express.Router();
 
@@ -347,9 +348,46 @@ router.get('/theater/:theaterId', [
       isActive: isActive !== undefined ? isActive === 'true' : undefined
     });
 
+    // Flatten qrDetails array from all documents into a single array
+    const flattenedQRCodes = [];
+    
+    singleQRCodes.forEach(doc => {
+      if (doc.qrDetails && doc.qrDetails.length > 0) {
+        doc.qrDetails.forEach(qrDetail => {
+          // Transform each qrDetail to match frontend expected structure
+          flattenedQRCodes.push({
+            _id: qrDetail._id,
+            name: qrDetail.qrName,
+            qrType: qrDetail.qrType,
+            seatClass: qrDetail.seatClass,
+            qrImageUrl: qrDetail.qrCodeUrl, // Map qrCodeUrl to qrImageUrl
+            logoUrl: qrDetail.logoUrl,
+            logoType: qrDetail.logoType,
+            screenName: qrDetail.screen,
+            seatNumber: qrDetail.seat,
+            seats: qrDetail.seats,
+            isActive: qrDetail.isActive,
+            scanCount: qrDetail.scanCount || 0,
+            orderCount: qrDetail.orderCount || 0,
+            totalRevenue: qrDetail.totalRevenue || 0,
+            lastScannedAt: qrDetail.lastScannedAt,
+            createdAt: qrDetail.createdAt,
+            updatedAt: qrDetail.updatedAt,
+            theater: doc.theater,
+            parentDocId: doc._id // Keep reference to parent document
+          });
+        });
+      }
+    });
+
+    console.log(`✅ Found ${flattenedQRCodes.length} QR codes for theater ${theaterId}`);
+
     res.json({
       success: true,
-      data: singleQRCodes
+      data: {
+        qrCodes: flattenedQRCodes,
+        total: flattenedQRCodes.length
+      }
     });
 
   } catch (error) {
@@ -466,11 +504,15 @@ router.put('/:id', [
 /**
  * PUT /api/single-qrcodes/:id/details/:detailId
  * Update a specific QR detail within the array
+ * Now regenerates the QR code with new data and deletes old image from GCS
  */
 router.put('/:id/details/:detailId', [
   authenticateToken,
   param('id').isMongoId().withMessage('Valid single QR code ID is required'),
   param('detailId').isMongoId().withMessage('Valid QR detail ID is required'),
+  body('qrName').optional().trim(),
+  body('seatClass').optional().trim(),
+  body('seat').optional().trim(),
   body('logoUrl').optional().trim(),
   body('logoType').optional().isIn(['default', 'theater', 'custom', '']),
   body('isActive').optional().isBoolean()
@@ -488,7 +530,7 @@ router.put('/:id/details/:detailId', [
     const { id, detailId } = req.params;
     const updates = req.body;
 
-    const singleQR = await SingleQRCode.findById(id);
+    const singleQR = await SingleQRCode.findById(id).populate('theater', 'name location city');
 
     if (!singleQR) {
       return res.status(404).json({
@@ -497,14 +539,71 @@ router.put('/:id/details/:detailId', [
       });
     }
 
+    // Get the existing QR detail
+    const qrDetail = singleQR.qrDetails.id(detailId);
+    
+    if (!qrDetail) {
+      return res.status(404).json({
+        success: false,
+        error: 'QR detail not found'
+      });
+    }
+
+    // Check if we need to regenerate the QR code (if critical data changed)
+    const needsRegeneration = 
+      (updates.qrName && updates.qrName !== qrDetail.qrName) ||
+      (updates.seatClass && updates.seatClass !== qrDetail.seatClass) ||
+      (updates.seat && updates.seat !== qrDetail.seat) ||
+      (updates.logoUrl && updates.logoUrl !== qrDetail.logoUrl);
+
+    if (needsRegeneration) {
+      console.log('🔄 Regenerating QR code due to data changes...');
+      
+      // Store old QR code URL for deletion
+      const oldQrCodeUrl = qrDetail.qrCodeUrl;
+
+      // Generate new QR code with updated data
+      const qrData = await generateSingleQRCode({
+        theaterId: singleQR.theater._id,
+        theaterName: singleQR.theater.name,
+        qrName: updates.qrName || qrDetail.qrName,
+        seatClass: updates.seatClass || qrDetail.seatClass,
+        seat: updates.seat || qrDetail.seat || null,
+        logoUrl: updates.logoUrl || qrDetail.logoUrl,
+        logoType: updates.logoType || qrDetail.logoType,
+        userId: req.user.id
+      });
+
+      // Update with new QR code data
+      updates.qrCodeUrl = qrData.qrCodeUrl;
+      updates.qrCodeData = qrData.qrCodeData;
+      
+      console.log('✅ New QR code generated:', qrData.qrCodeUrl);
+
+      // Delete old QR code from GCS
+      if (oldQrCodeUrl) {
+        console.log('🗑️  Deleting old QR code from GCS:', oldQrCodeUrl);
+        const deletedFromGCS = await deleteFile(oldQrCodeUrl);
+        if (deletedFromGCS) {
+          console.log('✅ Old QR code deleted from GCS');
+        } else {
+          console.warn('⚠️  Failed to delete old QR code from GCS (may not exist)');
+        }
+      }
+    } else {
+      console.log('ℹ️  No regeneration needed, updating metadata only');
+    }
+
+    // Update the QR detail with all changes
     await singleQR.updateQRDetail(detailId, updates);
-    await singleQR.populate('theater', 'name location city');
 
     console.log('✅ QR Detail updated:', detailId);
 
     res.json({
       success: true,
-      message: 'QR detail updated successfully',
+      message: needsRegeneration 
+        ? 'QR code regenerated and updated successfully' 
+        : 'QR detail updated successfully',
       data: singleQR
     });
 
@@ -619,12 +718,43 @@ router.delete('/:id/details/:detailId', [
       });
     }
 
+    // Get the QR detail before deletion to access qrCodeUrl
+    const qrDetail = singleQR.qrDetails.id(detailId);
+    
+    if (!qrDetail) {
+      return res.status(404).json({
+        success: false,
+        error: 'QR detail not found'
+      });
+    }
+
     if (permanent === 'true') {
+      // Delete QR code image from Google Cloud Storage
+      if (qrDetail.qrCodeUrl) {
+        console.log('🗑️  Attempting to delete QR code image from GCS:', qrDetail.qrCodeUrl);
+        const deletedFromGCS = await deleteFile(qrDetail.qrCodeUrl);
+        if (deletedFromGCS) {
+          console.log('✅ QR code image deleted from GCS');
+        } else {
+          console.warn('⚠️  Failed to delete QR code image from GCS (may not exist)');
+        }
+      }
+
+      // Also delete seat QR codes if it's a screen type with seats array
+      if (qrDetail.qrType === 'screen' && qrDetail.seats && qrDetail.seats.length > 0) {
+        console.log(`🗑️  Deleting ${qrDetail.seats.length} seat QR code images from GCS`);
+        for (const seat of qrDetail.seats) {
+          if (seat.qrCodeUrl) {
+            await deleteFile(seat.qrCodeUrl);
+          }
+        }
+      }
+
       // Permanently remove from array
       await singleQR.deleteQRDetail(detailId);
-      console.log('✅ QR Detail permanently deleted:', detailId);
+      console.log('✅ QR Detail permanently deleted from database:', detailId);
     } else {
-      // Soft delete (deactivate)
+      // Soft delete (deactivate) - keep the image in GCS
       await singleQR.deactivateQRDetail(detailId);
       console.log('✅ QR Detail deactivated:', detailId);
     }

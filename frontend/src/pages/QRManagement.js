@@ -8,6 +8,7 @@ import { useModal } from '../contexts/ModalContext';
 import { clearTheaterCache, addCacheBuster } from '../utils/cacheManager';
 import { usePerformanceMonitoring, preventLayoutShift } from '../hooks/usePerformanceMonitoring';
 import '../styles/TheaterList.css';
+import '../styles/QRManagementPage.css';
 
 // Enhanced Lazy Loading Image Component with Intersection Observer (matching TheaterList)
 const LazyTheaterImage = React.memo(({ src, alt, className, style }) => {
@@ -98,23 +99,43 @@ const LazyTheaterImage = React.memo(({ src, alt, className, style }) => {
 
 LazyTheaterImage.displayName = 'LazyTheaterImage';
 
-// Skeleton component for table rows (matching TheaterList pattern)
-const TableRowSkeleton = React.memo(() => (
-  <tr className="skeleton-row">
-    <td><div className="skeleton-text"></div></td>
-    <td>
-      <div className="theater-info-skeleton">
-        <div className="skeleton-image"></div>
-        <div className="skeleton-text"></div>
+// Table Skeleton Component
+const TableSkeletonRow = React.memo(() => (
+  <tr className="theater-row skeleton-row">
+    <td className="sno-cell">
+      <div className="skeleton-line skeleton-small"></div>
+    </td>
+    <td className="photo-cell">
+      <div className="theater-photo-thumb skeleton-image"></div>
+    </td>
+    <td className="name-cell">
+      <div className="skeleton-line skeleton-medium"></div>
+    </td>
+    <td className="owner-cell">
+      <div className="skeleton-line skeleton-medium"></div>
+    </td>
+    <td className="contact-cell">
+      <div className="skeleton-line skeleton-small"></div>
+    </td>
+    <td className="actions-cell">
+      <div className="skeleton-buttons">
+        <div className="skeleton-button skeleton-small"></div>
       </div>
     </td>
-    <td><div className="skeleton-text"></div></td>
-    <td><div className="skeleton-text"></div></td>
-    <td><div className="skeleton-text"></div></td>
   </tr>
 ));
 
-TableRowSkeleton.displayName = 'TableRowSkeleton';
+TableSkeletonRow.displayName = 'TableSkeletonRow';
+
+const TableSkeleton = React.memo(({ count = 10 }) => (
+  <>
+    {Array.from({ length: count }, (_, index) => (
+      <TableSkeletonRow key={`table-skeleton-${index}`} />
+    ))}
+  </>
+));
+
+TableSkeleton.displayName = 'TableSkeleton';
 
 const QRManagement = () => {
   const navigate = useNavigate();
@@ -326,259 +347,192 @@ const QRManagement = () => {
     <ErrorBoundary>
       <AdminLayout pageTitle="QR Management" currentPage="qr-list">
         <div className="theater-list-container">
+          {/* Main Theater Management Container */}
           <div className="theater-main-container">
-            {/* Header matching TheaterList */}
+            {/* Header */}
             <div className="theater-list-header">
               <div className="header-content">
-                <div className="title-group">
-                  <h1>QR Code Management</h1>
-                </div>
+                <h1>QR Code Management</h1>
               </div>
               {headerButton}
             </div>
 
-            {/* Stats Section */}
-            <div className="theater-stats-section" style={{
-              background: 'var(--white)',
-              padding: '24px 40px',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '24px',
-              borderBottom: '1px solid var(--border-color)'
-            }}>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{summary.totalTheaters}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Total Theaters</div>
+            {/* Statistics Section */}
+            <div className="qr-stats">
+              <div className="stat-card">
+                <div className="stat-number">{summary.totalTheaters}</div>
+                <div className="stat-label">Total Theaters</div>
               </div>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{summary.totalCanteenQRs}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Canteen QRs</div>
+              <div className="stat-card">
+                <div className="stat-number">{summary.totalCanteenQRs}</div>
+                <div className="stat-label">Canteen QRs</div>
               </div>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{summary.totalScreenQRs}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Screen QRs</div>
+              <div className="stat-card">
+                <div className="stat-number">{summary.totalScreenQRs}</div>
+                <div className="stat-label">Screen QRs</div>
               </div>
-              <div className="stat-card" style={{
-                background: 'var(--background-light)',
-                padding: '24px',
-                borderRadius: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--border-color)'
-              }}>
-                <div className="stat-number" style={{
-                  fontSize: '2rem',
-                  fontWeight: '700',
-                  color: 'var(--primary-color)',
-                  marginBottom: '8px'
-                }}>{summary.totalQRs}</div>
-                <div className="stat-label" style={{
-                  fontSize: '0.9rem',
-                  color: 'var(--text-gray)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  fontWeight: '600'
-                }}>Total QR Codes</div>
+              <div className="stat-card">
+                <div className="stat-number">{summary.totalQRs}</div>
+                <div className="stat-label">Total QR Codes</div>
               </div>
             </div>
 
-            {/* Enhanced Filters Section matching TheaterList */}
-            <div className="theater-filters">
-              <div className="search-box">
-                <input
-                  type="text"
-                  placeholder="Search theaters by name, city, or owner..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input"
-                />
-              </div>
-              <div className="filter-controls">
-                <span className="showing-text">
-                  Showing {sortedManagementData.length} of {totalItems} theaters (Page {currentPage} of {totalPages})
-                </span>
-                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Management Table */}
+            {/* Theater Content Container */}
             <div className="theater-content">
-              <div className="table-container">
-                <table className="theater-table">
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Logo</th>
-                <th>Theater Name</th>
-                <th>Canteen QR Count</th>
-                <th>Screen QR Count</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                Array.from({ length: 5 }, (_, index) => (
-                  <TableRowSkeleton key={`skeleton-${index}`} />
-                ))
-              ) : sortedManagementData.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="no-data">
-                    <div className="empty-state">
-                      <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '48px', height: '48px', opacity: 0.3}}>
-                        <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
-                      </svg>
-                      <p>No theaters found</p>
-                      <button 
-                        className="btn-primary" 
-                        onClick={() => navigate('/add-theater')}
-                      >
-                        CREATE YOUR FIRST THEATER
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+              {/* Filters and Search */}
+              <div className="theater-filters">
+                <div className="search-box">
+                  <input
+                    type="text"
+                    placeholder="Search theaters by name, city, or owner..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+                <div className="filter-controls">
+                  <div className="results-count">
+                    Showing {sortedManagementData.length} of {totalItems} theaters (Page {currentPage} of {totalPages})
+                  </div>
+                  <div className="items-per-page">
+                    <label>Items per page:</label>
+                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Theater Table */}
+              {sortedManagementData.length === 0 && !loading ? (
+                <div className="empty-state">
+                  <div className="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '48px', height: '48px', color: 'var(--text-gray)'}}>
+                      <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
+                    </svg>
+                  </div>
+                  <h3>No Theaters Found</h3>
+                  <p>No theaters are currently available in the system.</p>
+                  <button 
+                    className="btn-primary" 
+                    onClick={() => navigate('/add-theater')}
+                  >
+                    CREATE YOUR FIRST THEATER
+                  </button>
+                </div>
               ) : (
-                sortedManagementData.map((theater, index) => (
-                  <tr key={theater._id} className="theater-row">
-                    <td className="serial-number">{((currentPage - 1) * itemsPerPage) + index + 1}</td>
-                    <td className="theater-logo-cell">
-                      {/* Fixed: Use branding.logoUrl like in TheaterList (not just logoUrl) */}
-                      {(theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? (
-                        <img
-                          src={theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl}
-                          alt={theater.name}
-                          className="theater-logo"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                      ) : null}
-                      <div className="no-logo" style={{display: (theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? 'none' : 'flex'}}>
-                        <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '24px', height: '24px', color: '#8b5cf6'}}>
-                          <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
-                        </svg>
-                      </div>
-                    </td>
-                    <td className="theater-name-cell">
-                      <div className="theater-name">{theater.name || 'No Name'}</div>
-                    </td>
-                    <td className="qr-count">
-                      <span className="count-badge canteen-badge">
-                        {theater.canteenQRCount || 0}
-                      </span>
-                    </td>
-                    <td className="qr-count">
-                      <span className="count-badge screen-badge">
-                        {theater.screenQRCount || 0}
-                      </span>
-                    </td>
-                    <td className="actions">
-                      <button
-                        className="action-btn view-btn"
-                        onClick={() => viewTheaterQRs(theater)}
-                        title="View QR Code Names"
-                      >
-                        <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                <div className="table-container">
+                  <div className="table-wrapper">
+                    <table className="theater-table">
+                      <thead>
+                        <tr>
+                          <th className="sno-col">S NO</th>
+                          <th className="photo-col">LOGO</th>
+                          <th className="name-col">Theater Name</th>
+                          <th className="owner-col">Canteen QR Count</th>
+                          <th className="contact-col">Screen QR Count</th>
+                          <th className="actions-col">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loading ? (
+                          <TableSkeleton count={itemsPerPage} />
+                        ) : (
+                          sortedManagementData.map((theater, index) => (
+                            <tr key={theater._id} className="theater-row">
+                              {/* S NO Column */}
+                              <td className="sno-cell">
+                                <div className="sno-number">{(currentPage - 1) * itemsPerPage + index + 1}</div>
+                              </td>
+
+                              {/* Logo Column */}
+                              <td className="theater-logo-cell">
+                                {(theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? (
+                                  <img
+                                    src={theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl}
+                                    alt={theater.name}
+                                    className="theater-logo"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null}
+                                <div className="no-logo" style={{display: (theater.documents?.logo || theater.branding?.logo || theater.branding?.logoUrl) ? 'none' : 'flex'}}>
+                                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '24px', height: '24px', color: '#8b5cf6'}}>
+                                    <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/>
+                                  </svg>
+                                </div>
+                              </td>
+
+                              {/* Theater Name Column */}
+                              <td className="name-cell">
+                                <div className="theater-name-container">
+                                  <div className="theater-name">{theater.name || 'No Name'}</div>
+                                  <div className="theater-location">
+                                    {(theater.location?.address || theater.location?.city) ? `${theater.location?.city || ''}, ${theater.location?.state || ''}` : 'Location not specified'}
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Canteen QR Count Column */}
+                              <td className="owner-cell">
+                                <div className="owner-info">
+                                  <span className="count-badge canteen-badge">
+                                    {theater.canteenQRCount || 0}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Screen QR Count Column */}
+                              <td className="contact-cell">
+                                <div className="contact-info">
+                                  <span className="count-badge screen-badge">
+                                    {theater.screenQRCount || 0}
+                                  </span>
+                                </div>
+                              </td>
+
+                              {/* Actions Column */}
+                              <td className="actions-cell">
+                                <button
+                                  className="action-btn view-btn"
+                                  onClick={() => viewTheaterQRs(theater)}
+                                  title="View QR Codes"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                  </svg>
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Pagination - Global Component */}
-        {!loading && (
-          <Pagination 
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            itemsPerPage={itemsPerPage}
-            onPageChange={handlePageChange}
-            itemType="theaters"
-          />
-        )}
-
-        <div className="management-footer" style={{
-          padding: '20px 40px',
-          background: 'var(--white)',
-          borderTop: '1px solid var(--border-color)',
-          textAlign: 'center',
-          color: 'var(--text-gray)',
-          fontSize: '0.9rem'
-        }}>
-          <p>
-            {debouncedSearchTerm ? (
-              `Showing ${totalItems} of ${summary.totalTheaters} theaters matching "${debouncedSearchTerm}"`
-            ) : (
-              `Total: ${summary.totalTheaters} theaters, ${summary.totalQRs} QR codes`
-            )}
-          </p>
+              {/* Pagination - Global Component */}
+              {!loading && sortedManagementData.length > 0 && (
+                <Pagination 
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  totalItems={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  onPageChange={handlePageChange}
+                  itemType="theaters"
+                />
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    </div>
-    </AdminLayout>
-  </ErrorBoundary>
+      </AdminLayout>
+    </ErrorBoundary>
   );
 };
 
