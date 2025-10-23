@@ -197,7 +197,7 @@ const RoleAccessManagementList = () => {
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="Role Access Management" currentPage="role-access">
-        <div className="theater-list-container role-access-management-list-page">
+        <div className="theater-list-container role-access-management-list-page qr-management-page">
           {/* Main Theater Management Container */}
           <div className="theater-main-container">
             {/* Header */}

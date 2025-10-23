@@ -529,7 +529,7 @@ const QRCodeNameManagement = () => {
         pageTitle={theaterId ? `QR Code Names - ${theater?.name || 'Theater'}` : "QR Code Name Management"} 
         currentPage="qr-names"
       >
-        <div className="qr-code-name-details-page">
+        <div className="qr-code-name-details-page qr-management-page">
         <PageContainer
           hasHeader={false}
           className="qr-code-name-vertical"

@@ -485,7 +485,7 @@ const RoleCreate = () => {
         pageTitle={theaterId ? `${theater?.name || 'Theater'}` : "Role Management"} 
         currentPage="roles"
       >
-        <div className="role-create-details-page">
+        <div className="role-create-details-page qr-management-page">
         <PageContainer
           hasHeader={false}
           className="role-create-vertical"

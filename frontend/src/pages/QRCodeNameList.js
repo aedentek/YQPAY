@@ -245,7 +245,7 @@ const QRCodeNameList = () => {
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="QR Code Name Management" currentPage="qr-names">
-        <div className="theater-list-container qr-name-management-list-page">
+        <div className="theater-list-container qr-name-management-list-page qr-management-page">
           {/* Main Theater Management Container */}
           <div className="theater-main-container">
             {/* Header */}

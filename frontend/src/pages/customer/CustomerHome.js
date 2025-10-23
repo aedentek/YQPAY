@@ -56,6 +56,7 @@ const CustomerHome = () => {
       const res = await fetch(`${config.api.baseUrl}/theater-products/${id}`);
       const data = await res.json();
       if (data.success && data.data.products) {
+        console.log('🍔 Raw products from API:', data.data.products.slice(0, 2));
         const mappedProducts = data.data.products.map(p => {
           // Handle different image formats
           let imageUrl = null;
@@ -76,18 +77,56 @@ const CustomerHome = () => {
             _id: p._id,
             name: p.name || p.productName,
             price: p.pricing?.salePrice || p.price || p.sellingPrice || 0,
+            description: p.description || '',
             image: imageUrl,
-            category: typeof p.category === 'object' ? p.category?._id : p.category || 'Other',
+            // Keep category as-is (products store category name as string)
+            category: typeof p.category === 'object' ? (p.category?.categoryName || p.category?.name) : p.category,
             quantity: p.quantity || null,
             size: p.size || null,
           };
         });
+        console.log('✅ Mapped products:', mappedProducts.slice(0, 2));
         setProducts(mappedProducts);
         
-        // Group products into collections
+        // Group products into collections (for "All" view)
         const collections = groupProductsIntoCollections(mappedProducts);
+        console.log('📦 Collections created:', collections.length);
         setProductCollections(collections);
-        setFilteredCollections(collections);
+        
+        // Initial display depends on selected category
+        if (selectedCategory === 'all') {
+          setFilteredCollections(collections);
+        } else {
+          // For specific categories, show individual products
+          const individualProducts = mappedProducts
+            .filter(p => p.category === selectedCategory)
+            .map(p => ({
+              name: p.name,
+              baseImage: p.image,
+              category: p.category,
+              isCollection: false,
+              basePrice: parseFloat(p.price) || 0,
+              singleVariant: {
+                _id: p._id,
+                size: p.size || 'Regular',
+                sizeLabel: p.quantity || null,
+                price: parseFloat(p.price) || 0,
+                description: p.description,
+                image: p.image,
+                originalProduct: p
+              },
+              variants: [{
+                _id: p._id,
+                size: p.size || 'Regular',
+                sizeLabel: p.quantity || null,
+                price: parseFloat(p.price) || 0,
+                description: p.description,
+                image: p.image,
+                originalProduct: p
+              }]
+            }));
+          setFilteredCollections(individualProducts);
+        }
       }
     } catch (err) {
       console.error('Error loading products:', err);
@@ -140,9 +179,61 @@ const CustomerHome = () => {
 
   // Filter collections based on search query and selected category
   const filterProductCollections = useCallback(() => {
-    const filtered = filterCollections(productCollections, searchQuery, selectedCategory);
-    setFilteredCollections(filtered);
-  }, [productCollections, selectedCategory, searchQuery]);
+    console.log('🔍 Filtering:', { 
+      selectedCategory, 
+      totalCollections: productCollections.length,
+      totalProducts: products.length
+    });
+    
+    // For "All" category: show grouped collections
+    if (selectedCategory === 'all') {
+      const filtered = filterCollections(productCollections, searchQuery, selectedCategory);
+      console.log('✅ Showing grouped collections:', filtered.length);
+      setFilteredCollections(filtered);
+    } else {
+      // For specific categories: show individual products
+      let individualProducts = products.filter(p => p.category === selectedCategory);
+      
+      // Apply search filter
+      if (searchQuery && searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        individualProducts = individualProducts.filter(p =>
+          p.name.toLowerCase().includes(query) ||
+          (p.description && p.description.toLowerCase().includes(query))
+        );
+      }
+      
+      // Convert to collection format for consistent rendering
+      const productItems = individualProducts.map(p => ({
+        name: p.name,
+        baseImage: p.image,
+        category: p.category,
+        isCollection: false,
+        basePrice: parseFloat(p.price) || 0,
+        singleVariant: {
+          _id: p._id,
+          size: p.size || 'Regular',
+          sizeLabel: p.quantity || null,
+          price: parseFloat(p.price) || 0,
+          description: p.description,
+          image: p.image,
+          originalProduct: p
+        },
+        variants: [{
+          _id: p._id,
+          size: p.size || 'Regular',
+          sizeLabel: p.quantity || null,
+          price: parseFloat(p.price) || 0,
+          description: p.description,
+          image: p.image,
+          originalProduct: p
+        }]
+      }));
+      
+      console.log('✅ Showing individual products:', productItems.length);
+      setFilteredCollections(productItems);
+    }
+  }, [productCollections, products, selectedCategory, searchQuery]);
 
   // Update filtered collections when filters change
   useEffect(() => {
@@ -196,7 +287,12 @@ const CustomerHome = () => {
   };
 
   const handleCategoryChange = (categoryId) => {
-    setSelectedCategory(categoryId);
+    console.log('📂 Category changed to:', categoryId);
+    // Find the category name from the ID
+    const category = categories.find(cat => cat._id === categoryId);
+    const categoryName = category ? category.name : 'all';
+    console.log('📂 Category name:', categoryName);
+    setSelectedCategory(categoryName === 'all' ? 'all' : categoryName);
   };
 
   // Handle adding product to cart

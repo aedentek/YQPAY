@@ -681,7 +681,7 @@ const TheaterList = () => {
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="Theater Management" currentPage="theaters">
-      <div className="theater-list-container">
+      <div className="theater-list-container qr-management-page">
         {/* Main Theater Management Container */}
         <div className="theater-main-container">
           {/* Header */}

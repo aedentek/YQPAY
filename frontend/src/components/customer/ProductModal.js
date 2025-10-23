@@ -33,7 +33,7 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart, cartQuantity = 0 
               <img 
                 src={product.image.startsWith('http') 
                   ? product.image 
-                  : `${process.env.REACT_APP_API_URL || 'http://192.168.1.7:5000/api'}${product.image}`
+                  : `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}${product.image}`
                 } 
                 alt={product.name}
                 onError={(e) => { 

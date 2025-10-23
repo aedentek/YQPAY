@@ -114,7 +114,6 @@ const AutoUpload = ({
         
         // Fallback to common development URLs
         const fallbackUrls = [
-          'http://192.168.1.7:5000/api',
           'http://localhost:5000/api',
           '/api' // relative URL fallback
         ];

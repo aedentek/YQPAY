@@ -10,7 +10,7 @@ const config = {
   // API CONFIGURATION
   // ==============================================
   api: {
-    baseUrl: process.env.REACT_APP_API_URL || 'http://192.168.1.6:5000/api',
+    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
     timeout: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
     retryAttempts: parseInt(process.env.REACT_APP_API_RETRY_ATTEMPTS) || 3,
     retryDelay: parseInt(process.env.REACT_APP_API_RETRY_DELAY) || 1000

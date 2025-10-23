@@ -9,7 +9,7 @@ export const useSyncUtility = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const API_BASE = process.env.REACT_APP_API_BASE || 'http://192.168.1.7:5000';
+  const API_BASE = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
 
   /**
    * Get overall sync status

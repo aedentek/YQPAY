@@ -579,7 +579,7 @@ const RoleAccessManagement = () => {
         pageTitle={theaterId ? `Role Access Management` : "Role Access Management"} 
         currentPage="role-access"
       >
-        <div className="role-access-details-page">
+        <div className="role-access-details-page qr-management-page">
         <PageContainer
           hasHeader={false}
           className="role-access-vertical"

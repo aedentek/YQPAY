@@ -538,7 +538,7 @@ const PageAccessManagement = () => {
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="Page Access Management" currentPage="page-access">
-        <div className="theater-list-container">
+        <div className="theater-list-container qr-management-page">
           {/* Main Page Access Management Container */}
           <div className="theater-main-container">
             {/* Header */}

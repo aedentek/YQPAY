@@ -6,6 +6,7 @@ import { ActionButton, ActionButtons } from '../components/ActionButton';
 import Pagination from '../components/Pagination';
 import config from '../config';
 import '../styles/TheaterList.css';
+import '../styles/QRManagementPage.css';
 import '../styles/RoleCreate.css';
 
 const RolesList = () => {
@@ -206,7 +207,7 @@ const RolesList = () => {
   return (
     <ErrorBoundary>
       <AdminLayout>
-        <div className="theater-list-page">
+        <div className="theater-list-page qr-management-page">
           {/* Header */}
           <div className="page-header-section">
             <div className="header-content">
@@ -220,25 +221,23 @@ const RolesList = () => {
             </div>
           </div>
 
-          {/* Statistics */}
-          <div className="theater-stats">
+          {/* Statistics - Enhanced with QR Stats Design */}
+          <div className="qr-stats">
             <div className="stat-card">
-              <div className="stat-info">
-                <div className="stat-number">{totalItems}</div>
-                <div className="stat-label">Total Roles</div>
-              </div>
+              <div className="stat-number">{totalItems}</div>
+              <div className="stat-label">Total Roles</div>
             </div>
             <div className="stat-card">
-              <div className="stat-info">
-                <div className="stat-number">{roles.filter(r => r.isActive).length}</div>
-                <div className="stat-label">Active Roles</div>
-              </div>
+              <div className="stat-number">{roles.filter(r => r.isActive).length}</div>
+              <div className="stat-label">Active Roles</div>
             </div>
             <div className="stat-card">
-              <div className="stat-info">
-                <div className="stat-number">{roles.filter(r => r.isDefault).length}</div>
-                <div className="stat-label">Default Roles</div>
-              </div>
+              <div className="stat-number">{roles.filter(r => !r.isActive).length}</div>
+              <div className="stat-label">Inactive Roles</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-number">{roles.filter(r => r.isDefault).length}</div>
+              <div className="stat-label">Default Roles</div>
             </div>
           </div>
 

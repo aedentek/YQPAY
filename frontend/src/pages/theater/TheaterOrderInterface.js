@@ -102,18 +102,20 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
                 <div className="price-with-discount">
                   <span className="detail-value original-price">{formatPrice(originalPrice)}</span>
                   <span className="detail-value discounted-price">{formatPrice(productPrice)}</span>
-                  <span className="discount-badge">{discountPercentage}% OFF</span>
                 </div>
               ) : (
                 <span className="detail-value">{formatPrice(productPrice)}</span>
               )}
             </div>
-            <div className="modern-product-detail-item">
-              {/* <span className="detail-label">Quantity</span> */}
-              <span className="detail-value">{quantityInCart > 0 ? String(quantityInCart).padStart(2, '0') : '01'}</span>
-            </div>
           </div>
         </div>
+
+        {/* Discount Badge - Top Right */}
+        {hasDiscount && !isOutOfStock && (
+          <div className="modern-discount-badge">
+            {discountPercentage}% OFF
+          </div>
+        )}
 
         {/* Out of Stock Overlay */}
         {isOutOfStock && (
@@ -133,6 +135,9 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
       {/* Product Name - Outside Card */}
       <div className="modern-product-name-section">
         <h3 className="modern-product-name">{product.name || 'Unknown Product'}</h3>
+        <div className="modern-product-quantity">
+          {product.quantity || product.sizeLabel || ''}
+        </div>
       </div>
     </div>
   );
@@ -741,7 +746,7 @@ const TheaterOrderInterface = () => {
     // Prepare cart data to pass to ViewCart page
     const cartData = {
       items: currentOrder,
-      customerName: 'Walk-in Customer', // Default customer name
+      customerName: 'POS', // Default customer name
       notes: orderNotes.trim(),
       images: orderImages,
       subtotal: orderTotals.subtotal,
@@ -982,7 +987,7 @@ const TheaterOrderInterface = () => {
                         // Prepare cart data with current order
                         const cartData = {
                           items: currentOrder,
-                          customerName: 'Walk-in Customer', // Default customer name
+                          customerName: 'POS', // Default customer name
                           notes: orderNotes.trim(),
                           images: orderImages,
                           subtotal: orderTotals.subtotal,
