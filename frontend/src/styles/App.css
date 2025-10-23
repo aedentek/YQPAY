@@ -2166,3 +2166,351 @@
   width: 20px;
   text-align: center;
 }
+
+/* ============================================
+   GLOBAL TABLE STYLES WITH HORIZONTAL SCROLL
+   Applied to all tables throughout the project
+   ============================================ */
+
+/* Table Container - Universal wrapper for horizontal scroll */
+.table-container,
+.data-table-container,
+.responsive-table-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: visible !important; /* No scroll on outer container to prevent double scrollbars */
+  overflow-y: visible;
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  position: relative;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scrollbar-width: auto; /* Firefox - always show scrollbar */
+  scrollbar-color: var(--primary-color) #f1f1f1; /* Firefox */
+}
+
+/* Only .table-wrapper has the scroll - prevents double scrollbars */
+.table-wrapper {
+  overflow-x: scroll !important; /* Only this has horizontal scroll */
+}
+
+/* Custom Scrollbar for Tables */
+.table-container::-webkit-scrollbar,
+.data-table-container::-webkit-scrollbar,
+.responsive-table-container::-webkit-scrollbar,
+.table-wrapper::-webkit-scrollbar {
+  height: 14px; /* Larger scrollbar for better visibility */
+  width: 14px;
+}
+
+.table-container::-webkit-scrollbar-track,
+.data-table-container::-webkit-scrollbar-track,
+.responsive-table-container::-webkit-scrollbar-track,
+.table-wrapper::-webkit-scrollbar-track {
+  background: #e5e7eb;
+  border-radius: 10px;
+  margin: 0 8px; /* Add margin to scrollbar track */
+  border: 1px solid #d1d5db;
+}
+
+.table-container::-webkit-scrollbar-thumb,
+.data-table-container::-webkit-scrollbar-thumb,
+.responsive-table-container::-webkit-scrollbar-thumb,
+.table-wrapper::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  border-radius: 10px;
+  min-width: 60px; /* Minimum scrollbar thumb width */
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.table-container::-webkit-scrollbar-thumb:hover,
+.data-table-container::-webkit-scrollbar-thumb:hover,
+.responsive-table-container::-webkit-scrollbar-thumb:hover,
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #5B21B6 100%);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Corner between scrollbars */
+.table-container::-webkit-scrollbar-corner,
+.table-wrapper::-webkit-scrollbar-corner {
+  background: #e5e7eb;
+}
+
+/* Force scrollbar to always be visible */
+.table-wrapper {
+  scrollbar-width: auto; /* Firefox */
+  scrollbar-color: var(--primary-color) #e5e7eb; /* Firefox */
+}
+
+/* Table Wrapper - Inner wrapper for scroll */
+.table-wrapper {
+  overflow-x: auto !important;
+  overflow-y: visible;
+  max-width: 100%;
+  width: 100%;
+  position: relative;
+  display: block;
+}
+
+/* Universal Table Styles */
+table,
+.data-table,
+.responsive-table,
+.theater-table {
+  width: 100%;
+  min-width: 1200px; /* Increased to ensure all columns including actions are visible */
+  border-collapse: collapse;
+  background: var(--white);
+  font-size: 0.9rem;
+  table-layout: auto !important; /* Override fixed layout to allow proper column sizing */
+}
+
+/* Table Header - Universal */
+table thead,
+.data-table thead,
+.responsive-table thead {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+table thead th,
+.data-table thead th,
+.responsive-table thead th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  border: none;
+  position: relative;
+}
+
+/* Column Separators */
+table thead th::after,
+.data-table thead th::after,
+.responsive-table thead th::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+table thead th:last-child::after,
+.data-table thead th:last-child::after,
+.responsive-table thead th:last-child::after {
+  display: none;
+}
+
+/* Table Body - Universal */
+table tbody tr,
+.data-table tbody tr,
+.responsive-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+table tbody tr:hover,
+.data-table tbody tr:hover,
+.responsive-table tbody tr:hover {
+  background: var(--background-light);
+}
+
+table tbody tr:last-child,
+.data-table tbody tr:last-child,
+.responsive-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+table tbody td,
+.data-table tbody td,
+.responsive-table tbody td {
+  padding: 16px 12px;
+  color: var(--text-dark);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Centered Columns (S.No, Status, Actions) */
+table tbody td:first-child,
+table thead th:first-child,
+.data-table tbody td:first-child,
+.data-table thead th:first-child {
+  text-align: center;
+}
+
+/* Actions Column */
+table tbody td:last-child,
+.data-table tbody td:last-child,
+.responsive-table tbody td:last-child {
+  text-align: center;
+  white-space: nowrap;
+  min-width: 200px; /* Increased to fit multiple action buttons */
+  padding-right: 24px; /* Extra padding on the right */
+}
+
+/* Ensure action buttons are visible */
+.actions-cell,
+.theater-table .actions-cell {
+  min-width: 200px !important;
+  width: 200px !important;
+  padding-right: 24px !important;
+}
+
+/* Actions column header */
+table thead th:last-child,
+.data-table thead th:last-child,
+.responsive-table thead th:last-child,
+.actions-col {
+  min-width: 200px !important;
+  width: 200px !important;
+}
+
+/* Empty State */
+.table-empty-state {
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-gray);
+}
+
+.table-empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.table-empty-state-text {
+  font-size: 1rem;
+  color: var(--text-gray);
+}
+
+/* Loading State */
+.table-loading {
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.table-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: table-spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes table-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Scroll Indicator - Shows when table is scrollable */
+.table-container::after,
+.data-table-container::after {
+  content: '→ Scroll';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.9));
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 5;
+}
+
+.table-container.has-scroll::after,
+.data-table-container.has-scroll::after {
+  opacity: 1;
+}
+
+/* Responsive Table Adjustments */
+@media (max-width: 1024px) {
+  table,
+  .data-table,
+  .responsive-table {
+    min-width: 700px;
+  }
+  
+  table tbody td,
+  table thead th,
+  .data-table tbody td,
+  .data-table thead th {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  table,
+  .data-table,
+  .responsive-table {
+    min-width: 600px;
+  }
+  
+  table tbody td,
+  table thead th,
+  .data-table tbody td,
+  .data-table thead th {
+    padding: 10px 8px;
+    font-size: 0.75rem;
+  }
+  
+  .table-container::after,
+  .data-table-container::after {
+    font-size: 0.7rem;
+    padding: 6px 12px;
+  }
+}
+
+/* Sticky First Column (Optional - for better UX) */
+.table-sticky-first table tbody td:first-child,
+.table-sticky-first table thead th:first-child {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  z-index: 5;
+}
+
+.table-sticky-first table thead th:first-child {
+  z-index: 15;
+}
+
+/* Specific Component Overrides */
+/* These ensure compatibility with existing table implementations */
+.theater-table-container,
+.product-table-container,
+.order-table-container,
+.user-table-container,
+.role-table-container {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+/* Ensure all table wrappers have horizontal scroll */
+.table-wrapper,
+.theater-table-wrapper,
+.product-table-wrapper,
+.order-table-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+

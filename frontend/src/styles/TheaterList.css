@@ -313,26 +313,28 @@ body .filter-controls {
   margin: 0;
   border-radius: 0;
   box-shadow: none;
-  overflow: hidden;
+  overflow-x: visible !important; /* No scroll on outer container */
+  overflow-y: visible !important;
 }
 
 .table-wrapper {
-  overflow-x: auto;
+  overflow-x: scroll !important; /* Only inner wrapper has scroll */
   max-width: 100%;
 }
 
 /* Theater Table */
 .theater-table {
   width: 100%;
+  min-width: 1200px; /* Ensure minimum width for all columns */
   border-collapse: collapse;
   font-size: 0.9rem;
   background: var(--white);
-  table-layout: fixed; /* Fixed layout to prevent column misalignment */
+  table-layout: auto !important; /* Auto layout to allow proper column sizing */
 }
 
 /* Table Wrapper */
 .table-wrapper {
-  overflow-x: auto;
+  overflow-x: scroll !important; /* Force horizontal scroll */
   background: var(--white);
   border-radius: 0;
   box-shadow: var(--shadow-card);
@@ -400,10 +402,11 @@ body .filter-controls {
 /* Ensure table uses full width */
 .theater-table {
   width: 100%;
+  min-width: 1200px; /* Ensure minimum width for all columns */
   border-collapse: collapse;
   font-size: 0.9rem;
   background: var(--white);
-  table-layout: fixed; /* Fixed layout to prevent column misalignment */
+  table-layout: auto !important; /* Auto layout to allow proper column sizing */
 }
 
 /* Table Body */
