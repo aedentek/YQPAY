@@ -4,6 +4,10 @@ import '../css/HowItWorksSliderNew.css';
 // Import images
 import scanQRImage from '../images/Scan QR Code.jpg';
 import browseMenuImage from '../images/Browse Menu.jpg';
+import securePaymentImage from '../images/Payment.jpg';
+import orderProcessingImage from '../images/Order Processing.jpg';
+import seatDeliveryImage from '../images/Seat Delivery.webp';
+import analyticsReportsImage from '../images/Analytics & Reports.jpg';
 
 const HowItWorksSlider = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -15,7 +19,7 @@ const HowItWorksSlider = () => {
       topic: "Scan QR Code",
       description: "Audience members scan a unique QR code placed on their theater seat using their smartphone for instant access to the digital menu.",
       image: scanQRImage,
-      icon: "📱"
+      // icon: "📱"
     },
     {
       id: 2,
@@ -23,39 +27,39 @@ const HowItWorksSlider = () => {
       topic: "Browse Menu",
       description: "Access a full digital menu with detailed descriptions, images, and prices. Add items to the cart with just a few taps.",
       image: browseMenuImage,
-      icon: "🍿"
+      // icon: "🍿"
     },
     {
       id: 3,
       number: "03",
       topic: "Secure Payment",
       description: "Pay safely through integrated payment gateways like Razorpay, with multiple secure payment options available.",
-      image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      icon: "💳"
+      image: securePaymentImage,
+      // icon: "💳"
     },
     {
       id: 4,
       number: "04",
       topic: "Order Processing",
       description: "Orders are instantly sent to the kitchen with seat details. Real-time updates keep customers informed on progress.",
-      image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      icon: "⚡"
+      image: orderProcessingImage,
+      // icon: "⚡"
     },
     {
       id: 5,
       number: "05",
       topic: "Seat Delivery",
       description: "Snacks and beverages are delivered directly to the customer's seat, ensuring uninterrupted enjoyment of the show.",
-      image: "https://images.unsplash.com/photo-1606787366850-de6330128bfc?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      icon: "🎯"
+      image: seatDeliveryImage,
+      // icon: "🎯"
     },
     {
       id: 6,
       number: "06",
       topic: "Analytics & Reports",
       description: "Theater management receives detailed sales reports, order analytics, and performance insights to optimize operations.",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      icon: "📊"
+      image: analyticsReportsImage,
+      // icon: "📊"
     }
   ];
 
