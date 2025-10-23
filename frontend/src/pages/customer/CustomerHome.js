@@ -55,7 +55,6 @@ const CustomerHome = () => {
       // Use session storage to cache products for better performance
       const res = await fetch(`${config.api.baseUrl}/theater-products/${id}`);
       const data = await res.json();
-      console.log('🍔 Products API Response:', data);
       if (data.success && data.data.products) {
         const mappedProducts = data.data.products.map(p => {
           // Handle different image formats
@@ -73,9 +72,6 @@ const CustomerHome = () => {
             imageUrl = p.image; // Alternative old format
           }
           
-          // Only add cache buster on first load, not on every render
-          // This allows browser to cache images for better performance
-          
           return {
             _id: p._id,
             name: p.name || p.productName,
@@ -86,21 +82,10 @@ const CustomerHome = () => {
             size: p.size || null,
           };
         });
-        console.log('✅ Mapped products:', mappedProducts);
         setProducts(mappedProducts);
-        
-        // Preload images in the background for faster display
-        mappedProducts.forEach(product => {
-          if (product.image) {
-            const img = new Image();
-            img.src = product.image;
-          }
-        });
         
         // Group products into collections
         const collections = groupProductsIntoCollections(mappedProducts);
-        console.log('✅ Product collections:', collections);
-        console.log('📊 Collection categories:', collections.map(c => ({ name: c.name, category: c.category })));
         setProductCollections(collections);
         setFilteredCollections(collections);
       }
@@ -320,15 +305,18 @@ const CustomerHome = () => {
             onClick={() => handleCategoryChange('all')}
             aria-label="All categories"
           >
-            <div className="category-icon-large">
-              <OptimizedImage
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100&h=100&fit=crop"
-                alt="All Categories"
-                width={48}
-                height={48}
-                className="category-img"
-                lazy={false}
-              />
+            <div className="category-content">
+              <div className="category-icon-large">
+                <OptimizedImage
+                  src="/images/cinema-combo.jpg.png"
+                  alt="All Categories"
+                  width={48}
+                  height={48}
+                  className="category-img"
+                  lazy={false}
+                />
+              </div>
+              <span className="category-name">All</span>
             </div>
           </button>
           {categories.map((category) => {
@@ -373,16 +361,19 @@ const CustomerHome = () => {
                 onClick={() => handleCategoryChange(category._id)}
                 aria-label={`Filter by ${category.name}`}
               >
-                <div className="category-icon-large">
-                  <OptimizedImage
-                    src={categoryImgUrl}
-                    alt={category.name}
-                    width={48}
-                    height={48}
-                    className="category-img"
-                    fallback="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop"
-                      lazy={false}
-                    />
+                <div className="category-content">
+                  <div className="category-icon-large">
+                    <OptimizedImage
+                      src={categoryImgUrl}
+                      alt={category.name}
+                      width={48}
+                      height={48}
+                      className="category-img"
+                      fallback="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop"
+                        lazy={false}
+                      />
+                    </div>
+                    <span className="category-name">{category.name}</span>
                   </div>
                 </button>
               );

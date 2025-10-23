@@ -183,27 +183,11 @@ const generateIngredientIcons = (productName) => {
  * @returns {Array} Filtered collections
  */
 export const filterCollections = (collections, searchQuery, selectedCategory) => {
-  console.log('🔍 Filtering collections:', { 
-    totalCollections: collections.length, 
-    selectedCategory, 
-    searchQuery,
-    collectionCategories: collections.map(c => c.category)
-  });
-  
   let filtered = collections;
 
   // Filter by category
   if (selectedCategory !== 'all') {
-    filtered = filtered.filter(collection => {
-      const matches = collection.category === selectedCategory;
-      console.log('Category filter:', { 
-        collectionName: collection.name, 
-        collectionCategory: collection.category, 
-        selectedCategory, 
-        matches 
-      });
-      return matches;
-    });
+    filtered = filtered.filter(collection => collection.category === selectedCategory);
   }
 
   // Filter by search query
@@ -214,7 +198,6 @@ export const filterCollections = (collections, searchQuery, selectedCategory) =>
     );
   }
 
-  console.log('✅ Filtered result:', filtered.length, 'collections');
   return filtered;
 };
 
