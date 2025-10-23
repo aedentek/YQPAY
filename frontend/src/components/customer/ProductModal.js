@@ -54,31 +54,6 @@ const ProductModal = ({ product, isOpen, onClose, onAddToCart, cartQuantity = 0 
               ₹{product.price}
             </div>
 
-            <div className="product-modal-description">
-              <p>{product.description || 'Delicious item from our menu. Perfect for your movie experience!'}</p>
-            </div>
-
-            <div className="product-modal-features">
-              <div className="product-features-grid">
-                <div className="feature-item">
-                  <span className="feature-icon">⭐</span>
-                  <span className="feature-text">4.2 Rating</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🕒</span>
-                  <span className="feature-text">5-10 mins</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🥬</span>
-                  <span className="feature-text">Fresh</span>
-                </div>
-                <div className="feature-item">
-                  <span className="feature-icon">🌶️</span>
-                  <span className="feature-text">{product.spiceLevel || 'Mild'}</span>
-                </div>
-              </div>
-            </div>
-
             <div className="product-modal-actions">
               {cartQuantity > 0 ? (
                 <div className="quantity-controls-modal">

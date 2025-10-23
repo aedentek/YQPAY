@@ -40,7 +40,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(12px);
+  filter: blur(1px);
 }
 
 .background-blur-image::after {
@@ -100,6 +100,27 @@
   padding: 0 20px;
 }
 
+/* Product Name Above Image */
+.product-name-above-image {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  text-align: center;
+  animation: fadeInDown 0.4s ease-out;
+}
+
+.product-name-above-image h2 {
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+}
+
 /* Product Name Display - Top of Image */
 .product-name-display {
   position: absolute;
@@ -135,7 +156,7 @@
 /* Center Product Image */
 .center-product-image {
   position: absolute;
-  top: 25%;
+  top: 32%;
   left: 50%;
   transform: translate(-50%, -50%);
   width: 280px;
@@ -154,6 +175,52 @@
   object-fit: cover;
 }
 
+/* Slide animations from different directions */
+.slide-from-left {
+  animation: slideInFromLeft 0.4s ease-out;
+}
+
+.slide-from-right {
+  animation: slideInFromRight 0.4s ease-out;
+}
+
+.slide-from-center {
+  animation: slideInFromCenter 0.4s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    transform: translate(-150%, -50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  0% {
+    transform: translate(50%, -50%);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromCenter {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
 @keyframes slideInCircle {
   0% {
     transform: translate(100%, -50%);
@@ -165,18 +232,18 @@
   }
 }
 
-/* Selected Product Quantity */
+/* Selected Product Quantity - Below Center Image */
 .selected-product-quantity {
   position: absolute;
-  top: 48%;
+  top: 52%;
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, rgba(139, 92, 246, 0.95) 0%, rgba(167, 139, 250, 0.95) 100%);
   color: white;
-  padding: 8px 24px;
-  border-radius: 20px;
-  font-weight: 600;
-  font-size: 16px;
+  padding: 10px 28px;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 18px;
   text-transform: uppercase;
   box-shadow: 0 4px 16px rgba(139, 92, 246, 0.5);
   z-index: 6;
@@ -195,12 +262,41 @@
   }
 }
 
-/* Bottom Add to Cart Button */
-.bottom-add-to-cart-btn {
+/* Product Price Display - Bottom Center */
+.product-price-display {
   position: absolute;
   bottom: 3%;
   left: 50%;
   transform: translateX(-50%);
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+  padding: 16px 40px;
+  border-radius: 30px;
+  font-weight: 800;
+  font-size: 28px;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+  z-index: 6;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  animation: priceSlideUp 0.4s ease-out;
+  letter-spacing: 1px;
+}
+
+@keyframes priceSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Bottom Add to Cart Button */
+.bottom-add-to-cart-btn {
+  position: absolute;
+  bottom: 3%;
+  right: 3%;
   background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
   color: white;
   border: none;
@@ -219,19 +315,181 @@
 }
 
 .bottom-add-to-cart-btn:hover {
-  transform: translateX(-50%) translateY(-2px);
+  transform: translateY(-2px);
   box-shadow: 0 12px 32px rgba(139, 92, 246, 0.7);
   background: linear-gradient(135deg, #9F7CF8 0%, #B89FFC 100%);
 }
 
 .bottom-add-to-cart-btn:active {
-  transform: translateX(-50%) translateY(0px);
+  transform: translateY(0px);
 }
 
 .bottom-add-to-cart-btn .btn-icon {
   font-size: 1.5rem;
   font-weight: bold;
   line-height: 1;
+}
+
+/* Floating Cart Icon in Modal - Bottom Right */
+.modal-floating-cart-icon {
+  position: absolute;
+  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 20px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6B0E9B 0%, #5A0C82 100%);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  box-shadow: 0 6px 20px rgba(107, 14, 155, 0.6);
+  z-index: 10000;
+  transition: all 0.3s ease;
+  animation: slideInCart 0.4s ease-out;
+  padding: 0;
+}
+
+.modal-floating-cart-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(107, 14, 155, 0.7);
+}
+
+.modal-floating-cart-icon:active {
+  transform: scale(0.95);
+}
+
+.modal-floating-cart-icon .cart-icon {
+  font-size: 28px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.modal-floating-cart-icon .cart-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  line-height: 1;
+  margin-top: -2px;
+}
+
+@keyframes slideInCart {
+  from {
+    opacity: 0;
+    transform: translateY(100px) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Quantity Controls - Right Side of Modal */
+.modal-quantity-controls {
+  position: absolute;
+  right: 3%;
+  top: 58%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  background: rgba(212, 175, 55, 0.15);
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.modal-quantity-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-quantity-btn.modal-minus-btn {
+  background: linear-gradient(135deg, #e8e8e8, #d0d0d0);
+  color: #666;
+}
+
+.modal-quantity-btn.modal-minus-btn:hover {
+  background: linear-gradient(135deg, #d8d8d8, #c0c0c0);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.modal-quantity-btn.modal-plus-btn {
+  background: linear-gradient(135deg, #6B0E9B 0%, #5A0C82 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(107, 14, 155, 0.4);
+}
+
+.modal-quantity-btn.modal-plus-btn:hover {
+  background: linear-gradient(135deg, #7C1BAB 0%, #6B0E9B 100%);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(107, 14, 155, 0.6);
+}
+
+.modal-quantity-display {
+  min-width: 24px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  padding: 0 4px;
+}
+
+/* Back Icon - Bottom Left */
+.modal-back-icon {
+  position: absolute;
+  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 20px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  z-index: 10000;
+  transition: all 0.3s ease;
+  animation: slideInCart 0.4s ease-out;
+  padding: 0;
+}
+
+.modal-back-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.9) 100%);
+}
+
+.modal-back-icon:active {
+  transform: scale(0.95);
+}
+
+.modal-back-icon .back-arrow {
+  font-size: 32px;
+  line-height: 1;
+  color: white;
+  font-weight: bold;
 }
 
 /* Left Side - Product Card */
@@ -336,7 +594,7 @@
 /* Right Side - Circular Menu */
 .circular-menu-right {
   position: absolute;
-  bottom: 5%;
+  bottom: 12%;
   left: 50%;
   transform: translateX(-50%);
   width: 360px;
@@ -349,8 +607,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  margin-top: -40px;
-  margin-left: -40px;
+  margin-top: -30px;
+  margin-left: -30px;
   background: none;
   border: none;
   cursor: pointer;
@@ -372,8 +630,8 @@
 }
 
 .variant-image-circle {
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   background: rgba(30, 30, 40, 0.85);
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 50%;

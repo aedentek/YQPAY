@@ -81,7 +81,9 @@ const CustomerHome = () => {
             name: p.name || p.productName,
             price: p.pricing?.salePrice || p.price || p.sellingPrice || 0,
             image: imageUrl,
-            category: p.category || 'Other',
+            category: typeof p.category === 'object' ? p.category?._id : p.category || 'Other',
+            quantity: p.quantity || null,
+            size: p.size || null,
           };
         });
         console.log('✅ Mapped products:', mappedProducts);
@@ -98,6 +100,7 @@ const CustomerHome = () => {
         // Group products into collections
         const collections = groupProductsIntoCollections(mappedProducts);
         console.log('✅ Product collections:', collections);
+        console.log('📊 Collection categories:', collections.map(c => ({ name: c.name, category: c.category })));
         setProductCollections(collections);
         setFilteredCollections(collections);
       }
@@ -163,6 +166,48 @@ const CustomerHome = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleVoiceSearch = () => {
+    // Check if browser supports speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported in your browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN'; // English India
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      console.log('Voice recognition started. Speak now...');
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      console.log('Voice input:', transcript);
+      setSearchQuery(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Voice recognition error:', event.error);
+      if (event.error === 'no-speech') {
+        alert('No speech detected. Please try again.');
+      } else if (event.error === 'not-allowed') {
+        alert('Microphone access denied. Please allow microphone access in your browser settings.');
+      } else {
+        alert('Voice recognition error. Please try again.');
+      }
+    };
+
+    recognition.onend = () => {
+      console.log('Voice recognition ended.');
+    };
+
+    recognition.start();
   };
 
   const handleCategoryChange = (categoryId) => {
@@ -252,10 +297,6 @@ const CustomerHome = () => {
         </div>
 
         <div className="search-container">
-          <svg className="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
           <input 
             type="text" 
             className="search-input" 
@@ -264,7 +305,7 @@ const CustomerHome = () => {
             onChange={handleSearchChange}
             aria-label="Search products"
           />
-          <button className="mic-btn" aria-label="Voice search">
+          <button className="mic-btn" aria-label="Voice search" onClick={handleVoiceSearch}>
             <svg className="mic-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
               <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
@@ -286,7 +327,7 @@ const CustomerHome = () => {
                 width={48}
                 height={48}
                 className="category-img"
-                lazy={true}
+                lazy={false}
               />
             </div>
           </button>
@@ -340,12 +381,12 @@ const CustomerHome = () => {
                     height={48}
                     className="category-img"
                     fallback="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop"
-                    lazy={true}
-                  />
-                </div>
-              </button>
-            );
-          })}
+                      lazy={false}
+                    />
+                  </div>
+                </button>
+              );
+            })}
         </div>
       </header>
       <main className="customer-main">
@@ -367,17 +408,6 @@ const CustomerHome = () => {
                     onClick={() => handleCollectionClick(collection)}
                     style={{ cursor: collection.isCollection ? 'pointer' : 'default' }}
                   >
-                    {/* Collection Indicator Badge */}
-                    {collection.isCollection && (
-                      <div className="collection-select-btn">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="collection-select-icon">
-                          <circle cx="12" cy="12" r="3"/>
-                          <circle cx="12" cy="5" r="2"/>
-                          <circle cx="12" cy="19" r="2"/>
-                        </svg>
-                      </div>
-                    )}
-
                     <div className="product-image-wrapper">
                       <div className="product-image">
                         {imgUrl ? (
@@ -391,7 +421,7 @@ const CustomerHome = () => {
                             height={100}
                             className="product-img"
                             fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='40'%3E🍽️%3C/text%3E%3C/svg%3E"
-                            lazy={true}
+                            lazy={false}
                           />
                         ) : (
                           <div className="product-placeholder">

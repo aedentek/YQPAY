@@ -4,16 +4,18 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import './ProductCollectionModal.css';
 
 const ProductCollectionModal = ({ collection, isOpen, onClose }) => {
-  const { addItem, getItemQuantity } = useCart();
+  const { addItem, removeItem, getItemQuantity, totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [slideDirection, setSlideDirection] = useState('right');
 
   useEffect(() => {
     if (isOpen && collection?.variants?.length > 0) {
       setSelectedVariant(collection.variants[0]);
       setSelectedImage(collection.variants[0].image || collection.baseImage);
+      setSlideDirection('right');
       
       // Preload all variant images for instant switching
       collection.variants.forEach(variant => {
@@ -43,40 +45,45 @@ const ProductCollectionModal = ({ collection, isOpen, onClose }) => {
 
   if (!isOpen || !collection) return null;
 
-  const handleVariantClick = (variant) => {
+  const handleVariantClick = (variant, index) => {
+    // Determine slide direction based on variant position
+    const totalVariants = collection.variants.length;
+    const middleIndex = (totalVariants - 1) / 2;
+    
+    if (index < middleIndex) {
+      setSlideDirection('left');
+    } else if (index > middleIndex) {
+      setSlideDirection('right');
+    } else {
+      setSlideDirection('center');
+    }
+    
     setSelectedVariant(variant);
     setSelectedImage(variant.image || collection.baseImage);
   };
 
   const getCircularPosition = (index, total) => {
-    const radius = 160;
-    const startAngle = 180; // Start from left side
-    const angleStep = 180 / (total - 1); // Spread across top half (180 degrees)
-    const angle = (startAngle + (angleStep * index)) * (Math.PI / 180);
-    return { x: Math.cos(angle) * radius, y: Math.sin(angle) * radius };
+    // Changed to straight horizontal line instead of circular arc
+    const spacing = 85; // Space between each item
+    const totalWidth = (total - 1) * spacing;
+    const startX = -totalWidth / 2; // Center the line
+    return { x: startX + (index * spacing), y: 0 }; // y: 0 keeps them in a straight line
   };
 
   return (
     <div className="circular-modal-overlay" onClick={onClose}>
       <div className="circular-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-top-bar">
-          <button className="menu-btn" onClick={onClose}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="3" y1="12" x2="21" y2="12"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <line x1="3" y1="18" x2="21" y2="18"/>
-            </svg>
-          </button>
         </div>
         <div className="modal-main-content">
           
-          {/* Product Name - Top of Image */}
-          <div className="product-name-display">
+          {/* Product Name - Above Center Image */}
+          <div className="product-name-above-image">
             <h2>{collection.name}</h2>
           </div>
 
           {/* Center Product Image */}
-          <div className="center-product-image" key={selectedImage || collection.baseImage}>
+          <div className={`center-product-image slide-from-${slideDirection}`} key={selectedImage || collection.baseImage}>
             <img 
               src={selectedImage || collection.baseImage} 
               alt={collection.name}
@@ -88,10 +95,17 @@ const ProductCollectionModal = ({ collection, isOpen, onClose }) => {
             />
           </div>
 
-          {/* Product Quantity - Bottom of Image */}
+          {/* Product Size/Quantity Label Below Center Image */}
           {selectedVariant && (
             <div className="selected-product-quantity">
-              <span className="quantity-label">{selectedVariant.quantity || selectedVariant.sizeLabel || selectedVariant.size}</span>
+              {selectedVariant.sizeLabel || selectedVariant.size}
+            </div>
+          )}
+
+          {/* Product Price - Bottom Center */}
+          {selectedVariant && (
+            <div className="product-price-display">
+              ₹{selectedVariant.price}
             </div>
           )}
 
@@ -105,7 +119,7 @@ const ProductCollectionModal = ({ collection, isOpen, onClose }) => {
                   key={variant._id} 
                   className={`circular-variant-item ${isSelected ? 'selected' : ''}`}
                   style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
-                  onClick={() => handleVariantClick(variant)}
+                  onClick={() => handleVariantClick(variant, index)}
                 >
                   <div className="variant-image-circle">
                     <img 
@@ -115,21 +129,62 @@ const ProductCollectionModal = ({ collection, isOpen, onClose }) => {
                         e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%23ddd" width="60" height="60"/%3E%3C/svg%3E'; 
                       }}
                     />
-                    {quantity > 0 && (
-                      <div className="variant-quantity-badge">{quantity}</div>
-                    )}
                   </div>
-                  <span className="variant-label">{variant.sizeLabel || variant.size}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Add to Cart Button - Bottom Center */}
-          <button className="bottom-add-to-cart-btn" onClick={handleAddToCart}>
-            <span className="btn-icon">+</span>
-            Add to Cart
+          {/* Quantity Controls - Right Side */}
+          {selectedVariant && (
+            <div className="modal-quantity-controls">
+              <button 
+                className="modal-quantity-btn modal-minus-btn"
+                onClick={() => removeItem(selectedVariant)}
+                aria-label="Decrease quantity"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+              
+              <span className="modal-quantity-display">{getItemQuantity(selectedVariant._id)}</span>
+              
+              <button 
+                className="modal-quantity-btn modal-plus-btn"
+                onClick={handleAddToCart}
+                aria-label="Increase quantity"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+          )}
+
+          {/* Back Icon - Bottom Left */}
+          <button 
+            className="modal-back-icon"
+            onClick={onClose}
+            aria-label="Back to products"
+          >
+            <span className="back-arrow">←</span>
           </button>
+
+          {/* Floating Cart Icon - Bottom Right */}
+          {totalItems > 0 && (
+            <button 
+              className="modal-floating-cart-icon"
+              onClick={() => {
+                const params = new URLSearchParams(location.search);
+                navigate(`/customer/cart?${params.toString()}`);
+              }}
+              aria-label={`View Cart (${totalItems} items)`}
+            >
+              <span className="cart-icon">🛒</span>
+              <span className="cart-count">{totalItems}</span>
+            </button>
+          )}
 
         </div>
         <div className="background-blur-image">

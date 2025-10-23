@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const OptimizedImage = ({ 
   src, 
@@ -8,37 +8,26 @@ const OptimizedImage = ({
   className, 
   placeholder = 'https://via.placeholder.com/80x80?text=Loading...',
   fallback = 'https://via.placeholder.com/80x80?text=No+Image',
-  lazy = true 
+  lazy = false // Changed default to false for faster loading
 }) => {
-  const [imageSrc, setImageSrc] = useState(lazy ? placeholder : src);
-  const [imageRef, setImageRef] = useState();
+  const [imageSrc, setImageSrc] = useState(src); // Load actual image immediately
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    let observer;
-    
-    if (lazy && imageRef && imageSrc === placeholder) {
-      observer = new IntersectionObserver(
-        entries => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              setImageSrc(src);
-              observer.unobserve(imageRef);
-            }
-          });
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(imageRef);
+    // Update image source when src prop changes
+    if (src) {
+      setImageSrc(src);
+      // Preload image for faster display
+      const img = new Image();
+      img.src = src;
+      img.onload = () => setLoaded(true);
+      img.onerror = () => {
+        setError(true);
+        setImageSrc(fallback);
+      };
     }
-    
-    return () => {
-      if (observer && observer.unobserve) {
-        observer.unobserve(imageRef);
-      }
-    };
-  }, [imageRef, imageSrc, placeholder, src, lazy]);
+  }, [src, fallback]);
 
   const handleLoad = () => {
     setLoaded(true);
@@ -49,40 +38,20 @@ const OptimizedImage = ({
     setImageSrc(fallback);
   };
 
-  // Convert to WebP if supported and not already WebP
-  const getOptimizedSrc = (originalSrc) => {
-    if (!originalSrc || originalSrc.includes('placeholder') || originalSrc.includes('.webp')) {
-      return originalSrc;
-    }
-    
-    // Check if browser supports WebP
-    const canvas = document.createElement('canvas');
-    const supportsWebP = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
-    
-    if (supportsWebP && originalSrc.includes('unsplash.com')) {
-      // Add WebP format parameter for Unsplash images
-      return originalSrc.includes('?') 
-        ? `${originalSrc}&fm=webp&q=80`
-        : `${originalSrc}?fm=webp&q=80`;
-    }
-    
-    return originalSrc;
-  };
-
   return (
     <img
-      ref={setImageRef}
-      src={getOptimizedSrc(imageSrc)}
+      src={imageSrc}
       alt={alt}
       width={width}
       height={height}
       className={`${className} ${loaded ? 'image-loaded' : 'image-loading'} ${error ? 'image-error' : ''}`}
       onLoad={handleLoad}
       onError={handleError}
-      loading={lazy ? 'lazy' : 'eager'}
+      loading="eager" // Load images immediately, not lazy
+      decoding="async" // Decode images asynchronously for faster rendering
       style={{
-        transition: 'opacity 0.3s ease',
-        opacity: loaded ? 1 : 0.7
+        transition: 'opacity 0.2s ease',
+        opacity: loaded ? 1 : 0.8
       }}
     />
   );

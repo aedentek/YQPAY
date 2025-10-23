@@ -32,6 +32,7 @@ export const groupProductsIntoCollections = (products) => {
     collections[name].variants.push({
       _id: product._id,
       size: product.size || detectSizeFromName(product.name) || 'Regular',
+      sizeLabel: product.quantity || product.sizeLabel || null,
       price: parseFloat(product.price) || 0,
       description: product.description || generateSizeDescription(product.size),
       image: product.image,
@@ -60,7 +61,7 @@ export const groupProductsIntoCollections = (products) => {
       collection.variants = collection.variants.map((variant, index) => ({
         ...variant,
         size: variant.size || getSizeByIndex(index),
-        sizeLabel: getSizeLabelByIndex(index)
+        sizeLabel: variant.sizeLabel || getSizeLabelByIndex(index)
       }));
 
       // Generate ingredient icons based on product name
@@ -182,11 +183,27 @@ const generateIngredientIcons = (productName) => {
  * @returns {Array} Filtered collections
  */
 export const filterCollections = (collections, searchQuery, selectedCategory) => {
+  console.log('🔍 Filtering collections:', { 
+    totalCollections: collections.length, 
+    selectedCategory, 
+    searchQuery,
+    collectionCategories: collections.map(c => c.category)
+  });
+  
   let filtered = collections;
 
   // Filter by category
   if (selectedCategory !== 'all') {
-    filtered = filtered.filter(collection => collection.category === selectedCategory);
+    filtered = filtered.filter(collection => {
+      const matches = collection.category === selectedCategory;
+      console.log('Category filter:', { 
+        collectionName: collection.name, 
+        collectionCategory: collection.category, 
+        selectedCategory, 
+        matches 
+      });
+      return matches;
+    });
   }
 
   // Filter by search query
@@ -197,6 +214,7 @@ export const filterCollections = (collections, searchQuery, selectedCategory) =>
     );
   }
 
+  console.log('✅ Filtered result:', filtered.length, 'collections');
   return filtered;
 };
 
