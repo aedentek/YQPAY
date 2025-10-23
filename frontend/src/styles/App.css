@@ -2178,7 +2178,7 @@
 .responsive-table-container {
   width: 100%;
   max-width: 100%;
-  overflow-x: visible !important; /* No scroll on outer container to prevent double scrollbars */
+  overflow-x: auto !important; /* Show scrollbar only when needed */
   overflow-y: visible;
   background: var(--white);
   border-radius: 12px;
@@ -2187,12 +2187,12 @@
   position: relative;
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
   scrollbar-width: auto; /* Firefox - always show scrollbar */
-  scrollbar-color: var(--primary-color) #f1f1f1; /* Firefox */
+  scrollbar-color: var(--primary-color) #e5e7eb; /* Firefox */
 }
 
 /* Only .table-wrapper has the scroll - prevents double scrollbars */
 .table-wrapper {
-  overflow-x: scroll !important; /* Only this has horizontal scroll */
+  overflow-x: auto !important; /* Show scrollbar only when needed */
 }
 
 /* Custom Scrollbar for Tables */

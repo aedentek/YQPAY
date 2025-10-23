@@ -313,12 +313,12 @@ body .filter-controls {
   margin: 0;
   border-radius: 0;
   box-shadow: none;
-  overflow-x: visible !important; /* No scroll on outer container */
+  overflow-x: auto !important; /* Show scrollbar only when needed */
   overflow-y: visible !important;
 }
 
 .table-wrapper {
-  overflow-x: scroll !important; /* Only inner wrapper has scroll */
+  overflow-x: auto !important; /* Show scrollbar only when needed */
   max-width: 100%;
 }
 
@@ -334,7 +334,7 @@ body .filter-controls {
 
 /* Table Wrapper */
 .table-wrapper {
-  overflow-x: scroll !important; /* Force horizontal scroll */
+  overflow-x: auto !important; /* Show scrollbar only when needed */
   background: var(--white);
   border-radius: 0;
   box-shadow: var(--shadow-card);

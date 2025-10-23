@@ -319,6 +319,7 @@ const QRCodeNameManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedQRCodeName, setSelectedQRCodeName] = useState(null);
+  const [deleteModal, setDeleteModal] = useState({ show: false, qrCodeName: null });
   const [formData, setFormData] = useState({
     qrName: '',
     seatClass: '',
@@ -350,47 +351,51 @@ const QRCodeNameManagement = () => {
         return;
       }
 
-      const confirmed = await confirm({
-        title: 'Delete QR Code Name',
-        message: `Are you sure you want to delete the QR code name "${qrCodeName.qrName}" with seat class "${qrCodeName.seatClass}"? This action cannot be undone.`,
-        type: 'danger',
-        confirmText: 'Delete QR Code Name',
-        cancelText: 'Cancel'
-      });
+      // Show simple delete modal instead of confirm dialog
+      setDeleteModal({ show: true, qrCodeName });
+    } catch (error) {
+      console.error('❌ Delete error:', error);
+      showError('Failed to prepare delete action. Please try again.');
+    }
+  };
 
-      if (confirmed) {
-        console.log('🗑️ Deleting QR Code Name:', qrCodeName._id);
-        console.log('🔗 DELETE URL:', `${config.api.baseUrl}/qrcodenames/${qrCodeName._id}?permanent=true`);
-        console.log('🔑 Token:', token ? 'Present' : 'Missing');
+  const handleDeleteConfirm = async () => {
+    try {
+      const token = config.helpers.getAuthToken();
+      const qrCodeName = deleteModal.qrCodeName;
+
+      console.log('🗑️ Deleting QR Code Name:', qrCodeName._id);
+      console.log('🔗 DELETE URL:', `${config.api.baseUrl}/qrcodenames/${qrCodeName._id}?permanent=true`);
+      console.log('🔑 Token:', token ? 'Present' : 'Missing');
+      
+      const response = await fetch(`${config.api.baseUrl}/qrcodenames/${qrCodeName._id}?permanent=true`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('📡 DELETE response:', response.status, response.statusText);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Delete successful:', data);
+        setDeleteModal({ show: false, qrCodeName: null });
+        showSuccess('QR Code Name deleted successfully!');
+        loadQRCodeNameData(); // Refresh the list
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Delete failed:', errorData);
         
-        const response = await fetch(`${config.api.baseUrl}/qrcodenames/${qrCodeName._id}?permanent=true`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        console.log('📡 DELETE response:', response.status, response.statusText);
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ Delete successful:', data);
-          showSuccess('QR Code Name deleted successfully!');
-          loadQRCodeNameData(); // Refresh the list
+        // Enhanced error handling for array-based operations
+        if (errorData.message && errorData.message.includes('Theater QR names not found')) {
+          showError('Theater not found. Please refresh the page and try again.');
+        } else if (errorData.message && errorData.message.includes('QR name not found')) {
+          showError('QR code name not found. It may have been already deleted.');
+          loadQRCodeNameData(); // Refresh to show current state
         } else {
-          const errorData = await response.json();
-          console.error('❌ Delete failed:', errorData);
-          
-          // Enhanced error handling for array-based operations
-          if (errorData.message && errorData.message.includes('Theater QR names not found')) {
-            showError('Theater not found. Please refresh the page and try again.');
-          } else if (errorData.message && errorData.message.includes('QR name not found')) {
-            showError('QR code name not found. It may have been already deleted.');
-            loadQRCodeNameData(); // Refresh to show current state
-          } else {
-            showError(errorData.message || 'Failed to delete QR code name');
-          }
+          showError(errorData.message || 'Failed to delete QR code name');
         }
       }
     } catch (error) {
@@ -963,6 +968,35 @@ const QRCodeNameManagement = () => {
         </PageContainer>
         </div>
       </AdminLayout>
+
+      {/* Delete Confirmation Modal - Matching TheaterList Design */}
+      {deleteModal.show && (
+        <div className="modal-overlay">
+          <div className="delete-modal">
+            <div className="modal-header">
+              <h3>Confirm Deletion</h3>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to delete the QR code name <strong>"{deleteModal.qrCodeName?.qrName}"</strong> with seat class <strong>"{deleteModal.qrCodeName?.seatClass}"</strong>?</p>
+              <p className="warning-text">This action cannot be undone.</p>
+            </div>
+            <div className="modal-actions">
+              <button 
+                onClick={() => setDeleteModal({ show: false, qrCodeName: null })}
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleDeleteConfirm}
+                className="confirm-delete-btn"
+              >
+                Delete QR Code Name
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom CSS for modal width - matches TheaterList */}
       <style dangerouslySetInnerHTML={{
