@@ -7,10 +7,10 @@ import VerticalPageHeader from '../components/VerticalPageHeader';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ActionButton, ActionButtons } from '../components/ActionButton';
 import { useModal } from '../contexts/ModalContext';
-import '../styles/components.css';
-import '../styles/TheaterList.css';
-import '../styles/TheaterQRDetail.css';
-import '../styles/buttons.css';
+import '../styles/TheaterUserDetails.css';
+import '../styles/TheaterList.css'; // Import TheaterList styles for table
+import '../styles/QRManagementPage.css'; // Import global modal styles
+import '../styles/AddTheater.css'; // Import error message styles
 import { clearTheaterCache, addCacheBuster } from '../utils/cacheManager';
 import { usePerformanceMonitoring, preventLayoutShift } from '../hooks/usePerformanceMonitoring';
 
@@ -154,7 +154,7 @@ const QRCard = React.memo(({ qrCode, onView, onDownload, onToggleStatus, onDelet
 QRCard.displayName = 'QRCard';
 
 // CRUD Modal Component
-const CrudModal = React.memo(({ isOpen, qrCode, mode, theater, onClose, onSave, onDelete, onModeChange, actionLoading, confirmDelete, displayImageUrl }) => {
+const CrudModal = React.memo(({ isOpen, qrCode, mode, theater, onClose, onSave, onDelete, onModeChange, actionLoading, confirmDelete, displayImageUrl, onSeatEdit }) => {
   const [formData, setFormData] = useState({
     name: '',
     qrType: 'single',
@@ -327,9 +327,20 @@ const CrudModal = React.memo(({ isOpen, qrCode, mode, theater, onClose, onSave, 
               </label>
             </div>
 
-            <div className="form-group">
-              <label>QR Code Preview</label>
-              <div className="qr-preview">
+            {/* PHASE 2 FIX: Hide QR Preview for screen-type QR codes (seat rows) */}
+            {(() => {
+              const shouldShowQRPreview = formData.qrType !== 'screen' && !formData.isSeatRow;
+              console.log('🔍 QR Preview Condition:', {
+                qrType: formData.qrType,
+                isSeatRow: formData.isSeatRow,
+                shouldShowQRPreview,
+                seatNumber: formData.seatNumber
+              });
+              return shouldShowQRPreview;
+            })() && (
+              <div className="form-group">
+                <label>QR Code Preview</label>
+                <div className="qr-preview">
                 {console.log('?? Render: displayImageUrl =', displayImageUrl)}
                 {displayImageUrl ? (
                   <div className="qr-image-container">
@@ -409,6 +420,399 @@ const CrudModal = React.memo(({ isOpen, qrCode, mode, theater, onClose, onSave, 
                 )}
               </div>
             </div>
+            )}
+
+            {/* Display seat information for screen-type QR codes instead of QR preview */}
+            {(() => {
+              // Show individual seat info only if it's a seat row
+              const shouldShowSeatInfo = formData.isSeatRow;
+              console.log('🪑 Seat Info Condition:', {
+                qrType: formData.qrType,
+                isSeatRow: formData.isSeatRow,
+                shouldShowSeatInfo,
+                seatNumber: formData.seatNumber,
+                qrImageUrl: formData.qrImageUrl
+              });
+              return shouldShowSeatInfo;
+            })() && (
+              <div className="form-group">
+                <label>Seat Information</label>
+                <div className="seat-info-display" style={{
+                  padding: '15px',
+                  backgroundColor: '#f3f4f6',
+                  borderRadius: '8px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
+                    <strong>QR Code Name:</strong> {formData.name || formData.parentQRName}
+                  </div>
+                  <div style={{ fontSize: '16px', color: '#1f2937', fontWeight: '600', marginBottom: '8px' }}>
+                    <strong>Seat Number:</strong> {formData.seatNumber || 'N/A'}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#6b7280' }}>
+                    <strong>Seat Class:</strong> {formData.seatClass || 'N/A'}
+                  </div>
+                  
+                  {/* Show QR Code Image for individual seat in view/edit mode */}
+                  {formData.isSeatRow && formData.qrImageUrl && (
+                    <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid #e5e7eb' }}>
+                      <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>
+                        <strong>QR Code Image:</strong>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <img 
+                          src={formData.qrImageUrl} 
+                          alt={`QR Code for ${formData.seatNumber}`}
+                          style={{
+                            maxWidth: '200px',
+                            maxHeight: '200px',
+                            border: '2px solid #e5e7eb',
+                            borderRadius: '8px',
+                            padding: '8px',
+                            backgroundColor: 'white'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'block';
+                          }}
+                        />
+                        <div style={{ display: 'none', color: '#ef4444', fontSize: '12px', marginTop: '8px' }}>
+                          QR code image not available
+                        </div>
+                      </div>
+                      
+                      {/* Download Button for Seat QR Code */}
+                      <div style={{ textAlign: 'center', marginTop: '12px' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            console.log('📥 Downloading QR for seat:', formData.seatNumber);
+                            const link = document.createElement('a');
+                            link.href = formData.qrImageUrl;
+                            link.download = `${formData.seatClass || formData.name}_${formData.seatNumber}_QR.png`;
+                            link.target = '_blank';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          style={{
+                            backgroundColor: '#8b5cf6',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 20px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s',
+                            boxShadow: '0 2px 4px rgba(139, 92, 246, 0.3)'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#7c3aed';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 4px 8px rgba(139, 92, 246, 0.4)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = '#8b5cf6';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(139, 92, 246, 0.3)';
+                          }}
+                        >
+                          <span>⬇️</span>
+                          <span>Download QR Code</span>
+                        </button>
+                      </div>
+                      
+                      {/* QR Image Update in Edit Mode */}
+                      {mode === 'edit' && (
+                        <div style={{ marginTop: '12px' }}>
+                          <label style={{ 
+                            display: 'block', 
+                            fontSize: '13px', 
+                            color: '#6b7280', 
+                            marginBottom: '6px' 
+                          }}>
+                            Update QR Code Image URL:
+                          </label>
+                          <input
+                            type="text"
+                            name="qrImageUrl"
+                            className="form-control"
+                            value={formData.qrImageUrl || ''}
+                            onChange={handleInputChange}
+                            placeholder="Enter new QR code image URL"
+                            style={{ fontSize: '13px' }}
+                          />
+                          <p style={{ 
+                            fontSize: '11px', 
+                            color: '#9ca3af', 
+                            marginTop: '4px',
+                            marginBottom: '0'
+                          }}>
+                            Paste the new Google Cloud Storage URL for this seat's QR code
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Visual Seat Grid Display for Screen QR Codes (parent view) */}
+            {(() => {
+              // Show seat grid only if it's a screen-type QR with seats (not an individual seat row)
+              const shouldShowSeatGrid = formData.qrType === 'screen' && !formData.isSeatRow && formData.seats && formData.seats.length > 0;
+              console.log('🎭 Seat Grid Condition:', {
+                qrType: formData.qrType,
+                isSeatRow: formData.isSeatRow,
+                hasSeats: !!(formData.seats && formData.seats.length > 0),
+                seatsCount: formData.seats?.length || 0,
+                shouldShowSeatGrid
+              });
+              return shouldShowSeatGrid;
+            })() && (
+              <div className="form-group">
+                <label style={{ fontSize: '16px', fontWeight: '600', marginBottom: '15px', display: 'block' }}>
+                  Seat Layout ({formData.seats.length} seats)
+                </label>
+                <div style={{
+                  padding: '20px',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '12px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  {/* Screen Header with Download All Button */}
+                  <div style={{
+                    backgroundColor: '#8b5cf6',
+                    color: 'white',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    marginBottom: '20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>🎬</span>
+                      <span>SCREEN - {formData.seatClass || formData.name}</span>
+                    </div>
+                    
+                    {mode === 'view' && formData.seats.filter(s => s.qrCodeUrl).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const seatsWithQR = formData.seats.filter(s => s.qrCodeUrl);
+                          console.log(`📥 Downloading ${seatsWithQR.length} QR codes...`);
+                          
+                          // Download each seat QR with delay to prevent browser blocking
+                          seatsWithQR.forEach((seat, index) => {
+                            setTimeout(() => {
+                              const link = document.createElement('a');
+                              link.href = seat.qrCodeUrl;
+                              link.download = `${formData.seatClass || formData.name}_${seat.seat}_QR.png`;
+                              link.target = '_blank';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              
+                              // Show completion message after last download
+                              if (index === seatsWithQR.length - 1) {
+                                setTimeout(() => {
+                                  alert(`✅ Downloaded ${seatsWithQR.length} QR codes successfully!`);
+                                }, 500);
+                              }
+                            }, index * 300); // 300ms delay between downloads
+                          });
+                        }}
+                        style={{
+                          backgroundColor: 'white',
+                          color: '#8b5cf6',
+                          border: 'none',
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          fontSize: '13px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#f3f4f6';
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'white';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        <span>⬇️</span>
+                        <span>Download All ({formData.seats.filter(s => s.qrCodeUrl).length})</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Seat Grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'auto repeat(20, 1fr)',
+                    gap: '8px',
+                    alignItems: 'center'
+                  }}>
+                    {/* Row Label */}
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      textAlign: 'center'
+                    }}>
+                      A
+                    </div>
+
+                    {/* Seat Buttons */}
+                    {formData.seats.map((seat, index) => (
+                      <div
+                        key={seat._id || index}
+                        style={{
+                          backgroundColor: seat.isActive ? '#8b5cf6' : '#d1d5db',
+                          color: 'white',
+                          padding: '10px 6px',
+                          borderRadius: '6px',
+                          textAlign: 'center',
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          position: 'relative',
+                          border: '2px solid transparent',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}
+                        title={mode === 'view' ? `Left-click: Edit | Right-click: Download ${seat.seat}` : `Editing ${seat.seat}`}
+                        onClick={() => {
+                          // In view mode: Trigger seat edit callback
+                          if (mode === 'view' && onSeatEdit) {
+                            const seatData = {
+                              ...formData,
+                              isSeatRow: true,
+                              seatNumber: seat.seat,
+                              qrImageUrl: seat.qrCodeUrl,
+                              isActive: seat.isActive,
+                              scanCount: seat.scanCount || 0,
+                              seatId: seat._id,
+                              parentQRDetailId: formData._id,
+                              parentDocId: formData.parentDocId || formData._id,
+                              _id: `${formData._id}_${seat._id}`,
+                              parentQRName: formData.name,
+                              seatClass: formData.seatClass,
+                              seats: formData.seats
+                            };
+                            
+                            console.log('🪑 Opening seat edit for:', seat.seat);
+                            onSeatEdit(seatData);
+                          }
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault(); // Prevent default context menu
+                          if (seat.qrCodeUrl && mode === 'view') {
+                            // Download QR code for this seat
+                            console.log('📥 Downloading QR for seat:', seat.seat);
+                            
+                            const link = document.createElement('a');
+                            link.href = seat.qrCodeUrl;
+                            link.download = `${formData.seatClass || formData.name}_${seat.seat}_QR.png`;
+                            link.target = '_blank';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            
+                            // Visual feedback
+                            e.currentTarget.style.transform = 'scale(0.95)';
+                            setTimeout(() => {
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }, 150);
+                          }
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.05)';
+                          e.currentTarget.style.borderColor = '#6366f1';
+                          e.currentTarget.style.boxShadow = '0 4px 8px rgba(99, 102, 241, 0.3)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.borderColor = 'transparent';
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                        }}
+                      >
+                        {index + 1}
+                        {seat.qrCodeUrl && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '-4px',
+                            right: '-4px',
+                            width: '12px',
+                            height: '12px',
+                            backgroundColor: '#10b981',
+                            borderRadius: '50%',
+                            border: '2px solid white'
+                          }} title="QR code available" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Legend */}
+                  <div style={{
+                    marginTop: '20px',
+                    paddingTop: '15px',
+                    borderTop: '1px solid #e5e7eb',
+                    display: 'flex',
+                    gap: '20px',
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    flexWrap: 'wrap'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '20px', height: '20px', backgroundColor: '#8b5cf6', borderRadius: '4px' }}></div>
+                      <span>Active with QR</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '20px', height: '20px', backgroundColor: '#d1d5db', borderRadius: '4px' }}></div>
+                      <span>Inactive</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+                      <span>QR Code Available (click to view)</span>
+                    </div>
+                  </div>
+
+                  {/* Seat Count Summary */}
+                  <div style={{
+                    marginTop: '15px',
+                    padding: '12px',
+                    backgroundColor: '#f3f4f6',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    color: '#374151'
+                  }}>
+                    <div style={{ marginBottom: '8px' }}>
+                      <strong>Summary:</strong> {formData.seats.filter(s => s.isActive).length} active seats, 
+                      {' '}{formData.seats.filter(s => s.qrCodeUrl).length} with QR codes
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #e5e7eb' }}>
+                      <strong>Quick Actions:</strong> Left-click to edit • Right-click to download
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* <div className="form-group stats-group">
               <div className="stat-item">
@@ -663,14 +1067,19 @@ const TheaterQRDetail = () => {
         (singleData.data?.qrCodes || []).forEach(qr => {
           console.log('ðŸŽ¯ Processing QR:', { 
             name: qr.name, 
-            qrType: 'single',
+            qrType: qr.qrType,
             qrImageUrl: qr.qrImageUrl ? 'EXISTS' : 'MISSING',
-            qrImageUrlLength: qr.qrImageUrl?.length || 0
+            qrImageUrlLength: qr.qrImageUrl?.length || 0,
+            hasSeats: !!(qr.seats && qr.seats.length > 0),
+            seatsCount: qr.seats?.length || 0
           });
           if (!qrsByName[qr.name]) {
             qrsByName[qr.name] = [];
           }
-          qrsByName[qr.name].push({ ...qr, qrType: 'single' });
+          
+          // Keep screen QR as single row with seats array (don't expand into individual rows)
+          // The view modal will display the seat grid visually when clicked
+          qrsByName[qr.name].push({ ...qr });
         });
       }
       
@@ -689,12 +1098,16 @@ const TheaterQRDetail = () => {
             name: qr.name, 
             qrType: 'screen',
             qrImageUrl: qr.qrImageUrl ? 'EXISTS' : 'MISSING',
-            qrImageUrlLength: qr.qrImageUrl?.length || 0
+            qrImageUrl: qr.qrImageUrl ? 'EXISTS' : 'MISSING'
           });
+          
           if (!qrsByName[qr.name]) {
             qrsByName[qr.name] = [];
           }
-          qrsByName[qr.name].push({ ...qr, qrType: 'screen' });
+          
+          // Keep screen QR as single row with seats array (don't expand into individual rows)
+          // The view modal will display the seat grid visually when clicked
+          qrsByName[qr.name].push({ ...qr });
         });
       }
       
@@ -848,41 +1261,78 @@ const TheaterQRDetail = () => {
       const isEditing = crudModal.mode === 'edit';
       
       if (isEditing) {
-        // Update existing QR code using single-qrcodes detail endpoint
-        if (!formData.parentDocId) {
-          showError('Cannot update QR code: Missing parent document reference');
-          setActionLoading(prev => ({ ...prev, [formData._id]: false }));
-          return;
-        }
+        // PHASE 3 FIX: Check if this is a seat-level update
+        if (formData.isSeatRow && formData.parentQRDetailId && formData.seatId) {
+          console.log('Updating individual seat:', {
+            parentQRDetailId: formData.parentQRDetailId,
+            seatId: formData.seatId,
+            parentDocId: formData.parentDocId
+          });
+          
+          // Seat-wise update endpoint
+          const response = await fetch(
+            `${config.api.baseUrl}/single-qrcodes/${formData.parentDocId}/details/${formData.parentQRDetailId}/seats/${formData.seatId}`,
+            {
+              method: 'PUT',
+              headers: getAuthHeaders(),
+              body: JSON.stringify({
+                seat: formData.seatNumber,
+                isActive: formData.isActive,
+                qrCodeUrl: formData.qrImageUrl // Include QR code URL update
+              })
+            }
+          );
 
-        // Prepare update payload with all fields needed for QR regeneration
-        const updatePayload = {
-          qrName: formData.name,           // QR code name
-          seatClass: formData.seatClass,   // Seat class (e.g., 'screen-1')
-          seat: formData.seat || null,     // Seat number (for screen QR codes)
-          logoUrl: formData.logoUrl,       // Logo overlay URL
-          logoType: formData.logoType || 'default',
-          isActive: formData.isActive
-        };
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update seat');
+          }
 
-        console.log('📤 Sending update payload:', updatePayload);
-
-        const response = await fetch(`${config.api.baseUrl}/single-qrcodes/${formData.parentDocId}/details/${formData._id}`, {
-          method: 'PUT',
-          headers: getAuthHeaders(),
-          body: JSON.stringify(updatePayload)
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          // Reload theater data to get updated QR codes
-          await loadTheaterData();
-          showSuccess('QR code updated successfully');
-          closeCrudModal();
+          const result = await response.json();
+          console.log('Seat updated successfully:', result);
+          showSuccess(`Seat ${formData.seatNumber} updated successfully`);
+          
         } else {
-          showError(data.message || 'Failed to update QR code');
+          // Regular QR detail update
+          if (!formData.parentDocId) {
+            showError('Cannot update QR code: Missing parent document reference');
+            setActionLoading(prev => ({ ...prev, [formData._id]: false }));
+            return;
+          }
+
+          // Prepare update payload with all fields needed for QR regeneration
+          const updatePayload = {
+            qrName: formData.name,           // QR code name
+            seatClass: formData.seatClass,   // Seat class (e.g., 'screen-1')
+            seat: formData.seat || null,     // Seat number (for screen QR codes)
+            logoUrl: formData.logoUrl,       // Logo overlay URL
+            logoType: formData.logoType || 'default',
+            isActive: formData.isActive
+          };
+
+          console.log('Sending update payload:', updatePayload);
+
+          const response = await fetch(`${config.api.baseUrl}/single-qrcodes/${formData.parentDocId}/details/${formData._id}`, {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(updatePayload)
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            // Reload theater data to get updated QR codes
+            await loadTheaterData();
+            showSuccess('QR code updated successfully');
+            closeCrudModal();
+          } else {
+            showError(data.message || 'Failed to update QR code');
+          }
         }
+        
+        // Reload data after any successful update
+        await loadTheaterData();
+        closeCrudModal();
       } else {
         // Create new QR code using generate endpoint
         let payload;
@@ -1005,55 +1455,58 @@ const TheaterQRDetail = () => {
   };
 
   const downloadQRCode = async (qrCode) => {
-    console.log('?? Download button clicked!', { qrCode: qrCode.name, id: qrCode._id });
+    console.log('📥 Download button clicked!', { qrCode: qrCode.name, id: qrCode._id });
     try {
-      if (!qrCode.qrImageUrl) {
-        console.error('? No QR image URL available');
-        showError('QR code image not available');
+      if (!qrCode._id) {
+        console.error('❌ No QR code ID available');
+        showError('QR code ID not available');
         return;
       }
       
-      console.log('? QR Image URL:', qrCode.qrImageUrl);
+      console.log('🔗 QR Code ID:', qrCode._id);
       
       // Create clean filename
       const filename = `${qrCode.name.replace(/[^a-zA-Z0-9\s]/g, '_').replace(/\s+/g, '_')}_QR.png`;
-      console.log('?? Filename:', filename);
+      console.log('📝 Filename:', filename);
       
-      // Since GCS bucket is private, use backend to get signed URL
-      console.log('?? Getting signed download URL from backend...');
+      // Use backend proxy to download (handles CORS)
+      console.log('⬇️ Downloading via backend proxy...');
       
-      const response = await fetch(`${config.api.baseUrl}/qrcodes/${qrCode._id}/signed-url`, {
+      const downloadUrl = `${config.api.baseUrl}/single-qrcodes/${qrCode._id}/download`;
+      console.log('🔗 Download URL:', downloadUrl);
+      
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
         headers: getAuthHeaders()
       });
       
       if (!response.ok) {
-        throw new Error(`Failed to get signed URL: ${response.status}`);
+        throw new Error(`Failed to download QR code: ${response.status}`);
       }
       
-      const data = await response.json();
-      console.log('? Signed URL response:', data);
+      const blob = await response.blob();
+      console.log('✅ Image downloaded successfully, size:', blob.size);
       
-      if (!data.success || !data.data || !data.data.signedUrl) {
-        throw new Error('Failed to generate signed download URL');
-      }
-      
-      // Use the signed URL for download
+      // Create download link
+      const blobUrl = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = data.data.signedUrl;
+      a.href = blobUrl;
       a.download = filename;
-      a.target = '_blank';
       a.style.display = 'none';
       
-      console.log('?? Triggering download with signed URL...');
+      console.log('🚀 Triggering download...');
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       
-      console.log('? Download initiated successfully!');
-      showSuccess('QR code download started!');
+      // Clean up blob URL
+      setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+      
+      console.log('✅ Download completed successfully!');
+      showSuccess('QR code downloaded successfully!');
       
     } catch (error) {
-      console.error('? Error downloading QR code:', error);
+      console.error('❌ Error downloading QR code:', error);
       showError('Failed to download QR code: ' + error.message);
     }
   };
@@ -1202,66 +1655,64 @@ const TheaterQRDetail = () => {
     );
   }
 
-  const headerButton = (
-    <button 
-      className="header-btn"
-      onClick={() => console.log('Generate QR Codes clicked')}
-    >
-      <span className="btn-icon">
-        <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-      </span>
-      GENERATE QR CODES
-    </button>
-  );
-
   return (
     <ErrorBoundary>
       <AdminLayout 
         pageTitle={theater ? `QR Codes - ${theater.name}` : "Theater QR Management"} 
         currentPage="qr-list"
       >
-        <div className="theater-qr-details-page">
+        <div className="theater-user-details-page">
         <PageContainer
           hasHeader={false}
-          className="theater-qr-vertical"
+          className="theater-user-management-vertical"
         >
           {/* Global Vertical Header Component */}
           <VerticalPageHeader
             title={theater?.name || 'Loading Theater...'}
             backButtonText="Back to QR Management"
             backButtonPath="/qr-management"
-            actionButton={headerButton}
+            actionButton={
+              <button 
+                className="header-btn"
+                onClick={() => console.log('Generate QR Codes clicked')}
+              >
+                <span className="btn-icon">
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                </span>
+                GENERATE QR CODES
+              </button>
+            }
           />
-          <div className="theater-qr-settings-container">
+          <div className="theater-user-settings-container">
             {/* Settings Tabs - Dynamic QR Names */}
-            <div className="theater-qr-settings-tabs">
+            <div className="theater-user-settings-tabs">
               {qrNamesLoading ? (
-                <div className="theater-qr-loading">Loading QR names...</div>
+                <div className="theater-user-loading">Loading QR names...</div>
               ) : qrNames.length > 0 ? (
                 qrNames.map((qrName) => (
                   <button 
                     key={qrName.qrName}
-                    className={`theater-qr-settings-tab ${activeCategory === qrName.qrName ? 'active' : ''}`}
+                    className={`theater-user-settings-tab ${activeCategory === qrName.qrName ? 'active' : ''}`}
                     onClick={() => setActiveCategory(qrName.qrName)}
                   >
-                    <span className="theater-qr-tab-icon"></span>
+                    <span className="theater-user-tab-icon">📱</span>
                     {qrName.qrName}
-                    <span className="theater-qr-tab-count">{qrNameCounts[qrName.qrName] || 0}</span>
+                    <span className="theater-user-tab-count">{qrNameCounts[qrName.qrName] || 0}</span>
                   </button>
                 ))
               ) : (
-                <div className="theater-qr-no-names">No QR names configured for this theater</div>
+                <div className="theater-user-no-names">No QR names configured for this theater</div>
               )}
             </div>
 
             {/* Settings Content - EXACTLY like Settings page */}
-            <div className="theater-qr-settings-content">
-              <div className="theater-qr-settings-section">
-                <div className="theater-qr-section-header">
+            <div className="theater-user-settings-content">
+              <div className="theater-user-settings-section">
+                <div className="theater-user-section-header">
                   <h3>{activeCategory ? `${activeCategory} QR Codes` : 'QR Codes'}</h3>
-                  <div className="theater-qr-section-stats">
+                  <div className="theater-user-section-stats">
                     {loading ? (
                       <>
                         <span>Total: <span className="loading-dots">...</span></span>
@@ -1282,12 +1733,12 @@ const TheaterQRDetail = () => {
                     <table className="theater-table">
                       <thead>
                         <tr>
-                          <th className="sno-col">S NO</th>
-                          <th className="name-col">QR CODE NAME</th>
-                          <th className="owner-col">SEAT CLASS</th>
-                          <th className="status-col">STATUS</th>
-                          <th className="access-status-col">ACCESS STATUS</th>
-                          <th className="actions-col">ACTION</th>
+                          <th className="sno-col">S.No</th>
+                          <th className="name-col">QR Code Name</th>
+                          <th className="owner-col">Seat Class</th>
+                          <th className="status-col">Status</th>
+                          <th className="access-status-col">Access Status</th>
+                          <th className="actions-col">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1324,13 +1775,13 @@ const TheaterQRDetail = () => {
                               {/* Seat Class Column */}
                               <td className="owner-cell">
                                 <div className="owner-info">
-                                  {qrCode.qrType === 'screen' ? (
+                                  {qrCode.qrType === 'screen' && qrCode.isSeatRow ? (
                                     <div className="seat-class-info">
-                                      <div className="screen-name">{qrCode.screenName}</div>
+                                      <div className="screen-name">{qrCode.seatClass || qrCode.name}</div>
                                       <div className="seat-number">Seat {qrCode.seatNumber}</div>
                                     </div>
                                   ) : (
-                                    <div className="owner-name">Single QR</div>
+                                    <div className="owner-name">{qrCode.seatClass || 'Single QR'}</div>
                                   )}
                                 </div>
                               </td>
@@ -1440,12 +1891,42 @@ const TheaterQRDetail = () => {
               actionLoading={actionLoading}
               confirmDelete={confirmDelete}
               displayImageUrl={displayImageUrl}
+              onSeatEdit={(seatData) => {
+                // Close current modal and open seat edit modal
+                closeCrudModal();
+                setTimeout(() => {
+                  setCrudModal({
+                    isOpen: true,
+                    qrCode: seatData,
+                    mode: 'edit'
+                  });
+                }, 100);
+              }}
             />
           )}
 
         </PageContainer>
         </div>
       </AdminLayout>
+
+      {/* Custom CSS for modal width - matches TheaterList */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .theater-view-modal-content,
+          .theater-edit-modal-content {
+            max-width: 900px !important;
+            width: 85% !important;
+          }
+
+          @media (max-width: 768px) {
+            .theater-view-modal-content,
+            .theater-edit-modal-content {
+              width: 95% !important;
+              max-width: none !important;
+            }
+          }
+        `
+      }} />
     </ErrorBoundary>
   );
 };

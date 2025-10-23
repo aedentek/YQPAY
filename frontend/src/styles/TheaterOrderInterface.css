@@ -1483,3 +1483,66 @@ div.pos-order-section div.pos-order-header,
 .pos-cart-icon-container[data-count-changed="true"] {
   animation: cartBounce 0.6s ease-in-out;
 }
+
+/* Product Discount Styles - OnlinePOS and Staff Order Interface */
+.pos-product-price-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pos-original-price {
+  text-decoration: line-through;
+  color: #9ca3af;
+  font-size: 0.85em;
+}
+
+.pos-discounted-price {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.pos-discount-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-size: 0.7em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Modern Product Card Discount Styles */
+.price-with-discount {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85em;
+}
+
+.discounted-price {
+  color: #10b981;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.discount-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-size: 0.65em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+}

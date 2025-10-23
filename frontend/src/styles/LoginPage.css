@@ -1431,3 +1431,145 @@
     transition: none;
   }
 }
+
+/* PIN Input Specific Styles */
+.pin-form {
+  animation: slideIn 0.3s ease-out;
+}
+
+.pin-header {
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+  padding-top: 1rem;
+}
+
+.back-button {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  border: none;
+  padding: 12px 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--shadow-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin-bottom: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+}
+
+.back-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.back-button:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.back-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--shadow-primary);
+}
+
+.back-button:disabled {
+  background: var(--text-gray);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pin-instruction {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+  margin-top: 2.5rem;
+  padding: 0 1rem;
+}
+
+.pin-instruction strong {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.pin-input {
+  text-align: center;
+  font-size: 1.8rem;
+  letter-spacing: 1rem;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--white);
+  border: none;
+  padding: 16px 48px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--shadow-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.submit-btn:hover:not(:disabled)::before {
+  left: 100%;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--shadow-primary);
+}
+
+.submit-btn:disabled {
+  background: var(--text-gray);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

@@ -183,6 +183,79 @@ router.post('/generate/legacy', [
 });
 
 /**
+ * GET /api/qrcodes/:qrCodeId/download
+ * Proxy download for QR code image (handles CORS)
+ * NOTE: Must be before /:theaterId route to avoid conflicts
+ */
+router.get('/:qrCodeId/download', authenticateToken, async (req, res) => {
+  try {
+    const { qrCodeId } = req.params;
+    console.log('📥 Download QR code request:', qrCodeId);
+
+    // Find the theater containing this QR code
+    const theater = await Theater.findOne({ 'qrCodes._id': qrCodeId });
+    
+    if (!theater) {
+      return res.status(404).json({
+        success: false,
+        error: 'QR code not found'
+      });
+    }
+
+    // Find the specific QR code
+    const qrCode = theater.qrCodes.id(qrCodeId);
+    
+    if (!qrCode || !qrCode.qrImageUrl) {
+      return res.status(404).json({
+        success: false,
+        error: 'QR code image not found'
+      });
+    }
+
+    // Fetch image from GCS
+    const https = require('https');
+    const http = require('http');
+    const url = require('url');
+    
+    const imageUrl = qrCode.qrImageUrl;
+    const parsedUrl = url.parse(imageUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+
+    protocol.get(imageUrl, (imageResponse) => {
+      if (imageResponse.statusCode !== 200) {
+        return res.status(imageResponse.statusCode).json({
+          success: false,
+          error: 'Failed to fetch image'
+        });
+      }
+
+      // Set headers for download
+      const filename = `${qrCode.name.replace(/[^a-zA-Z0-9\s]/g, '_').replace(/\s+/g, '_')}_QR.png`;
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      // Pipe the image to response
+      imageResponse.pipe(res);
+    }).on('error', (error) => {
+      console.error('Error fetching image:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to download image'
+      });
+    });
+
+  } catch (error) {
+    console.error('Download QR code error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to download QR code',
+      message: error.message
+    });
+  }
+});
+
+/**
  * GET /api/qrcodes/:theaterId
  * Get all QR codes for a theater
  */

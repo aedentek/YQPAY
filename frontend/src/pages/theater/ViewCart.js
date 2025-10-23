@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import TheaterLayout from '../../components/theater/TheaterLayout';
 import { getAuthToken, autoLogin } from '../../utils/authHelper';
+import config from '../../config';
 import '../../styles/ViewCart.css';
 
 const ViewCart = () => {
@@ -66,18 +67,28 @@ const ViewCart = () => {
     }
   }, [location.pathname, theaterId]);
 
-  // Calculate totals with dynamic GST
-  const { subtotal, tax, total } = useMemo(() => {
+  // Calculate totals with dynamic GST and product discounts
+  const { subtotal, tax, total, totalDiscount } = useMemo(() => {
     let calculatedSubtotal = 0;
     let calculatedTax = 0;
+    let calculatedDiscount = 0;
     
     (cartData.items || []).forEach(item => {
-      const price = parseFloat(item.sellingPrice) || 0;
+      const originalPrice = parseFloat(item.sellingPrice) || 0;
       const qty = parseInt(item.quantity) || 0;
       const taxRate = parseFloat(item.taxRate) || 0;
       const gstType = item.gstType || 'EXCLUDE';
+      const discountPercentage = parseFloat(item.discountPercentage || item.pricing?.discountPercentage) || 0;
       
-      const lineTotal = price * qty;
+      // Apply product discount to get final price
+      const discountedPrice = discountPercentage > 0 
+        ? originalPrice * (1 - discountPercentage / 100)
+        : originalPrice;
+      
+      const discountAmount = (originalPrice - discountedPrice) * qty;
+      calculatedDiscount += discountAmount;
+      
+      const lineTotal = discountedPrice * qty;
       
       if (gstType === 'INCLUDE') {
         // Price already includes GST, extract the GST amount
@@ -98,7 +109,8 @@ const ViewCart = () => {
     return {
       subtotal: parseFloat(calculatedSubtotal.toFixed(2)),
       tax: parseFloat(calculatedTax.toFixed(2)),
-      total: parseFloat(calculatedTotal.toFixed(2))
+      total: parseFloat(calculatedTotal.toFixed(2)),
+      totalDiscount: parseFloat(calculatedDiscount.toFixed(2))
     };
   }, [cartData.items]);
 
@@ -189,7 +201,7 @@ const ViewCart = () => {
 
       // Submit order to backend API
       console.log('🌐 Making API call to /api/orders/theater');
-      const response = await fetch('/api/orders/theater', {
+      const response = await fetch(`${config.api.baseUrl}/orders/theater`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -354,6 +366,12 @@ const ViewCart = () => {
                   <span>Subtotal:</span>
                   <span>{formatPrice(subtotal)}</span>
                 </div>
+                {totalDiscount > 0 && (
+                  <div className="summary-row discount-row">
+                    <span>Discount:</span>
+                    <span className="discount-amount">-{formatPrice(totalDiscount)}</span>
+                  </div>
+                )}
                 <div className="summary-row">
                   <span>GST:</span>
                   <span>{formatPrice(tax)}</span>

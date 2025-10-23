@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
-import ProductModal from '../../components/customer/ProductModal';
-import ProductCollectionModal from '../../components/customer/ProductCollectionModal';
 import OptimizedImage from '../../components/common/OptimizedImage';
+import ProductCollectionModal from '../../components/customer/ProductCollectionModal';
 import { 
   groupProductsIntoCollections, 
   filterCollections,
@@ -16,7 +15,7 @@ const CustomerHome = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const cart = useCart();
-  const { addItem, removeItem, getTotalItems } = cart;
+  const { items, addItem, updateQuantity, removeItem, getTotalItems, getItemQuantity } = cart;
   const [theaterId, setTheaterId] = useState(null);
   const [theater, setTheater] = useState(null);
   const [products, setProducts] = useState([]);
@@ -28,8 +27,6 @@ const CustomerHome = () => {
   const [loading, setLoading] = useState(true);
   const [qrName, setQrName] = useState(null);
   const [seat, setSeat] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
 
@@ -55,6 +52,7 @@ const CustomerHome = () => {
 
   const loadProducts = useCallback(async (id) => {
     try {
+      // Use session storage to cache products for better performance
       const res = await fetch(`${config.api.baseUrl}/theater-products/${id}`);
       const data = await res.json();
       console.log('🍔 Products API Response:', data);
@@ -75,6 +73,9 @@ const CustomerHome = () => {
             imageUrl = p.image; // Alternative old format
           }
           
+          // Only add cache buster on first load, not on every render
+          // This allows browser to cache images for better performance
+          
           return {
             _id: p._id,
             name: p.name || p.productName,
@@ -85,6 +86,14 @@ const CustomerHome = () => {
         });
         console.log('✅ Mapped products:', mappedProducts);
         setProducts(mappedProducts);
+        
+        // Preload images in the background for faster display
+        mappedProducts.forEach(product => {
+          if (product.image) {
+            const img = new Image();
+            img.src = product.image;
+          }
+        });
         
         // Group products into collections
         const collections = groupProductsIntoCollections(mappedProducts);
@@ -128,9 +137,18 @@ const CustomerHome = () => {
     }
   }, [theaterId, loadTheater, loadProducts, loadCategories]);
 
-  const handleAddToCart = (product) => {
-    addItem({ id: product._id, name: product.name, price: product.price, image: product.image });
-  };
+  // Auto-refresh products every 30 seconds to get admin updates
+  useEffect(() => {
+    if (!theaterId) return;
+    
+    const refreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refreshing products...');
+      loadProducts(theaterId);
+      loadCategories(theaterId);
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(refreshInterval);
+  }, [theaterId, loadProducts, loadCategories]);
 
   // Filter collections based on search query and selected category
   const filterProductCollections = useCallback(() => {
@@ -151,24 +169,43 @@ const CustomerHome = () => {
     setSelectedCategory(categoryId);
   };
 
-  const handleProductClick = (product) => {
-    setSelectedProduct(product);
-    setIsModalOpen(true);
+  // Handle adding product to cart
+  const handleAddToCart = (product) => {
+    addItem({
+      _id: product._id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      quantity: 1
+    });
   };
 
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
+  // Handle increasing quantity
+  const handleIncreaseQuantity = (product) => {
+    const currentQty = getItemQuantity(product._id);
+    if (currentQty > 0) {
+      updateQuantity(product._id, currentQty + 1);
+    } else {
+      handleAddToCart(product);
+    }
   };
 
+  // Handle decreasing quantity
+  const handleDecreaseQuantity = (product) => {
+    const currentQty = getItemQuantity(product._id);
+    if (currentQty > 1) {
+      updateQuantity(product._id, currentQty - 1);
+    } else if (currentQty === 1) {
+      removeItem({ _id: product._id });
+    }
+  };
+
+  // Handle collection click
   const handleCollectionClick = (collection) => {
-    setSelectedCollection(collection);
-    setIsCollectionModalOpen(true);
-  };
-
-  const handleCollectionModalClose = () => {
-    setIsCollectionModalOpen(false);
-    setSelectedCollection(null);
+    if (collection.isCollection) {
+      setSelectedCollection(collection);
+      setIsCollectionModalOpen(true);
+    }
   };
 
   if (loading) return <div className="customer-loading"><div className="spinner"></div></div>;
@@ -320,37 +357,17 @@ const CustomerHome = () => {
               filteredCollections.map((collection) => {
                 const defaultVariant = getDefaultVariant(collection);
                 const imgUrl = defaultVariant?.image || collection.baseImage;
+                const product = defaultVariant?.originalProduct || defaultVariant;
+                const productQty = product ? getItemQuantity(product._id) : 0;
                 
                 return (
                   <div 
                     key={collection.isCollection ? `collection-${collection.name}` : defaultVariant?._id} 
                     className={`product-card ${collection.isCollection ? 'collection-card' : 'single-product-card'}`}
-                    onClick={() => {
-                      if (collection.isCollection) {
-                        handleCollectionClick(collection);
-                      } else {
-                        handleProductClick(defaultVariant?.originalProduct || defaultVariant);
-                      }
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={
-                      collection.isCollection 
-                        ? `View ${collection.name} collection with ${collection.variants.length} variants`
-                        : `View details for ${collection.name}, price ₹${defaultVariant?.price}`
-                    }
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        if (collection.isCollection) {
-                          handleCollectionClick(collection);
-                        } else {
-                          handleProductClick(defaultVariant?.originalProduct || defaultVariant);
-                        }
-                      }
-                    }}
+                    onClick={() => handleCollectionClick(collection)}
+                    style={{ cursor: collection.isCollection ? 'pointer' : 'default' }}
                   >
-                    {/* Collection Select Button */}
+                    {/* Collection Indicator Badge */}
                     {collection.isCollection && (
                       <div className="collection-select-btn">
                         <svg viewBox="0 0 24 24" fill="currentColor" className="collection-select-icon">
@@ -361,23 +378,46 @@ const CustomerHome = () => {
                       </div>
                     )}
 
-                    <div className="product-image">
-                      {imgUrl ? (
-                        <OptimizedImage
-                          src={imgUrl && typeof imgUrl === 'string' 
-                            ? (imgUrl.startsWith('http') ? imgUrl : `${config.api.baseUrl}${imgUrl}`) 
-                            : null
-                          }
-                          alt={collection.name}
-                          width={80}
-                          height={80}
-                          className="product-img"
-                          fallback="https://via.placeholder.com/80x80?text=No+Image"
-                          lazy={true}
-                        />
-                      ) : (
-                        <div className="product-placeholder">
-                          <span>🍽️</span>
+                    <div className="product-image-wrapper">
+                      <div className="product-image">
+                        {imgUrl ? (
+                          <OptimizedImage
+                            src={imgUrl && typeof imgUrl === 'string' 
+                              ? (imgUrl.startsWith('http') ? imgUrl : `${config.api.baseUrl}${imgUrl}`) 
+                              : null
+                            }
+                            alt={collection.name}
+                            width={100}
+                            height={100}
+                            className="product-img"
+                            fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='40'%3E🍽️%3C/text%3E%3C/svg%3E"
+                            lazy={true}
+                          />
+                        ) : (
+                          <div className="product-placeholder">
+                            <span>🍽️</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Quantity Controls Overlay - Only for single products */}
+                      {!collection.isCollection && product && (
+                        <div className="product-actions" onClick={(e) => e.stopPropagation()}>
+                          {productQty > 0 && (
+                            <button 
+                              className="quantity-btn minus"
+                              onClick={() => handleDecreaseQuantity(product)}
+                            >
+                              −
+                            </button>
+                          )}
+                          <span className="quantity-display">{productQty}</span>
+                          <button 
+                            className="quantity-btn plus"
+                            onClick={() => handleIncreaseQuantity(product)}
+                          >
+                            +
+                          </button>
                         </div>
                       )}
                     </div>
@@ -390,13 +430,12 @@ const CustomerHome = () => {
                             {collection.variants.length} sizes available
                           </p>
                           <p className="product-price-range">
-                            From ₹{collection.basePrice.toFixed(2)}
+                            From ₹{parseFloat(collection.basePrice || 0).toFixed(2)}
                           </p>
                         </>
                       ) : (
-                        <p className="product-price">₹{defaultVariant?.price?.toFixed(2)}</p>
+                        <p className="product-price">₹{parseFloat(defaultVariant?.price || 0).toFixed(2)}</p>
                       )}
-                      {/* <p className="tap-to-view">Tap to view details</p> */}
                     </div>
                   </div>
                 );
@@ -430,20 +469,11 @@ const CustomerHome = () => {
         </button>
       )}
 
-      {/* Product Details Modal */}
-      <ProductModal
-        product={selectedProduct}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onAddToCart={handleAddToCart}
-        cartQuantity={selectedProduct ? cart.items?.find(item => item._id === selectedProduct._id)?.quantity || 0 : 0}
-      />
-
       {/* Product Collection Modal */}
       <ProductCollectionModal
         collection={selectedCollection}
         isOpen={isCollectionModalOpen}
-        onClose={handleCollectionModalClose}
+        onClose={() => setIsCollectionModalOpen(false)}
       />
     </div>
   );

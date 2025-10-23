@@ -13,6 +13,9 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false); // Add password visibility state
+  const [showPinInput, setShowPinInput] = useState(false); // Show PIN input after password validation
+  const [pin, setPin] = useState(''); // 4-digit PIN
+  const [pendingAuth, setPendingAuth] = useState(null); // Store pending authentication data
   const navigate = useNavigate();
   const { login, isAuthenticated, userType, theaterId, isLoading: authLoading } = useAuth();
 
@@ -66,6 +69,76 @@ const LoginPage = () => {
     setShowPassword(prev => !prev);
   };
 
+  // Handle PIN input change
+  const handlePinChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ''); // Only digits
+    if (value.length <= 4) {
+      setPin(value);
+      if (errors.pin) {
+        setErrors(prev => ({ ...prev, pin: '' }));
+      }
+    }
+  };
+
+  // Handle PIN submission
+  const handlePinSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (pin.length !== 4) {
+      setErrors({ pin: 'PIN must be 4 digits' });
+      return;
+    }
+
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      console.log('🔢 Validating PIN...');
+      const response = await fetch(`${config.api.baseUrl}/auth/validate-pin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: pendingAuth.userId,
+          pin: pin,
+          theaterId: pendingAuth.theaterId
+        }),
+      });
+
+      const data = await response.json();
+      console.log('📥 PIN validation response:', data);
+
+      if (response.ok && data.success) {
+        const userData = data.user;
+        const userType = data.user.userType;
+        const theaterId = data.user.theaterId;
+        const rolePermissions = data.rolePermissions;
+        
+        // Complete login with AuthContext
+        login(userData, data.token, userType, theaterId, rolePermissions);
+        
+        // Navigate to theater dashboard
+        navigate(`/theater-dashboard/${theaterId}`);
+      } else {
+        setErrors({ pin: data.error || 'Invalid PIN. Please try again.' });
+      }
+    } catch (error) {
+      console.error('❌ PIN validation error:', error);
+      setErrors({ pin: 'Unable to validate PIN. Please try again.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle back to password screen
+  const handleBackToPassword = () => {
+    setShowPinInput(false);
+    setPin('');
+    setPendingAuth(null);
+    setErrors({});
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -114,7 +187,16 @@ const LoginPage = () => {
       console.log('📥 Response data:', data);
 
       if (response.ok && data.success) {
+        // Check if PIN is required (theater users)
+        if (data.isPinRequired) {
+          console.log('🔢 PIN required - showing PIN input');
+          setPendingAuth(data.pendingAuth);
+          setShowPinInput(true);
+          setIsLoading(false);
+          return;
+        }
 
+        // Admin login - no PIN required
         const userData = data.user;
         const userType = data.user.userType; // Fix: get userType from data.user.userType
         const theaterId = data.user.theaterId || data.theaterId;
@@ -201,7 +283,8 @@ const LoginPage = () => {
             </div>
           )}
 
-          {/* Login Form */}
+          {/* Login Form - Password Step */}
+          {!showPinInput && (
           <form onSubmit={handleSubmit} className="login-form">
             <div className="form-group">
               <label htmlFor="username" className="form-label">Username / Email</label>
@@ -280,6 +363,64 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+          )}
+
+          {/* PIN Input Form - Second Step for Theater Users */}
+          {showPinInput && (
+          <form onSubmit={handlePinSubmit} className="login-form pin-form">
+            <div className="pin-header">
+              <button 
+                type="button" 
+                onClick={handleBackToPassword}
+                className="back-button"
+                title="Back to password"
+              >
+                ← Back
+              </button>
+              <p className="pin-instruction">
+                Welcome, <strong>{pendingAuth?.username}</strong>!
+                <br />
+                Please enter your 4-digit PIN to continue
+              </p>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="pin" className="form-label">4-Digit PIN</label>
+              <div className="input-wrapper">
+                <input
+                  type="password"
+                  id="pin"
+                  name="pin"
+                  value={pin}
+                  onChange={handlePinChange}
+                  className={`form-input pin-input ${errors.pin ? 'error' : ''}`}
+                  placeholder="Enter 4-digit PIN"
+                  maxLength="4"
+                  autoFocus
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                />
+                <span className="input-icon">🔢</span>
+              </div>
+              {errors.pin && <span className="error-text">{errors.pin}</span>}
+            </div>
+
+            <button 
+              type="submit" 
+              className={`submit-btn ${isLoading ? 'loading' : ''}`}
+              disabled={pin.length !== 4}
+            >
+              {isLoading ? (
+                <>
+                  <span className="loading-spinner"></span>
+                  Validating PIN...
+                </>
+              ) : (
+                'Verify PIN & Continue'
+              )}
+            </button>
+          </form>
+          )}
 
           {/* Footer */}
           <div className="login-footer">

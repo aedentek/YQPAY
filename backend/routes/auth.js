@@ -99,82 +99,134 @@ router.post('/login', [
       }
     }
 
-    // Step 2: Check THEATERUSERS collection by username if no admin found
+    // Step 2: Check THEATERUSERS collection by username if no admin found (ARRAY-BASED STRUCTURE)
     if (!authenticatedUser) {
-      console.log('👤 Checking theaterusers collection by username...');
+      console.log('👤 Checking theaterusers collection by username (array structure)...');
       try {
-        const theaterUser = await mongoose.connection.db.collection('theaterusers')
-          .findOne({ username: loginIdentifier, isActive: true });
+        // Find the theater document that contains this user in its users array
+        const theaterUsersDoc = await mongoose.connection.db.collection('theaterusers')
+          .findOne({ 
+            'users.username': loginIdentifier, 
+            'users.isActive': true 
+          });
         
-        if (theaterUser && await bcrypt.compare(password, theaterUser.password)) {
-          console.log('✅ Theater user authenticated successfully');
+        if (theaterUsersDoc && theaterUsersDoc.users) {
+          // Find the specific user within the users array
+          const theaterUser = theaterUsersDoc.users.find(
+            u => u.username === loginIdentifier && u.isActive === true
+          );
           
-          // Get theater details
-          let theaterInfo = null;
-          if (theaterUser.theater) {
-            theaterInfo = await mongoose.connection.db.collection('theaters')
-              .findOne({ _id: theaterUser.theater });
-          }
-          
-          // Get role details if role is ObjectId
-          let roleInfo = null;
-          let userType = 'theater_user';
-          let rolePermissions = [];
-          
-          if (theaterUser.role) {
-            try {
-              if (typeof theaterUser.role === 'string' && theaterUser.role.includes('admin')) {
-                userType = 'theater_admin';
-              } else if (mongoose.Types.ObjectId.isValid(theaterUser.role)) {
-                roleInfo = await mongoose.connection.db.collection('roles')
-                  .findOne({ 
-                    _id: new mongoose.Types.ObjectId(theaterUser.role),
-                    isActive: true 
-                  });
-                
-                if (roleInfo) {
-                  // Check if role name includes 'admin'
-                  if (roleInfo.name && roleInfo.name.toLowerCase().includes('admin')) {
-                    userType = 'theater_admin';
+          if (theaterUser && await bcrypt.compare(password, theaterUser.password)) {
+            console.log('✅ Theater user password validated - PIN required');
+            
+            // ✅ Return pending status - PIN is required before completing login
+            return res.json({
+              success: true,
+              isPinRequired: true,
+              message: 'Password validated. Please enter your PIN.',
+              pendingAuth: {
+                userId: theaterUser._id.toString(),
+                username: theaterUser.username,
+                theaterId: theaterUsersDoc.theaterId.toString()
+              }
+            });
+            
+            // Get theater details
+            let theaterInfo = null;
+            if (theaterUsersDoc.theaterId) {
+              theaterInfo = await mongoose.connection.db.collection('theaters')
+                .findOne({ _id: theaterUsersDoc.theaterId });
+            }
+            
+            // Get role details if role is ObjectId
+            let roleInfo = null;
+            let userType = 'theater_user';
+            let rolePermissions = [];
+            
+            if (theaterUser.role) {
+              try {
+                if (typeof theaterUser.role === 'string' && theaterUser.role.includes('admin')) {
+                  userType = 'theater_admin';
+                } else if (mongoose.Types.ObjectId.isValid(theaterUser.role)) {
+                  // First check RoleArray collection (nested structure)
+                  console.log('🔍 Looking up role:', theaterUser.role, 'for theater:', theaterUsersDoc.theaterId);
+                  
+                  const rolesDoc = await mongoose.connection.db.collection('roles')
+                    .findOne({ 
+                      theater: theaterUsersDoc.theaterId, // ✅ FIX: Use 'theater' not 'theaterId'
+                      'roleList._id': new mongoose.Types.ObjectId(theaterUser.role)
+                    });
+                  
+                  console.log('🔍 Roles document found:', !!rolesDoc);
+                  
+                  if (rolesDoc && rolesDoc.roleList) {
+                    console.log('🔍 Searching in roleList array, length:', rolesDoc.roleList.length);
+                    
+                    // Find the specific role in the roleList array
+                    roleInfo = rolesDoc.roleList.find(
+                      r => r._id.toString() === theaterUser.role.toString() && r.isActive
+                    );
+                    
+                    console.log('🔍 Role found in array:', !!roleInfo);
+                    if (roleInfo) {
+                      console.log('🔍 Role name:', roleInfo.name);
+                      console.log('🔍 Role permissions count:', roleInfo.permissions?.length || 0);
+                    }
                   }
                   
-                  // ✅ EXTRACT ROLE PERMISSIONS for theater users
-                  if (roleInfo.permissions && Array.isArray(roleInfo.permissions)) {
-                    rolePermissions = [{
-                      role: {
-                        _id: roleInfo._id,
-                        name: roleInfo.name,
-                        description: roleInfo.description || ''
-                      },
-                      permissions: roleInfo.permissions.filter(p => p.hasAccess === true)
-                    }];
-                    console.log(`🔑 Loaded ${rolePermissions[0].permissions.length} permissions for role: ${roleInfo.name}`);
+                  if (roleInfo) {
+                    // Check if role name includes 'admin'
+                    if (roleInfo.name && roleInfo.name.toLowerCase().includes('admin')) {
+                      userType = 'theater_admin';
+                    }
+                    
+                    // ✅ EXTRACT ROLE PERMISSIONS for theater users
+                    if (roleInfo.permissions && Array.isArray(roleInfo.permissions)) {
+                      rolePermissions = [{
+                        role: {
+                          _id: roleInfo._id,
+                          name: roleInfo.name,
+                          description: roleInfo.description || ''
+                        },
+                        permissions: roleInfo.permissions.filter(p => p.hasAccess === true)
+                      }];
+                      console.log(`🔑 Loaded ${rolePermissions[0].permissions.length} permissions for role: ${roleInfo.name}`);
+                    }
                   }
                 }
+              } catch (roleError) {
+                console.log('⚠️ Role lookup error:', roleError.message);
               }
-            } catch (roleError) {
-              console.log('⚠️ Role lookup error:', roleError.message);
             }
+            
+            authenticatedUser = {
+              _id: theaterUser._id,
+              username: theaterUser.username,
+              name: theaterUser.fullName || `${theaterUser.firstName || ''} ${theaterUser.lastName || ''}`.trim(),
+              role: roleInfo ? roleInfo.name : (theaterUser.role || 'theater_user'),
+              email: theaterUser.email,
+              phone: theaterUser.phoneNumber,
+              theaterId: theaterUsersDoc.theaterId, // ✅ Use theaterId from parent document
+              theaterName: theaterInfo ? theaterInfo.name : null,
+              userType: userType,
+              rolePermissions: rolePermissions // ✅ ATTACH ROLE PERMISSIONS to authenticated user
+            };
+            
+            // Update last login in the nested array
+            await mongoose.connection.db.collection('theaterusers')
+              .updateOne(
+                { 
+                  theaterId: theaterUsersDoc.theaterId,
+                  'users._id': theaterUser._id 
+                },
+                { 
+                  $set: { 
+                    'users.$.lastLogin': new Date(),
+                    'users.$.updatedAt': new Date()
+                  }
+                }
+              );
           }
-          
-          authenticatedUser = {
-            _id: theaterUser._id,
-            username: theaterUser.username,
-            name: theaterUser.fullName || `${theaterUser.firstName || ''} ${theaterUser.lastName || ''}`.trim(),
-            role: roleInfo ? roleInfo.name : (theaterUser.role || 'theater_user'),
-            email: theaterUser.email,
-            phone: theaterUser.phoneNumber,
-            theaterId: theaterUser.theater || theaterUser.theaterId, // ✅ FIX: Support both field names
-            theaterName: theaterInfo ? theaterInfo.name : null,
-            userType: userType,
-            rolePermissions: rolePermissions // ✅ ATTACH ROLE PERMISSIONS to authenticated user
-          };
-          
-          // Update last login
-          await mongoose.connection.db.collection('theaterusers')
-            .updateOne({ _id: theaterUser._id }, { 
-              $set: { lastLogin: new Date() }
-            });
         }
       } catch (error) {
         console.log('❌ Theater user lookup error:', error.message);
@@ -269,6 +321,197 @@ router.post('/login', [
     console.error('Login error:', error);
     res.status(500).json({
       error: 'Login failed',
+      message: 'Internal server error'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/validate-pin
+ * Validate PIN for theater users (second step of authentication)
+ */
+router.post('/validate-pin', [
+  body('userId').notEmpty().withMessage('User ID is required'),
+  body('pin').isLength({ min: 4, max: 4 }).withMessage('PIN must be 4 digits'),
+  body('theaterId').notEmpty().withMessage('Theater ID is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { userId, pin, theaterId } = req.body;
+
+    console.log(`🔢 PIN validation attempt for user: ${userId}`);
+
+    // Find the theater users document
+    const theaterUsersDoc = await mongoose.connection.db.collection('theaterusers')
+      .findOne({ 
+        theaterId: new mongoose.Types.ObjectId(theaterId),
+        'users._id': new mongoose.Types.ObjectId(userId)
+      });
+
+    if (!theaterUsersDoc) {
+      console.log('❌ Theater user not found');
+      return res.status(404).json({
+        success: false,
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Find the specific user in the array
+    const theaterUser = theaterUsersDoc.users.find(
+      u => u._id.toString() === userId && u.isActive === true
+    );
+
+    if (!theaterUser) {
+      console.log('❌ User not found or inactive');
+      return res.status(404).json({
+        success: false,
+        error: 'User not found or inactive',
+        code: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Validate PIN
+    if (theaterUser.pin !== pin) {
+      console.log('❌ Invalid PIN');
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid PIN',
+        code: 'INVALID_PIN'
+      });
+    }
+
+    console.log('✅ PIN validated successfully');
+
+    // Get theater details
+    let theaterInfo = null;
+    if (theaterUsersDoc.theaterId) {
+      theaterInfo = await mongoose.connection.db.collection('theaters')
+        .findOne({ _id: theaterUsersDoc.theaterId });
+    }
+
+    // Get role details if role is ObjectId
+    let roleInfo = null;
+    let userType = 'theater_user';
+    let rolePermissions = [];
+
+    if (theaterUser.role) {
+      try {
+        if (typeof theaterUser.role === 'string' && theaterUser.role.includes('admin')) {
+          userType = 'theater_admin';
+        } else if (mongoose.Types.ObjectId.isValid(theaterUser.role)) {
+          console.log('🔍 Looking up role:', theaterUser.role, 'for theater:', theaterUsersDoc.theaterId);
+
+          const rolesDoc = await mongoose.connection.db.collection('roles')
+            .findOne({
+              theater: theaterUsersDoc.theaterId,
+              'roleList._id': new mongoose.Types.ObjectId(theaterUser.role)
+            });
+
+          if (rolesDoc && rolesDoc.roleList) {
+            roleInfo = rolesDoc.roleList.find(
+              r => r._id.toString() === theaterUser.role.toString() && r.isActive
+            );
+
+            if (roleInfo) {
+              if (roleInfo.name && roleInfo.name.toLowerCase().includes('admin')) {
+                userType = 'theater_admin';
+              }
+
+              if (roleInfo.permissions && Array.isArray(roleInfo.permissions)) {
+                rolePermissions = [{
+                  role: {
+                    _id: roleInfo._id,
+                    name: roleInfo.name,
+                    description: roleInfo.description || ''
+                  },
+                  permissions: roleInfo.permissions.filter(p => p.hasAccess === true)
+                }];
+                console.log(`🔑 Loaded ${rolePermissions[0].permissions.length} permissions for role: ${roleInfo.name}`);
+              }
+            }
+          }
+        }
+      } catch (roleError) {
+        console.log('⚠️ Role lookup error:', roleError.message);
+      }
+    }
+
+    const authenticatedUser = {
+      _id: theaterUser._id,
+      username: theaterUser.username,
+      name: theaterUser.fullName || `${theaterUser.firstName || ''} ${theaterUser.lastName || ''}`.trim(),
+      role: roleInfo ? roleInfo.name : (theaterUser.role || 'theater_user'),
+      email: theaterUser.email,
+      phone: theaterUser.phoneNumber,
+      theaterId: theaterUsersDoc.theaterId,
+      theaterName: theaterInfo ? theaterInfo.name : null,
+      userType: userType,
+      rolePermissions: rolePermissions
+    };
+
+    // Update last login
+    await mongoose.connection.db.collection('theaterusers')
+      .updateOne(
+        {
+          theaterId: theaterUsersDoc.theaterId,
+          'users._id': theaterUser._id
+        },
+        {
+          $set: {
+            'users.$.lastLogin': new Date(),
+            'users.$.updatedAt': new Date()
+          }
+        }
+      );
+
+    // Generate tokens
+    const token = generateToken(authenticatedUser);
+    const refreshToken = generateRefreshToken(authenticatedUser);
+
+    const response = {
+      success: true,
+      message: 'PIN validated successfully',
+      token,
+      refreshToken,
+      user: {
+        id: authenticatedUser._id,
+        username: authenticatedUser.username,
+        name: authenticatedUser.name,
+        role: authenticatedUser.role,
+        email: authenticatedUser.email,
+        phone: authenticatedUser.phone,
+        theaterId: authenticatedUser.theaterId ? String(authenticatedUser.theaterId) : null,
+        theaterName: authenticatedUser.theaterName,
+        userType: authenticatedUser.userType
+      }
+    };
+
+    if (authenticatedUser.rolePermissions && authenticatedUser.rolePermissions.length > 0) {
+      response.rolePermissions = authenticatedUser.rolePermissions;
+    }
+
+    console.log('📤 PIN validation response:', {
+      success: true,
+      userType: response.user.userType,
+      theaterId: response.user.theaterId
+    });
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('❌ PIN validation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'PIN validation failed',
       message: 'Internal server error'
     });
   }

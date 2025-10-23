@@ -1,0 +1,861 @@
+/* ============================================
+   SUPER ADMIN DASHBOARD - UNIQUE CLASS NAMES
+   All class names prefixed with "sadmin-" to avoid conflicts
+   ============================================ */
+
+.sadmin-wrapper {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ============================================
+   LOADING & ERROR STATES
+   ============================================ */
+.sadmin-loading,
+.sadmin-error,
+.sadmin-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  text-align: center;
+}
+
+.sadmin-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: sadmin-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes sadmin-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sadmin-loading p {
+  font-size: 1rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.sadmin-error {
+  background: white;
+  border-radius: 12px;
+  padding: 48px;
+  margin: 20px;
+  border: 1px solid var(--border-color);
+}
+
+.sadmin-error-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.sadmin-error h3 {
+  color: var(--text-dark);
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+}
+
+.sadmin-error p {
+  color: var(--text-gray);
+  margin-bottom: 24px;
+}
+
+.sadmin-retry-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sadmin-retry-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+.sadmin-empty {
+  background: white;
+  border-radius: 12px;
+  padding: 48px;
+  margin: 20px;
+  border: 1px solid var(--border-color);
+  color: var(--text-gray);
+}
+
+/* ============================================
+   TOP STATS ROW
+   ============================================ */
+.sadmin-top-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.sadmin-stat-card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.sadmin-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.sadmin-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sadmin-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sadmin-icon-logout {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  color: white;
+}
+
+.sadmin-icon-tasks {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+}
+
+.sadmin-icon-events {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: white;
+}
+
+.sadmin-icon-due {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: white;
+}
+
+.sadmin-stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sadmin-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.sadmin-stat-label {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.sadmin-stat-sublabel {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  margin-top: 2px;
+}
+
+.sadmin-card-logout .sadmin-stat-label {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ============================================
+   MAIN GRID LAYOUT
+   ============================================ */
+.sadmin-main-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ============================================
+   WIDGET COMMON STYLES
+   ============================================ */
+.sadmin-widget {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 24px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.sadmin-widget:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.sadmin-widget-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sadmin-widget-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sadmin-widget-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke: white;
+}
+
+.sadmin-widget-title {
+  flex: 1;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.sadmin-widget-menu {
+  background: none;
+  border: none;
+  color: var(--text-gray);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0 8px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.sadmin-widget-menu:hover {
+  color: var(--primary-color);
+}
+
+/* ============================================
+   PROJECTS OVERVIEW
+   ============================================ */
+.sadmin-projects-widget {
+  grid-column: span 1;
+}
+
+.sadmin-projects-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.sadmin-project-stat {
+  text-align: center;
+  padding: 12px;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.sadmin-project-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.sadmin-project-label {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.sadmin-progress-bar {
+  position: relative;
+  height: 40px;
+  background: var(--background-light);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sadmin-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+  border-radius: 20px;
+  transition: width 0.5s ease;
+}
+
+.sadmin-progress-label {
+  position: relative;
+  z-index: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* ============================================
+   INVOICE OVERVIEW
+   ============================================ */
+.sadmin-invoice-widget {
+  grid-column: span 1;
+}
+
+.sadmin-invoice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.sadmin-invoice-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.sadmin-invoice-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sadmin-dot-overdue {
+  background: #EF4444;
+}
+
+.sadmin-dot-notpaid {
+  background: #F59E0B;
+}
+
+.sadmin-dot-partial {
+  background: #3B82F6;
+}
+
+.sadmin-dot-paid {
+  background: #10B981;
+}
+
+.sadmin-dot-draft {
+  background: #9CA3AF;
+}
+
+.sadmin-invoice-label {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.sadmin-invoice-count {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  text-align: right;
+}
+
+.sadmin-invoice-amount {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  text-align: right;
+}
+
+.sadmin-invoice-totals {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sadmin-invoice-total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sadmin-invoice-total-label {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.sadmin-invoice-total-amount {
+  font-size: 1rem;
+  color: var(--text-dark);
+  font-weight: 700;
+}
+
+.sadmin-last-months {
+  position: relative;
+}
+
+.sadmin-invoice-period {
+  position: absolute;
+  bottom: -16px;
+  right: 0;
+  font-size: 0.75rem;
+  color: var(--text-gray);
+}
+
+/* ============================================
+   INCOME VS EXPENSES
+   ============================================ */
+.sadmin-income-widget {
+  grid-column: span 1;
+}
+
+.sadmin-income-chart {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+.sadmin-donut-chart {
+  width: 180px;
+  height: 180px;
+}
+
+.sadmin-donut-chart svg {
+  transform: rotate(-90deg);
+}
+
+.sadmin-income-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.sadmin-income-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sadmin-income-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.sadmin-income-positive {
+  background: #10B981;
+}
+
+.sadmin-income-negative {
+  background: #EF4444;
+}
+
+.sadmin-income-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.sadmin-income-label {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  margin-bottom: 2px;
+}
+
+.sadmin-income-value {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+/* ============================================
+   REMINDERS
+   ============================================ */
+.sadmin-reminders-widget {
+  grid-column: span 1;
+}
+
+.sadmin-reminders-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.sadmin-reminders-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--background-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.sadmin-reminders-icon svg {
+  width: 32px;
+  height: 32px;
+  stroke: var(--text-gray);
+}
+
+.sadmin-reminders-text {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sadmin-reminders-subtext {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+}
+
+/* ============================================
+   ALL TASKS OVERVIEW
+   ============================================ */
+.sadmin-tasks-widget {
+  grid-column: span 1;
+}
+
+.sadmin-tasks-donut {
+  display: flex;
+  justify-content: center;
+  margin: 24px 0;
+}
+
+.sadmin-tasks-donut svg {
+  width: 160px;
+  height: 160px;
+}
+
+.sadmin-tasks-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sadmin-task-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.sadmin-task-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sadmin-task-todo {
+  background: #F59E0B;
+}
+
+.sadmin-task-progress {
+  background: #3B82F6;
+}
+
+.sadmin-task-review {
+  background: var(--primary-color);
+}
+
+.sadmin-task-done {
+  background: #10B981;
+}
+
+.sadmin-task-label {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.sadmin-task-count {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 700;
+  background: white;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* ============================================
+   TEAM MEMBERS OVERVIEW
+   ============================================ */
+.sadmin-team-widget {
+  grid-column: span 1;
+}
+
+.sadmin-team-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 16px 0;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.sadmin-team-stat {
+  text-align: center;
+}
+
+.sadmin-team-separator {
+  width: 1px;
+  height: 40px;
+  background: var(--border-color);
+}
+
+.sadmin-team-number {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+}
+
+.sadmin-team-label {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+.sadmin-team-attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sadmin-attendance-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--background-light);
+  border-radius: 8px;
+}
+
+.sadmin-attendance-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sadmin-attendance-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sadmin-attendance-in {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.sadmin-attendance-out {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.sadmin-attendance-info {
+  flex: 1;
+}
+
+.sadmin-attendance-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+}
+
+.sadmin-attendance-label {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  font-weight: 500;
+}
+
+/* ============================================
+   TICKET STATUS
+   ============================================ */
+.sadmin-ticket-widget {
+  grid-column: span 1;
+}
+
+.sadmin-ticket-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sadmin-ticket-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sadmin-ticket-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sadmin-ticket-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sadmin-ticket-new {
+  background: #3B82F6;
+}
+
+.sadmin-ticket-open {
+  background: #10B981;
+}
+
+.sadmin-ticket-closed {
+  background: #6B7280;
+}
+
+.sadmin-ticket-name {
+  font-size: 0.875rem;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.sadmin-ticket-count {
+  font-size: 0.875rem;
+  color: var(--text-gray);
+  margin-left: auto;
+}
+
+.sadmin-ticket-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 18px;
+}
+
+.sadmin-ticket-tag {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+  background: var(--background-light);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.sadmin-ticket-badge {
+  font-size: 0.75rem;
+  color: white;
+  background: var(--primary-color);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.sadmin-ticket-footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.sadmin-ticket-footer-text {
+  font-size: 0.75rem;
+  color: var(--text-gray);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 1400px) {
+  .sadmin-main-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .sadmin-top-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .sadmin-main-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sadmin-top-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .sadmin-stat-card {
+    padding: 16px;
+  }
+  
+  .sadmin-stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .sadmin-widget {
+    padding: 20px;
+  }
+  
+  .sadmin-projects-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .sadmin-income-legend {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sadmin-wrapper {
+    padding: 0;
+  }
+  
+  .sadmin-top-stats,
+  .sadmin-main-grid {
+    gap: 12px;
+  }
+  
+  .sadmin-widget-header {
+    flex-wrap: wrap;
+  }
+}

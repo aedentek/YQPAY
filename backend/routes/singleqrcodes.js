@@ -401,6 +401,116 @@ router.get('/theater/:theaterId', [
 });
 
 /**
+ * GET /api/single-qrcodes/:qrDetailId/download
+ * Proxy download for QR code image (handles CORS)
+ * NOTE: Must be before /:id route to avoid conflicts
+ */
+router.get('/:qrDetailId/download', authenticateToken, async (req, res) => {
+  try {
+    const { qrDetailId } = req.params;
+    console.log('📥 Download QR code request:', qrDetailId);
+
+    // Find the SingleQRCode document containing this QR detail
+    const singleQR = await SingleQRCode.findOne({ 'qrDetails._id': qrDetailId });
+    
+    if (!singleQR) {
+      console.log('❌ SingleQRCode not found for detail ID:', qrDetailId);
+      return res.status(404).json({
+        success: false,
+        error: 'QR code not found'
+      });
+    }
+
+    console.log('✅ Found SingleQRCode document');
+
+    // Find the specific QR detail
+    const qrDetail = singleQR.qrDetails.id(qrDetailId);
+    
+    if (!qrDetail) {
+      console.log('❌ QR detail not found in qrDetails array');
+      return res.status(404).json({
+        success: false,
+        error: 'QR code detail not found'
+      });
+    }
+
+    console.log('✅ Found QR detail:', qrDetail.qrName);
+
+    // Get image URL - field name is qrCodeUrl (for single type) or check seats array (for screen type)
+    let imageUrl = null;
+    
+    if (qrDetail.qrType === 'single') {
+      imageUrl = qrDetail.qrCodeUrl;
+    } else if (qrDetail.qrType === 'screen' && qrDetail.seats && qrDetail.seats.length > 0) {
+      // For screen type, use the first seat's QR code (or we could download all)
+      imageUrl = qrDetail.seats[0].qrCodeUrl;
+    }
+    
+    if (!imageUrl) {
+      console.log('❌ No image URL found. QR Type:', qrDetail.qrType);
+      return res.status(404).json({
+        success: false,
+        error: 'QR code image URL not found'
+      });
+    }
+
+    console.log('✅ Image URL:', imageUrl);
+
+    // Fetch image from GCS
+    const https = require('https');
+    const http = require('http');
+    const url = require('url');
+    
+    const parsedUrl = url.parse(imageUrl);
+    const protocol = parsedUrl.protocol === 'https:' ? https : http;
+
+    console.log('🌐 Fetching image from GCS...');
+
+    protocol.get(imageUrl, (imageResponse) => {
+      if (imageResponse.statusCode !== 200) {
+        console.error('❌ GCS fetch failed:', imageResponse.statusCode);
+        return res.status(imageResponse.statusCode).json({
+          success: false,
+          error: 'Failed to fetch image'
+        });
+      }
+
+      // Set headers for download
+      const filename = `${qrDetail.qrName.replace(/[^a-zA-Z0-9\s]/g, '_').replace(/\s+/g, '_')}_QR.png`;
+      console.log('📦 Sending file:', filename);
+      
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+      // Pipe the image to response
+      imageResponse.pipe(res);
+      
+      console.log('✅ Download started successfully');
+    }).on('error', (error) => {
+      console.error('❌ Download error:', error);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to download image',
+          message: error.message
+        });
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Download QR code error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to download QR code',
+      message: error.message || 'Internal server error'
+    });
+  }
+});
+
+/**
  * GET /api/single-qrcodes/:id
  * Get a specific single QR code by ID
  */
@@ -612,6 +722,115 @@ router.put('/:id/details/:detailId', [
     res.status(500).json({
       success: false,
       error: 'Failed to update QR detail',
+      message: error.message || 'Internal server error'
+    });
+  }
+});
+
+/**
+ * PUT /api/single-qrcodes/:id/details/:detailId/seats/:seatId
+ * PHASE 3: Update a specific seat within a screen-type QR code
+ * Allows seat-wise updates for individual seat properties (seat number, active status, QR code URL)
+ */
+router.put('/:id/details/:detailId/seats/:seatId', [
+  authenticateToken,
+  param('id').isMongoId().withMessage('Valid single QR code ID is required'),
+  param('detailId').isMongoId().withMessage('Valid QR detail ID is required'),
+  param('seatId').isMongoId().withMessage('Valid seat ID is required'),
+  body('seat').optional().isString().trim().withMessage('Seat number must be a string'),
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
+  body('qrCodeUrl').optional().isString().trim().withMessage('QR code URL must be a string')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
+    const { id, detailId, seatId } = req.params;
+    const { seat, isActive, qrCodeUrl } = req.body;
+
+    console.log('🎬 Update seat request:', { id, detailId, seatId, updates: { seat, isActive, qrCodeUrl } });
+
+    // Find the SingleQRCode document
+    const singleQR = await SingleQRCode.findById(id);
+
+    if (!singleQR) {
+      return res.status(404).json({
+        success: false,
+        error: 'Single QR code document not found'
+      });
+    }
+
+    // Find the specific QR detail
+    const qrDetail = singleQR.qrDetails.id(detailId);
+
+    if (!qrDetail) {
+      return res.status(404).json({
+        success: false,
+        error: 'QR detail not found'
+      });
+    }
+
+    // Verify it's a screen type with seats
+    if (qrDetail.qrType !== 'screen' || !qrDetail.seats) {
+      return res.status(400).json({
+        success: false,
+        error: 'This QR detail is not a screen type or has no seats'
+      });
+    }
+
+    // Find the specific seat
+    const seatIndex = qrDetail.seats.findIndex(s => s._id.toString() === seatId);
+
+    if (seatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Seat not found in QR detail'
+      });
+    }
+
+    // Update seat properties
+    if (seat !== undefined) {
+      qrDetail.seats[seatIndex].seat = seat;
+      console.log('✏️ Updated seat number to:', seat);
+    }
+
+    if (isActive !== undefined) {
+      qrDetail.seats[seatIndex].isActive = isActive;
+      console.log('🔄 Updated seat active status to:', isActive);
+    }
+
+    if (qrCodeUrl !== undefined) {
+      qrDetail.seats[seatIndex].qrCodeUrl = qrCodeUrl;
+      console.log('🖼️ Updated seat QR code URL');
+    }
+
+    qrDetail.seats[seatIndex].updatedAt = Date.now();
+
+    // Save the document
+    await singleQR.save();
+
+    console.log('✅ Seat updated successfully');
+
+    res.json({
+      success: true,
+      message: 'Seat updated successfully',
+      data: {
+        seat: qrDetail.seats[seatIndex],
+        qrDetail: qrDetail
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Update seat error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update seat',
       message: error.message || 'Internal server error'
     });
   }

@@ -99,10 +99,8 @@
   padding-left: 0;
 }
 
-/* More specific selector to override TheaterList.css !important rules */
-.qr-stats .stat-card,
-.theater-main-container .qr-stats .stat-card,
-.theater-list-container .qr-stats .stat-card {
+/* Scoped to QR Management page only - Prevents CSS leak to other pages */
+.qr-management-page .qr-stats .stat-card {
   background: var(--background-light) !important;
   padding: 24px;
   border-radius: 12px;
@@ -112,9 +110,7 @@
   box-shadow: none !important;
 }
 
-.qr-stats .stat-card:hover,
-.theater-main-container .qr-stats .stat-card:hover,
-.theater-list-container .qr-stats .stat-card:hover {
+.qr-management-page .qr-stats .stat-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
 }
@@ -1333,9 +1329,7 @@ div[class*="theater"] .filter-controls {
     padding: 20px;
   }
 
-  .qr-stats .stat-card,
-  .theater-main-container .qr-stats .stat-card,
-  .theater-list-container .qr-stats .stat-card {
+  .qr-management-page .qr-stats .stat-card {
     padding: 20px;
   }
 
@@ -1394,9 +1388,7 @@ div[class*="theater"] .filter-controls {
     padding: 16px;
   }
 
-  .qr-stats .stat-card,
-  .theater-main-container .qr-stats .stat-card,
-  .theater-list-container .qr-stats .stat-card {
+  .qr-management-page .qr-stats .stat-card {
     padding: 16px;
   }
 
@@ -1474,21 +1466,21 @@ div[class*="theater"] .filter-controls {
   cursor: not-allowed;
 }
 
-/* Select dropdown styling */
+/* Select dropdown styling - Arrow removed */
 select.form-control {
   cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: none !important;
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 20px;
-  padding-right: 45px;
+  padding-right: 16px;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 }
 
 select.form-control:focus {
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: none !important;
 }
 
 /* Textarea specific styling */
@@ -1518,8 +1510,8 @@ textarea.form-control {
   background: white;
   border-radius: 12px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 1000px; /* Increased width for better readability */
-  width: 100%;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal width */
+  width: 95%;
   max-height: 90vh;
   overflow: hidden;
   position: relative;
@@ -2799,8 +2791,8 @@ textarea.form-control {
   background: var(--white);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  max-width: 600px;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal width */
+  width: 95%;
   max-height: 90vh;
   overflow: hidden;
   position: relative;

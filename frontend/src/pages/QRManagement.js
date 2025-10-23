@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import config from '../config';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
 import ErrorBoundary from '../components/ErrorBoundary';
 import Pagination from '../components/Pagination';
@@ -139,6 +139,7 @@ TableSkeleton.displayName = 'TableSkeleton';
 
 const QRManagement = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showError } = useModal();
   
   // PERFORMANCE MONITORING: Track page performance metrics
@@ -198,16 +199,7 @@ const QRManagement = () => {
     };
   }, [searchTerm]);
 
-  // Load management data with pagination and search
-  useEffect(() => {
-    loadManagementData();
-  }, [currentPage, debouncedSearchTerm, itemsPerPage]);
-
-  // Initial data load on component mount
-  useEffect(() => {
-    loadManagementData();
-  }, []);
-
+  // Define loadManagementData with useCallback
   const loadManagementData = useCallback(async () => {
     try {
       // Cancel previous request if still pending
@@ -300,6 +292,16 @@ const QRManagement = () => {
     }
   }, [currentPage, debouncedSearchTerm, itemsPerPage]);
 
+  // Load management data with pagination and search
+  useEffect(() => {
+    loadManagementData();
+  }, [loadManagementData]);
+
+  // Force reload when navigating back to this page
+  useEffect(() => {
+    loadManagementData();
+  }, [location.key, loadManagementData]);
+
   // Pagination handlers (matching TheaterList)
   const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage);
@@ -346,7 +348,7 @@ const QRManagement = () => {
   return (
     <ErrorBoundary>
       <AdminLayout pageTitle="QR Management" currentPage="qr-list">
-        <div className="theater-list-container">
+        <div className="theater-list-container qr-management-page">
           {/* Main Theater Management Container */}
           <div className="theater-main-container">
             {/* Header */}
@@ -358,21 +360,21 @@ const QRManagement = () => {
             </div>
 
             {/* Statistics Section */}
-            <div className="qr-stats">
+            <div className="qr-stats" key={`stats-${location.key}`}>
               <div className="stat-card">
-                <div className="stat-number">{summary.totalTheaters}</div>
+                <div className="stat-number">{summary.totalTheaters || 0}</div>
                 <div className="stat-label">Total Theaters</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{summary.totalCanteenQRs}</div>
+                <div className="stat-number">{summary.totalCanteenQRs || 0}</div>
                 <div className="stat-label">Canteen QRs</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{summary.totalScreenQRs}</div>
+                <div className="stat-number">{summary.totalScreenQRs || 0}</div>
                 <div className="stat-label">Screen QRs</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{summary.totalQRs}</div>
+                <div className="stat-number">{summary.totalQRs || 0}</div>
                 <div className="stat-label">Total QR Codes</div>
               </div>
             </div>

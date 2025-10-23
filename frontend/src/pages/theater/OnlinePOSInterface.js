@@ -43,6 +43,14 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
 
   const isOutOfStock = (product.stockQuantity || 0) <= 0 || !product.isActive || !product.isAvailable;
   
+  // Calculate discounted price
+  const discountPercentage = parseFloat(product.discountPercentage || product.pricing?.discountPercentage) || 0;
+  const originalPrice = product.sellingPrice || 0;
+  const discountedPrice = discountPercentage > 0 
+    ? originalPrice * (1 - discountPercentage / 100)
+    : originalPrice;
+  const hasDiscount = discountPercentage > 0;
+  
   // Determine the reason for being out of stock
   const getOutOfStockReason = () => {
     if (!product.isActive || !product.isAvailable) {
@@ -77,7 +85,17 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
         
         {/* Price and Quantity Controls in same row */}
         <div className="pos-product-price-row">
-          <div className="pos-product-price">{formatPrice(product.sellingPrice || 0)}</div>
+          <div className="pos-product-price-container">
+            {hasDiscount ? (
+              <>
+                <span className="pos-product-price pos-original-price">{formatPrice(originalPrice)}</span>
+                <span className="pos-product-price pos-discounted-price">{formatPrice(discountedPrice)}</span>
+                <span className="pos-discount-badge">{discountPercentage}% OFF</span>
+              </>
+            ) : (
+              <div className="pos-product-price">{formatPrice(originalPrice)}</div>
+            )}
+          </div>
           
           {/* Quantity Controls */}
           {!isOutOfStock && (
@@ -316,7 +334,26 @@ const OnlinePOSInterface = () => {
         );
       } else {
         // Add new item with specified quantity
-        return [...prevOrder, { ...product, quantity: quantity }];
+        // Calculate discounted price
+        const originalPrice = product.sellingPrice || 0;
+        const discountPercentage = parseFloat(product.discountPercentage || product.pricing?.discountPercentage) || 0;
+        const sellingPrice = discountPercentage > 0 
+          ? originalPrice * (1 - discountPercentage / 100)
+          : originalPrice;
+        
+        // Extract tax information
+        const taxRate = parseFloat(product.pricing?.taxRate ?? product.taxRate) || 0;
+        const gstType = product.gstType || 'EXCLUDE';
+        
+        return [...prevOrder, { 
+          ...product, 
+          quantity: quantity,
+          sellingPrice: sellingPrice,
+          originalPrice: originalPrice,
+          discountPercentage: discountPercentage,
+          taxRate: taxRate, // Ensure tax rate is available
+          gstType: gstType // Ensure GST type is available
+        }];
       }
     });
   }, []);
@@ -383,7 +420,7 @@ const OnlinePOSInterface = () => {
         }
       }
 
-      const categoriesResponse = await fetch(`/api/theater-categories/${theaterId}`, {
+      const categoriesResponse = await fetch(`${config.api.baseUrl}/theater-categories/${theaterId}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
@@ -472,7 +509,7 @@ const OnlinePOSInterface = () => {
         _random: Math.random()
       });
 
-      const baseUrl = `/api/theater-products/${theaterId}?${params.toString()}`;
+      const baseUrl = `${config.api.baseUrl}/theater-products/${theaterId}?${params.toString()}`;
       
       
       const response = await fetch(baseUrl, {

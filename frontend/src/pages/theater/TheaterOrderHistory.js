@@ -154,7 +154,17 @@ const TheaterOrderHistory = () => {
         if (response.status === 401) {
           throw new Error('Authentication failed. Please login again.');
         } else if (response.status === 404) {
-          throw new Error('No orders found for this theater.');
+          // 404 means no orders found - handle gracefully without error
+          console.log('ℹ️ No orders found for this theater (404)');
+          if (!isMountedRef.current) return;
+          setAllOrders([]);
+          setOrders([]);
+          setTotalItems(0);
+          setTotalPages(0);
+          setCurrentPage(1);
+          setSummary({ totalOrders: 0, confirmedOrders: 0, completedOrders: 0, totalRevenue: 0 });
+          setLoading(false);
+          return; // Exit early without throwing error
         } else {
           throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
         }
@@ -210,12 +220,9 @@ const TheaterOrderHistory = () => {
     } catch (error) {
       if (error.name !== 'AbortError' && isMountedRef.current) {
         console.error('❌ Order History Error:', error);
-        } else {
         // Show different messages based on error type
         if (error.message.includes('Authentication failed')) {
           showError('Session expired. Please login again.');
-        } else if (error.message.includes('No orders found')) {
-          showError('No orders found for this theater. Orders will appear here once they are created.');
         } else {
           showError('Failed to load orders. Please try again.');
         }

@@ -6,9 +6,26 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const path = require('path');
+const os = require('os');
 require('dotenv').config();
 
 const app = express();
+
+// ==============================================
+// UTILITY - Get Network IP for Mobile Access
+// ==============================================
+const getNetworkIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return null;
+};
+const NETWORK_IP = getNetworkIP();
 
 // ==============================================
 // MIDDLEWARE SETUP
@@ -40,20 +57,34 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// CORS configuration - Use environment variable and fallbacks
-const frontendUrl = process.env.FRONTEND_URL || 'http://192.168.1.6:3001';
+// CORS configuration - Allow localhost and network IP for mobile QR scanning
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001'
+];
+
+// Add network IP dynamically for mobile device access
+if (NETWORK_IP) {
+  allowedOrigins.push(`http://${NETWORK_IP}:3000`);
+  allowedOrigins.push(`http://${NETWORK_IP}:3001`);
+  allowedOrigins.push(`https://${NETWORK_IP}:3001`);
+}
+
 app.use(cors({
-  origin: [
-    frontendUrl,
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001', 
-    'http://192.168.1.6:3000',
-    'http://192.168.1.6:3001',
-    'https://192.168.1.6:3001'
-  ],
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log(`⚠️  CORS Warning - Origin not in whitelist: ${origin}`);
+      callback(null, true); // Allow for development
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: [
@@ -131,6 +162,7 @@ app.get('/api/health', (req, res) => {
 
 // Mount API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboard', require('./routes/dashboard')); // Super Admin Dashboard Stats
 app.use('/api/theaters', theaterRoutes);
 app.use('/api/theater-products', productRoutes.products);
 app.use('/api/theater-categories', productRoutes.categories);
@@ -226,16 +258,26 @@ app.use((error, req, res, next) => {
 // SERVER STARTUP
 // ==============================================
 
-// const PORT = process.env.PORT || 5000;
-const PORT = process.env.PORT || 5000;
-const HOST = '127.0.0.1'; // Use localhost for better compatibility
+const PORT = process.env.PORT || 5000; // Backend on port 5000
 
-app.listen(PORT, HOST, () => {
-  console.log(`🚀 YQPayNow Backend Server running on port ${PORT}`);
-  console.log(`📍 API Base URL: http://${HOST}:${PORT}/api`);
-  console.log(`🏥 Health Check: http://${HOST}:${PORT}/api/health`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 Server accessible at: http://192.168.1.6:${PORT}/api`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n${'='.repeat(60)}`);
+  console.log(`🚀 YQPayNow Backend Server - RUNNING`);
+  console.log(`${'='.repeat(60)}`);
+  console.log(`📍 Local Access:    http://localhost:${PORT}/api`);
+  if (NETWORK_IP) {
+    console.log(`� Mobile Access:   http://${NETWORK_IP}:${PORT}/api`);
+    console.log(`   (For QR Code Scanning)`);
+  }
+  console.log(`🏥 Health Check:    http://localhost:${PORT}/api/health`);
+  console.log(`🌍 Environment:     ${process.env.NODE_ENV || 'development'}`);
+  console.log(`${'='.repeat(60)}\n`);
+  
+  if (NETWORK_IP) {
+    console.log(`✅ Both PC and Mobile can access the server`);
+    console.log(`   - On PC: Use localhost or ${NETWORK_IP}`);
+    console.log(`   - On Mobile: Use ${NETWORK_IP} (same WiFi required)\n`);
+  }
 });
 
 module.exports = app;

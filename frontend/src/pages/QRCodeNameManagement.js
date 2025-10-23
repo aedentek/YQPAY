@@ -963,6 +963,23 @@ const QRCodeNameManagement = () => {
         </PageContainer>
         </div>
       </AdminLayout>
+
+      {/* Custom CSS for modal width - matches TheaterList */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .modal-content {
+            max-width: 900px !important;
+            width: 85% !important;
+          }
+
+          @media (max-width: 768px) {
+            .modal-content {
+              width: 95% !important;
+              max-width: none !important;
+            }
+          }
+        `
+      }} />
     </ErrorBoundary>
   );
 };

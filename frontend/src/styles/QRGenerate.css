@@ -655,14 +655,14 @@ select.form-control {
   font-weight: 600;
   cursor: pointer;
   
-  /* Padding to account for custom arrow */
-  padding: 12px 40px 12px 16px;
+  /* Padding adjusted (removed custom arrow) */
+  padding: 12px 16px;
   border-radius: 8px;
   font-size: 15px;
   transition: all 0.3s ease;
   
-  /* Custom arrow icon */
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  /* Remove dropdown arrow */
+  background-image: none !important;
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 16px;
@@ -710,14 +710,14 @@ select.form-control:disabled {
   border-color: #d1d5db;
   color: #9ca3af;
   cursor: not-allowed;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: none !important;
 }
 
-/* Firefox fix */
+/* Firefox fix - Remove arrow */
 @-moz-document url-prefix() {
   .form-control select,
   select.form-control {
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B5CF6' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-image: none !important;
   }
 }
 

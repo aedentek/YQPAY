@@ -785,9 +785,9 @@ const TheaterUserManagement = () => {
           .modal-content {
             background: var(--white);
             border-radius: 12px;
-            max-width: 600px;
-            width: 95%;
-            max-height: 85vh;
+            max-width: 900px !important; /* Match TheaterList global width */
+            width: 85% !important;
+            max-height: 90vh;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             display: flex;
@@ -1208,8 +1208,8 @@ const TheaterUserManagement = () => {
 
           @media (max-width: 768px) {
             .modal-content {
-              width: 98%;
-              max-width: 500px;
+              width: 95% !important;
+              max-width: none !important;
             }
             .modal-header {
               padding: 20px 24px;

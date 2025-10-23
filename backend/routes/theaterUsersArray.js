@@ -87,6 +87,7 @@ router.post('/', [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('fullName').trim().notEmpty().withMessage('Full name is required'),
   body('phoneNumber').trim().notEmpty().withMessage('Phone number is required'),
+  body('pin').optional().isLength({ min: 4, max: 4 }).isNumeric().withMessage('PIN must be 4 digits if provided'),
   body('role').optional().isMongoId().withMessage('Valid role ID required if provided'),
   body('permissions').optional().isObject().withMessage('Permissions must be an object'),
   body('isActive').optional().isBoolean().withMessage('isActive must be boolean'),
@@ -111,7 +112,8 @@ router.post('/', [
       email, 
       password, 
       fullName, 
-      phoneNumber, 
+      phoneNumber,
+      pin, // Optional - will be auto-generated if not provided
       role, 
       permissions = {}, 
       isActive = true,
@@ -147,6 +149,7 @@ router.post('/', [
       password: hashedPassword,
       fullName: fullName.trim(),
       phoneNumber: phoneNumber.trim(),
+      pin: pin || undefined, // Pass undefined to trigger auto-generation
       role: role || null,
       permissions,
       isActive,
@@ -154,7 +157,7 @@ router.post('/', [
       profileImage,
       createdBy: req.user?.userId || null
     });
-    console.log('✅ User added to array');
+    console.log('✅ User added to array with PIN:', newUser.pin);
 
     // Populate theater info (field is theaterId, not theater)
     await usersDoc.populate('theaterId', 'name location');

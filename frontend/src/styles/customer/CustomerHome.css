@@ -757,7 +757,7 @@
 
 /* MAIN CONTENT - Add margin for fixed header */
 .customer-main {
-  padding-top: 200px; /* Optimized header space for better content ratio */
+  padding-top: 240px; /* Adjusted header space to account for header + categories */
   padding-bottom: calc(100px + env(safe-area-inset-bottom)); /* Space for fixed button + safe area */
   background: #ffffff;
   min-height: 100vh;
@@ -766,14 +766,15 @@
 /* PRODUCTS SECTION - Card List Design */
 .products-section {
   padding: 0;
-  padding-bottom: 0;
+  padding-bottom: 32px; /* Add bottom padding for better visibility */
+  min-height: 50vh; /* Ensure minimum height for content visibility */
 }
 
 .products-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0 16px;
+  padding: 16px 16px 32px 16px; /* Added padding all around and extra at bottom */
 }
 
 .product-card {
@@ -781,18 +782,19 @@
   align-items: center;
   background: white;
   border-radius: 16px;
-  padding: 12px;
+  padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  gap: 12px;
-  cursor: pointer; /* Make it clear the card is clickable */
-  border: 1px solid transparent; /* Add border for hover effect */
+  gap: 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  position: relative;
 }
 
 .product-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   transform: translateY(-2px);
-  border-color: var(--customer-primary-light); /* Add colored border on hover */
+  border-color: var(--customer-primary-light);
 }
 
 .product-card:active {
@@ -800,16 +802,28 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+/* Circular Product Image Container */
 .product-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 12px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%; /* Make it circular */
   overflow: hidden;
   flex-shrink: 0;
   background: #f8f8f8;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+}
+
+/* Product Image Wrapper - Contains image and overlay controls */
+.product-image-wrapper {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
 }
 
 .product-image img {
@@ -854,85 +868,96 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
   align-items: flex-start;
   text-align: left;
-  padding-right: 12px; /* Add some spacing since no actions on the right */
 }
 
 .product-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #1a1a1a;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+  line-height: 1.3;
   text-align: left;
+  max-width: 100%;
 }
 
 .product-quantity {
-  font-size: 14px;
-  color: #666;
+  font-size: 13px;
+  color: #888;
   margin: 0;
   text-align: left;
 }
 
+/* Quantity Controls - Overlaid on Image */
 .product-actions {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
 }
 
 .quantity-btn {
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: none;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
 }
 
 .quantity-btn.minus {
-  background: #f0f0f0;
+  background: #e0e0e0;
   color: #666;
+  font-size: 18px;
 }
 
 .quantity-btn.minus:hover {
-  background: #e0e0e0;
+  background: #d0d0d0;
+  transform: scale(1.05);
 }
 
 .quantity-btn.plus,
 .quantity-btn.plus-only {
   background: linear-gradient(135deg, #6B0E9B 0%, #5A0C82 100%);
   color: white;
-  box-shadow: 0 2px 8px rgba(107, 14, 155, 0.3);
+  box-shadow: 0 2px 6px rgba(107, 14, 155, 0.3);
+  font-size: 18px;
 }
 
 .quantity-btn.plus:hover,
 .quantity-btn.plus-only:hover {
   background: linear-gradient(135deg, #7C1BAB 0%, #6B0E9B 100%);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(107, 14, 155, 0.4);
+  transform: scale(1.05);
+  box-shadow: 0 3px 8px rgba(107, 14, 155, 0.4);
 }
 
 .quantity-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.9);
 }
 
 .quantity-display {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #1a1a1a;
-  min-width: 24px;
+  min-width: 20px;
   text-align: center;
 }
 
@@ -951,50 +976,48 @@
 
 .collection-select-btn {
   position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px;
-  height: 32px;
+  left: 8px;
+  top: 8px;
+  width: 28px;
+  height: 28px;
   background: linear-gradient(135deg, #6B0E9B 0%, #8B4513 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(107, 14, 155, 0.3);
-  z-index: 1;
+  box-shadow: 0 2px 8px rgba(107, 14, 155, 0.3);
+  z-index: 5;
 }
 
 .collection-select-icon {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   color: white;
 }
 
 .single-product-card {
   /* Regular product card styling */
-  margin-left: 8px; /* Align with collection cards that have select button */
 }
 
 .product-collection-info {
-  font-size: 12px;
-  color: #666;
-  margin: 2px 0;
+  font-size: 13px;
+  color: #888;
+  margin: 0;
   font-weight: 500;
 }
 
 .product-price-range {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--customer-primary);
-  margin: 2px 0;
-  font-weight: 600;
+  margin: 4px 0 0 0;
+  font-weight: 700;
 }
 
 .product-price {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--customer-primary);
-  margin: 2px 0;
-  font-weight: 600;
+  margin: 4px 0 0 0;
+  font-weight: 700;
 }
 
 .tap-to-view {

@@ -39,8 +39,13 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
   const currentStock = product.inventory?.currentStock ?? product.stockQuantity ?? 0;
   const isOutOfStock = currentStock <= 0 || !product.isActive || !product.isAvailable;
 
-  // Get price from array structure
-  const productPrice = product.pricing?.basePrice ?? product.sellingPrice ?? 0;
+  // Get price from array structure and calculate discount
+  const originalPrice = product.pricing?.basePrice ?? product.sellingPrice ?? 0;
+  const discountPercentage = parseFloat(product.discountPercentage || product.pricing?.discountPercentage) || 0;
+  const productPrice = discountPercentage > 0 
+    ? originalPrice * (1 - discountPercentage / 100)
+    : originalPrice;
+  const hasDiscount = discountPercentage > 0;
 
   // Get product image
   const getProductImage = () => {
@@ -93,7 +98,15 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
           <div className="modern-product-details">
             <div className="modern-product-detail-item">
               {/* <span className="detail-label">Price</span> */}
-              <span className="detail-value">{formatPrice(productPrice)}</span>
+              {hasDiscount ? (
+                <div className="price-with-discount">
+                  <span className="detail-value original-price">{formatPrice(originalPrice)}</span>
+                  <span className="detail-value discounted-price">{formatPrice(productPrice)}</span>
+                  <span className="discount-badge">{discountPercentage}% OFF</span>
+                </div>
+              ) : (
+                <span className="detail-value">{formatPrice(productPrice)}</span>
+              )}
             </div>
             <div className="modern-product-detail-item">
               {/* <span className="detail-label">Quantity</span> */}
@@ -136,26 +149,28 @@ const StaffOrderItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
     }).format(price);
   };
 
-  const itemTotal = (item.sellingPrice || 0) * (item.quantity || 0);
+  const sellingPrice = parseFloat(item.sellingPrice) || 0;
+  const quantity = parseInt(item.quantity) || 0;
+  const itemTotal = sellingPrice * quantity;
 
   return (
     <div className="pos-order-item">
       <div className="pos-item-content">
         <div className="pos-item-name">{item.name || 'Unknown Item'}</div>
-        <div className="pos-item-price">₹{(item.sellingPrice || 0).toFixed(2)}</div>
+        <div className="pos-item-price">₹{sellingPrice.toFixed(2)}</div>
         
         <div className="pos-quantity-controls">
           <button 
             className="pos-qty-btn pos-qty-minus"
-            onClick={() => onUpdateQuantity(item._id, (item.quantity || 1) - 1)}
-            disabled={(item.quantity || 0) <= 1}
+            onClick={() => onUpdateQuantity(item._id, Math.max(1, quantity - 1))}
+            disabled={quantity <= 1}
           >
             −
           </button>
-          <span className="pos-qty-display">{item.quantity || 0}</span>
+          <span className="pos-qty-display">{quantity}</span>
           <button 
             className="pos-qty-btn pos-qty-plus"
-            onClick={() => onUpdateQuantity(item._id, (item.quantity || 0) + 1)}
+            onClick={() => onUpdateQuantity(item._id, quantity + 1)}
           >
             +
           </button>
@@ -331,12 +346,24 @@ const TheaterOrderInterface = () => {
       } else {
         // Add new item with specified quantity
         // Extract price from array structure (pricing.basePrice) or old structure (sellingPrice)
-        const sellingPrice = product.pricing?.basePrice ?? product.sellingPrice ?? 0;
+        const originalPrice = product.pricing?.basePrice ?? product.sellingPrice ?? 0;
+        const discountPercentage = parseFloat(product.discountPercentage || product.pricing?.discountPercentage) || 0;
+        const sellingPrice = discountPercentage > 0 
+          ? originalPrice * (1 - discountPercentage / 100)
+          : originalPrice;
+        
+        // Extract tax information
+        const taxRate = parseFloat(product.pricing?.taxRate ?? product.taxRate) || 0;
+        const gstType = product.gstType || 'EXCLUDE';
         
         return [...prevOrder, { 
           ...product, 
           quantity: quantity,
-          sellingPrice: sellingPrice // Ensure sellingPrice is always set for cart display
+          sellingPrice: sellingPrice, // Use discounted price
+          originalPrice: originalPrice, // Keep original for reference
+          discountPercentage: discountPercentage,
+          taxRate: taxRate, // Ensure tax rate is available
+          gstType: gstType // Ensure GST type is available
         }];
       }
     });
@@ -404,7 +431,7 @@ const TheaterOrderInterface = () => {
         }
       }
 
-      const categoriesResponse = await fetch(`/api/theater-categories/${theaterId}`, {
+      const categoriesResponse = await fetch(`${config.api.baseUrl}/theater-categories/${theaterId}`, {
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
@@ -495,7 +522,7 @@ const TheaterOrderInterface = () => {
         _random: Math.random()
       });
 
-      const baseUrl = `/api/theater-products/${theaterId}?${params.toString()}`;
+      const baseUrl = `${config.api.baseUrl}/theater-products/${theaterId}?${params.toString()}`;
       
       
       const response = await fetch(baseUrl, {

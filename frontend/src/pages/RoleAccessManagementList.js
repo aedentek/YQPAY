@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
+import ErrorBoundary from '../components/ErrorBoundary';
 import ActionButton from '../components/ActionButton';
 import Pagination from '../components/Pagination';
 import { usePerformanceMonitoring } from '../hooks/usePerformanceMonitoring';
 import { useModal } from '../contexts/ModalContext';
 import config from '../config';
 import '../styles/TheaterList.css';
+import '../styles/QRManagementPage.css';
 
 // Table Row Skeleton for loading state
 const TableRowSkeleton = () => (
@@ -193,46 +195,41 @@ const RoleAccessManagementList = () => {
 
   // Main component render
   return (
-    <AdminLayout pageTitle="Role Access Management" currentPage="role-access">
-        <div className="theater-list-page">
-          {/* Header */}
-          <div className="page-header-section">
-            <div className="header-content">
-              <h1 className="page-title">Role Access Management</h1>
+    <ErrorBoundary>
+      <AdminLayout pageTitle="Role Access Management" currentPage="role-access">
+        <div className="theater-list-container role-access-management-list-page">
+          {/* Main Theater Management Container */}
+          <div className="theater-main-container">
+            {/* Header */}
+            <div className="theater-list-header">
+              <div className="header-content">
+                <h1>Role Access Management</h1>
+              </div>
             </div>
-          </div>
 
-          {/* Statistics */}
-          <div className="theater-stats">
-            <div className="stat-card">
-              <div className="stat-info">
+            {/* Statistics Section */}
+            <div className="qr-stats">
+              <div className="stat-card">
                 <div className="stat-number">{totalItems || 0}</div>
                 <div className="stat-label">Total Active Theaters</div>
               </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-info">
+              <div className="stat-card">
                 <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && theater.isActive).length : 0}</div>
                 <div className="stat-label">Currently Active</div>
               </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-info">
-                <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && (theater.contact)).length : 0}</div>
+              <div className="stat-card">
+                <div className="stat-number">{Array.isArray(theaters) ? theaters.filter(theater => theater && theater.contact).length : 0}</div>
                 <div className="stat-label">With Contact Info</div>
               </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-info">
+              <div className="stat-card">
                 <div className="stat-number">{Array.isArray(theaters) ? theaters.length : 0}</div>
                 <div className="stat-label">Displayed on Page</div>
               </div>
             </div>
-          </div>
 
-          {/* Filters */}
-          <div className="theater-list-section">
-            <div className="filters-section">
+            {/* Theater Content Container */}
+            <div className="theater-content">
+              {/* Filters and Search */}
               <div className="theater-filters">
                 <div className="search-box">
                   <input
@@ -243,29 +240,24 @@ const RoleAccessManagementList = () => {
                     className="search-input"
                   />
                 </div>
+                <div className="filter-controls">
+                  <div className="results-count">
+                    Showing {Array.isArray(sortedTheaters) ? sortedTheaters.length : 0} of {totalItems || 0} theaters (Page {currentPage || 1} of {totalPages || 1})
+                  </div>
+                  <div className="items-per-page">
+                    <label>Items per page:</label>
+                    <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div className="pagination-info">
-                Showing {Array.isArray(sortedTheaters) ? (sortedTheaters.length > 0 ? ((currentPage - 1) * itemsPerPage + 1) : 0) : 0}
-                {' - '}
-                {Math.min(currentPage * itemsPerPage, totalItems || 0)} of {totalItems || 0} theaters
-                {' (Page '}{currentPage || 1} of {totalPages || 1}{')'}
-              </div>
-
-              <div className="items-per-page">
-                <label>Items per page:</label>
-                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                </select>
-              </div>
-            </div>
-            {/* End filters-section */}
-
-            {/* Theater Table */}
-            {sortedTheaters.length === 0 && !loading ? (
+              {/* Theater Table */}
+              {sortedTheaters.length === 0 && !loading ? (
               <div className="empty-state">
                 <div className="empty-icon">
                   <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '48px', height: '48px', color: 'var(--text-gray)'}}>
@@ -387,10 +379,13 @@ const RoleAccessManagementList = () => {
                 />
               )}
           </div>
-          {/* End theater-list-section */}
+          {/* End theater-content */}
         </div>
-        {/* End theater-list-page */}
-    </AdminLayout>
+        {/* End theater-main-container */}
+        </div>
+        {/* End theater-list-container */}
+      </AdminLayout>
+    </ErrorBoundary>
   );
 };
 

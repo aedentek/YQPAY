@@ -9,6 +9,7 @@ import ImageUpload from '../../components/ImageUpload';
 import { ActionButton, ActionButtons } from '../../components/ActionButton';
 import { useModal } from '../../contexts/ModalContext';
 import { usePerformanceMonitoring } from '../../hooks/usePerformanceMonitoring';
+import config from '../../config';
 import '../../styles/QRManagementPage.css';
 import '../../styles/TheaterList.css';
 
@@ -105,7 +106,7 @@ const TheaterProductTypes = () => {
         _random: Math.random()
       });
 
-      const baseUrl = `/api/theater-product-types/${theaterId}?${params.toString()}`;
+      const baseUrl = `${config.api.baseUrl}/theater-product-types/${theaterId}?${params.toString()}`;
       
       console.log('🔥 DEBUGGING: Fetching from', baseUrl);
       
@@ -243,8 +244,8 @@ const TheaterProductTypes = () => {
   const handleSubmitProductType = async (isEdit = false) => {
     try {
       const url = isEdit 
-        ? `/api/theater-product-types/${theaterId}/${selectedProductType._id}` 
-        : `/api/theater-product-types/${theaterId}`;
+        ? `${config.api.baseUrl}/theater-product-types/${theaterId}/${selectedProductType._id}` 
+        : `${config.api.baseUrl}/theater-product-types/${theaterId}`;
       const method = isEdit ? 'PUT' : 'POST';
       
       // Create FormData for file upload support
@@ -300,7 +301,7 @@ const TheaterProductTypes = () => {
 
   const handleDeleteProductType = async () => {
     try {
-      const response = await fetch(`/api/theater-product-types/${theaterId}/${selectedProductType._id}`, {
+      const response = await fetch(`${config.api.baseUrl}/theater-product-types/${theaterId}/${selectedProductType._id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`

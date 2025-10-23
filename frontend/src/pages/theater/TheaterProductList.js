@@ -827,9 +827,9 @@ const TheaterProductList = () => {
         _random: Math.random()
       });
 
-      const baseUrl = `/api/theater-products/${theaterId}?${params.toString()}`;
+      const baseUrl = `${config.api.baseUrl}/theater-products/${theaterId}?${params.toString()}`;
       
-      console.log('� DEBUGGING: Fetching from', baseUrl);
+      console.log('🔥 DEBUGGING: Fetching from', baseUrl);
       
       const response = await fetch(baseUrl, {
         signal: abortControllerRef.current.signal,
@@ -845,6 +845,17 @@ const TheaterProductList = () => {
       console.log('🔥 DEBUGGING: Response status', response.status);
       
       if (!response.ok) {
+        if (response.status === 404) {
+          // Handle no products found gracefully
+          console.log('ℹ️ No products found for this theater (404)');
+          if (!isMountedRef.current) return;
+          setProducts([]);
+          setTotalItems(0);
+          setTotalPages(1);
+          setCurrentPage(page);
+          setLoading(false);
+          return; // Exit early without throwing error
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -1147,21 +1158,22 @@ const TheaterProductList = () => {
   }, [products]);
 
   // Navigation functions for modal
-  const handlePrevProduct = useCallback(() => {
-    if (!viewModal.show || products.length === 0) return;
-    
-    const newIndex = (viewModal.currentIndex - 1 + products.length) % products.length;
-    const newProduct = products[newIndex];
-    setViewModal({ show: true, product: newProduct, currentIndex: newIndex });
-  }, [viewModal, products]);
+  // Navigation functions removed - Product Details modal no longer supports prev/next navigation
+  // const handlePrevProduct = useCallback(() => {
+  //   if (!viewModal.show || products.length === 0) return;
+  //   
+  //   const newIndex = (viewModal.currentIndex - 1 + products.length) % products.length;
+  //   const newProduct = products[newIndex];
+  //   setViewModal({ show: true, product: newProduct, currentIndex: newIndex });
+  // }, [viewModal, products]);
 
-  const handleNextProduct = useCallback(() => {
-    if (!viewModal.show || products.length === 0) return;
-    
-    const newIndex = (viewModal.currentIndex + 1) % products.length;
-    const newProduct = products[newIndex];
-    setViewModal({ show: true, product: newProduct, currentIndex: newIndex });
-  }, [viewModal, products]);
+  // const handleNextProduct = useCallback(() => {
+  //   if (!viewModal.show || products.length === 0) return;
+  //   
+  //   const newIndex = (viewModal.currentIndex + 1) % products.length;
+  //   const newProduct = products[newIndex];
+  //   setViewModal({ show: true, product: newProduct, currentIndex: newIndex });
+  // }, [viewModal, products]);
 
   const handleEditProduct = useCallback((product) => {
     const currentIndex = products.findIndex(p => p._id === product._id);
@@ -1547,47 +1559,15 @@ const TheaterProductList = () => {
           <div className="modal-overlay" onClick={() => setViewModal({ show: false, product: null })}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <div className="modal-nav-left">
-                  <button 
-                    className="nav-btn prev-btn" 
-                    onClick={handlePrevProduct}
-                    disabled={products.length <= 1}
-                    title="Previous Product"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="modal-title-section">
-                  <h2>Product Details</h2>
-                  <span className="product-counter">
-                    {viewModal.currentIndex + 1} of {products.length}
-                  </span>
-                </div>
-                
-                <div className="modal-nav-right">
-                  <button 
-                    className="nav-btn next-btn" 
-                    onClick={handleNextProduct}
-                    disabled={products.length <= 1}
-                    title="Next Product"
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                  </button>
-                  
-                  <button 
-                    className="close-btn" 
-                    onClick={() => setViewModal({ show: false, product: null })}
-                  >
-                    <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
-                      <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                    </svg>
-                  </button>
-                </div>
+                <h2>Product Details</h2>
+                <button 
+                  className="close-btn" 
+                  onClick={() => setViewModal({ show: false, product: null })}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '20px', height: '20px'}}>
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                  </svg>
+                </button>
               </div>
               
               <div className="modal-body">
@@ -1623,7 +1603,7 @@ const TheaterProductList = () => {
                     <label>Base Price</label>
                     <input 
                       type="text" 
-                      value={`₹${(viewModal.product?.pricing?.basePrice || viewModal.product?.sellingPrice || 0).toFixed(2)}`} 
+                      value={`₹${parseFloat(viewModal.product?.pricing?.basePrice || viewModal.product?.sellingPrice || 0).toFixed(2)}`} 
                       className="form-control"
                       readOnly
                     />
@@ -1633,7 +1613,7 @@ const TheaterProductList = () => {
                       <label>Sale Price</label>
                       <input 
                         type="text" 
-                        value={`₹${viewModal.product.pricing.salePrice.toFixed(2)}`} 
+                        value={`₹${parseFloat(viewModal.product.pricing.salePrice || 0).toFixed(2)}`} 
                         className="form-control"
                         readOnly
                       />

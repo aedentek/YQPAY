@@ -32,7 +32,7 @@ export const groupProductsIntoCollections = (products) => {
     collections[name].variants.push({
       _id: product._id,
       size: product.size || detectSizeFromName(product.name) || 'Regular',
-      price: product.price,
+      price: parseFloat(product.price) || 0,
       description: product.description || generateSizeDescription(product.size),
       image: product.image,
       originalProduct: product
@@ -46,14 +46,15 @@ export const groupProductsIntoCollections = (products) => {
     if (collection.variants.length > 1) {
       // Multiple variants - this is a collection
       collection.isCollection = true;
-      collection.basePrice = Math.min(...collection.variants.map(v => v.price));
+      const prices = collection.variants.map(v => parseFloat(v.price) || 0);
+      collection.basePrice = Math.min(...prices);
       collection.priceRange = {
-        min: Math.min(...collection.variants.map(v => v.price)),
-        max: Math.max(...collection.variants.map(v => v.price))
+        min: Math.min(...prices),
+        max: Math.max(...prices)
       };
       
       // Sort variants by price
-      collection.variants.sort((a, b) => a.price - b.price);
+      collection.variants.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
       
       // Add size indicators if not present
       collection.variants = collection.variants.map((variant, index) => ({
@@ -67,7 +68,7 @@ export const groupProductsIntoCollections = (products) => {
     } else {
       // Single product - not a collection
       collection.isCollection = false;
-      collection.basePrice = collection.variants[0].price;
+      collection.basePrice = parseFloat(collection.variants[0]?.price) || 0;
       collection.singleVariant = collection.variants[0];
     }
 

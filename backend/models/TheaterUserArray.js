@@ -55,11 +55,20 @@ const theaterUserArraySchema = new mongoose.Schema({
       maxlength: [20, 'Phone number cannot exceed 20 characters']
     },
     
-    // Role reference
+    // 4-digit PIN for login (auto-generated, unique across all theater users)
+    pin: {
+      type: String,
+      required: [true, 'PIN is required'],
+      minlength: [4, 'PIN must be 4 digits'],
+      maxlength: [4, 'PIN must be 4 digits'],
+      match: [/^\d{4}$/, 'PIN must be exactly 4 digits']
+    },
+    
+    // Role reference (optional - can be assigned later)
     role: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Role',
-      required: [true, 'Role is required']
+      required: false // ✅ FIX: Make role optional
     },
     
     // User permissions (legacy support)
@@ -178,6 +187,31 @@ theaterUserArraySchema.pre('save', function(next) {
 });
 
 /**
+ * Static method to generate a unique 4-digit PIN
+ * Checks across ALL theater users in the entire database
+ */
+theaterUserArraySchema.statics.generateUniquePin = async function() {
+  const maxAttempts = 100; // Prevent infinite loops
+  let attempts = 0;
+  
+  while (attempts < maxAttempts) {
+    // Generate random 4-digit PIN (1000-9999)
+    const pin = String(Math.floor(1000 + Math.random() * 9000));
+    
+    // Check if PIN exists in ANY theater's users array
+    const existingPin = await this.findOne({ 'users.pin': pin });
+    
+    if (!existingPin) {
+      return pin; // PIN is unique
+    }
+    
+    attempts++;
+  }
+  
+  throw new Error('Unable to generate unique PIN after maximum attempts');
+};
+
+/**
  * Static method to find or create by theater ID
  */
 theaterUserArraySchema.statics.findOrCreateByTheater = async function(theaterId) {
@@ -275,9 +309,17 @@ theaterUserArraySchema.methods.addUser = async function(userData) {
     throw new Error('Username already exists in this theater');
   }
   
-  // Add new user with auto-generated sortOrder
+  // Generate unique 4-digit PIN if not provided
+  let pin = userData.pin;
+  if (!pin) {
+    pin = await this.constructor.generateUniquePin();
+    console.log('🔢 Auto-generated unique PIN:', pin);
+  }
+  
+  // Add new user with auto-generated sortOrder and PIN
   const newUser = {
     ...userData,
+    pin,
     normalizedUsername: userData.username.toLowerCase().trim(),
     sortOrder: this.users.length,
     createdAt: new Date(),

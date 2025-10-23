@@ -5,6 +5,7 @@ import TheaterLayout from '../../components/theater/TheaterLayout';
 import PageContainer from '../../components/PageContainer';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import { useModal } from '../../contexts/ModalContext';
+import config from '../../config';
 import '../../styles/QRManagementPage.css';
 import '../../styles/TheaterList.css';
 
@@ -48,7 +49,7 @@ const StaffOrderHistory = () => {
         params.append('month', dateFilter.month.toString());
       }
 
-      const response = await fetch(`/api/orders/my-orders?${params.toString()}`, {
+      const response = await fetch(`${config.api.baseUrl}/orders/my-orders?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
           'Content-Type': 'application/json'
@@ -69,6 +70,14 @@ const StaffOrderHistory = () => {
           console.error('Failed to fetch staff orders:', data.message);
           showError('Failed to load your order history');
         }
+      } else if (response.status === 404) {
+        // Handle no orders found gracefully
+        console.log('ℹ️ No orders found for staff user (404)');
+        setOrders([]);
+        setStatistics({ totalOrders: 0, totalRevenue: 0 });
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalItems(0);
       } else {
         console.error('HTTP error:', response.status);
         showError('Failed to load your order history');

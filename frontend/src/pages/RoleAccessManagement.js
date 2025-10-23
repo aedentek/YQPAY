@@ -4,6 +4,7 @@ import AdminLayout from '../components/AdminLayout';
 import PageContainer from '../components/PageContainer';
 import VerticalPageHeader from '../components/VerticalPageHeader';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { ActionButton, ActionButtons } from '../components/ActionButton';
 import Pagination from '../components/Pagination';
 import { useModal } from '../contexts/ModalContext';
 import config from '../config';
@@ -575,22 +576,24 @@ const RoleAccessManagement = () => {
   return (
     <ErrorBoundary>
       <AdminLayout 
-        pageTitle={theaterId ? `Role Management ` : "Role Management"} 
+        pageTitle={theaterId ? `Role Access Management` : "Role Access Management"} 
         currentPage="role-access"
       >
-        <div className="theater-list-page">
-          {/* Header */}
-          <div className="page-header-section">
-            <div className="header-content">
-              <h1 className="page-title">
-                {theaterId ? `${theater?.name || 'Loading...'}` : "Role Access Management"}
-              </h1>
-              {headerButton}
-            </div>
-          </div>
+        <div className="role-access-details-page">
+        <PageContainer
+          hasHeader={false}
+          className="role-access-vertical"
+        >
+          {/* Global Vertical Header Component */}
+          <VerticalPageHeader
+            title={theaterLoading ? 'Loading Theater...' : (theater?.name || 'Role Access Management')}
+            backButtonText="Back to Theater List"
+            backButtonPath="/role-access"
+            actionButton={headerButton}
+          />
 
           {/* Statistics */}
-          <div className="theater-stats">
+          <div className="qr-stats">
             <div className="stat-card">
               <div className="stat-info">
                 <div className="stat-number">{summary.activeRolePermissions || 0}</div>
@@ -611,50 +614,43 @@ const RoleAccessManagement = () => {
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="theater-list-section">
-            <div className="filters-section">
-              <div className="theater-filters">
-                <div className="search-box">
-                  <input
-                    type="text"
-                    placeholder="Search role access by role name..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    className="search-input"
-                  />
-                </div>
-              </div>
-
-              <div className="pagination-info">
-                Showing {sortedRolePermissions.length > 0 ? ((currentPage - 1) * itemsPerPage + 1) : 0}
-                {' - '}
-                {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} role access
-                {' (Page '}{currentPage} of {totalPages || 1}{')'}
-              </div>
-
-              <div className="items-per-page">
-                <label>Items per page:</label>
-                <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
+        {/* Enhanced Filters Section matching RoleCreate */}
+        <div className="theater-filters">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Search role access by role name..."
+              value={searchTerm}
+              onChange={handleSearch}
+              className="search-input"
+            />
+          </div>
+          <div className="filter-controls">
+            <div className="results-count">
+              Showing {sortedRolePermissions.length} of {totalItems} role access (Page {currentPage} of {totalPages || 1})
             </div>
-            {/* End filters-section */}
+            <div className="items-per-page">
+              <label>Items per page:</label>
+              <select value={itemsPerPage} onChange={handleItemsPerPageChange} className="items-select">
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* Management Table */}
         <div className="theater-table-container">
           <table className="theater-table">
             <thead>
               <tr>
-                <th className="sno-cell">S.NO</th>
-                <th>ICON</th>
-                <th className="name-cell">ROLE NAME</th>
-                <th className="status-cell">STATUS</th>
-                <th className="actions-cell">ACTION</th>
+                <th className="sno-col">S.No</th>
+                <th className="photo-col">Icon</th>
+                <th className="name-col">Role Name</th>
+                <th className="status-col">Status</th>
+                <th className="actions-col">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -682,55 +678,47 @@ const RoleAccessManagement = () => {
               ) : (
                 sortedRolePermissions.map((rolePermission, index) => (
                   <tr key={rolePermission._id} className="theater-row">
-                    <td className="serial-number">{((currentPage - 1) * itemsPerPage) + index + 1}</td>
-                    <td className="theater-logo-cell">
+                    <td className="sno-cell">
+                      <div className="sno-number">{((currentPage - 1) * itemsPerPage) + index + 1}</div>
+                    </td>
+                    <td className="photo-cell">
                       <div className="role-icon">
                         <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '24px', height: '24px', color: '#8b5cf6'}}>
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>
                       </div>
                     </td>
-                    <td className="role-name-cell">
-                      <div className="role-name">{rolePermission.name || 'No Role'}</div>
-                      <div className="role-description" style={{fontSize: '12px', color: '#666', marginTop: '2px'}}>
-                        {(rolePermission.permissions?.filter(p => p.hasAccess).length || 0)} permissions granted
+                    <td className="name-cell">
+                      <div className="theater-name-container">
+                        <div className="theater-name">{rolePermission.name || 'No Role'}</div>
+                        <div className="theater-location">
+                          {(rolePermission.permissions?.filter(p => p.hasAccess).length || 0)} permissions granted
+                        </div>
                       </div>
                     </td>
-                    <td className="role-status">
-                      <span className={`status-badge ${rolePermission.isActive ? 'active-badge' : 'inactive-badge'}`}>
+                    <td className="status-cell">
+                      <span className={`status-badge ${rolePermission.isActive ? 'active' : 'inactive'}`}>
                         {rolePermission.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="actions">
-                      <div className="action-buttons">
-                        <button
-                          className="action-btn view-btn"
+                    <td className="actions-cell">
+                      <ActionButtons>
+                        <ActionButton 
+                          type="view"
                           onClick={() => viewRolePermission(rolePermission)}
                           title="View Role Access Details"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '16px', height: '16px'}}>
-                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="action-btn edit-btn"
+                        />
+                        <ActionButton 
+                          type="edit"
                           onClick={() => editRolePermission(rolePermission)}
                           title="Edit Role Access"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '16px', height: '16px'}}>
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
+                        />
+                        <ActionButton 
+                          type="delete"
                           onClick={() => deleteRolePermission(rolePermission)}
                           title="Delete Role Access"
-                        >
-                          <svg viewBox="0 0 24 24" fill="currentColor" style={{width: '16px', height: '16px'}}>
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                          </svg>
-                        </button>
-                      </div>
+                        />
+                      </ActionButtons>
                     </td>
                   </tr>
                 ))
@@ -751,10 +739,12 @@ const RoleAccessManagement = () => {
                 itemType="role access"
               />
             )}
-          </div>
-          {/* End theater-list-section */}
+
+        {/* End PageContainer - Modals are inside AdminLayout but outside PageContainer */}
+        </PageContainer>
         </div>
-        {/* End theater-list-page */}
+
+        {/* Modals are outside PageContainer but inside AdminLayout */}
 
         {/* Create Modal */}
         {showCreateModal && (
@@ -1037,6 +1027,23 @@ const RoleAccessManagement = () => {
         )}
 
       </AdminLayout>
+
+      {/* Custom CSS for modal width - matches TheaterList */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .modal-content {
+            max-width: 900px !important;
+            width: 85% !important;
+          }
+
+          @media (max-width: 768px) {
+            .modal-content {
+              width: 95% !important;
+              max-width: none !important;
+            }
+          }
+        `
+      }} />
     </ErrorBoundary>
   );
 };

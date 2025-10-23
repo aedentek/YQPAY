@@ -255,6 +255,17 @@ input,
 textarea,
 select {
   font-family: inherit;
+  /* Remove dropdown arrow globally for all select elements */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important;
+  padding-right: 12px;
+}
+
+/* Remove arrow for select in all states */
+select::-ms-expand {
+  display: none;
 }
 
 /* Focus styles */

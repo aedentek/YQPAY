@@ -1308,6 +1308,78 @@ productTypesRouter.put('/:theaterId/:productTypeId', [
 
     console.log('✅ Product type updated successfully');
 
+    // Sync changes to all products that belong to this product type
+    try {
+      // Products are stored in array structure, need to update them differently
+      const db = mongoose.connection.db;
+      const productContainer = await db.collection('productlist').findOne({
+        theater: new mongoose.Types.ObjectId(theaterId),
+        productList: { $exists: true }
+      });
+
+      if (productContainer && productContainer.productList) {
+        let productsUpdated = 0;
+        const productList = productContainer.productList;
+        
+        // Update each product in the array that matches this productTypeId
+        for (let i = 0; i < productList.length; i++) {
+          const product = productList[i];
+          
+          // Check if product belongs to this product type
+          if (product.productTypeId && product.productTypeId.toString() === productTypeId) {
+            let needsUpdate = false;
+            
+            // Update product name if changed
+            if (productName) {
+              productList[i].name = productName.trim();
+              needsUpdate = true;
+            }
+            
+            // Update image if changed
+            if (req.file && productType.image) {
+              // Update first image in images array
+              if (!productList[i].images) {
+                productList[i].images = [];
+              }
+              if (productList[i].images.length > 0) {
+                productList[i].images[0] = {
+                  url: productType.image,
+                  filename: productType.image.split('/').pop(),
+                  isMain: true
+                };
+              } else {
+                productList[i].images.push({
+                  url: productType.image,
+                  filename: productType.image.split('/').pop(),
+                  isMain: true
+                });
+              }
+              needsUpdate = true;
+            }
+            
+            if (needsUpdate) {
+              productList[i].updatedAt = new Date();
+              productsUpdated++;
+            }
+          }
+        }
+        
+        // Save the updated product list
+        if (productsUpdated > 0) {
+          await db.collection('productlist').updateOne(
+            { _id: productContainer._id },
+            { $set: { productList: productList, updatedAt: new Date() } }
+          );
+          console.log(`✅ Synced changes to ${productsUpdated} products in array structure`);
+        } else {
+          console.log('ℹ️  No products found with this productTypeId');
+        }
+      }
+    } catch (syncError) {
+      console.error('⚠️ Failed to sync changes to products:', syncError.message);
+      // Don't fail the request, just log the error
+    }
+
     res.json({
       success: true,
       message: 'Product type updated successfully',

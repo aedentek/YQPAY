@@ -1,8 +1,10 @@
 const Role = require('../models/Role');
+const RoleArray = require('../models/RoleArray'); // Use array-based structure
 const PageAccess = require('../models/PageAccess');
 
 /**
  * Role Service - Handles role creation and management logic
+ * Updated to use nested array structure (RoleArray model) like QRCodeNameArray
  */
 
 /**
@@ -62,8 +64,9 @@ function getBasicTheaterAdminPermissions() {
 }
 
 /**
- * Create default Theater Admin role for a theater
+ * Create default Theater Admin role for a theater (ARRAY-BASED STRUCTURE)
  * This role is created automatically when a new theater is created
+ * Uses the nested array structure like QRCodeNameArray
  * 
  * @param {ObjectId} theaterId - The theater's MongoDB ObjectId
  * @param {String} theaterName - The theater's name (for role description)
@@ -73,11 +76,12 @@ async function createDefaultTheaterAdminRole(theaterId, theaterName) {
   try {
     console.log(`🎭 Creating default Theater Admin role for theater: ${theaterName} (${theaterId})`);
     
-    // Check if default role already exists for this theater
-    const existingDefaultRole = await Role.findOne({
-      theater: theaterId,
-      isDefault: true
-    });
+    // Find or create roles document for theater (similar to QRCodeNameArray)
+    let rolesDoc = await RoleArray.findOrCreateByTheater(theaterId);
+    console.log(`✅ Found/created roles document for theater ${theaterId}`);
+    
+    // Check if default role already exists in the roleList array
+    const existingDefaultRole = rolesDoc.roleList.find(role => role.isDefault === true);
     
     if (existingDefaultRole) {
       console.log(`⚠️  Default role already exists for theater ${theaterId}`);
@@ -86,12 +90,12 @@ async function createDefaultTheaterAdminRole(theaterId, theaterName) {
     
     // Get default permissions
     const permissions = await getDefaultTheaterAdminPermissions();
+    console.log(`✅ Generated ${permissions.length} default permissions`);
     
-    // Create the Theater Admin role
+    // Create the Theater Admin role data
     const roleData = {
       name: 'Theater Admin',
       description: `Default administrator role for ${theaterName}. This role has full access to manage all theater operations including products, orders, stock, and reports. Cannot be deleted or edited.`,
-      theater: theaterId,
       permissions: permissions,
       isGlobal: false,
       priority: 1, // Highest priority
@@ -101,13 +105,17 @@ async function createDefaultTheaterAdminRole(theaterId, theaterName) {
       canEdit: false // Cannot be edited
     };
     
-    const role = new Role(roleData);
-    const savedRole = await role.save();
+    console.log(`📝 Adding role to roleList array...`);
     
-    console.log(`✅ Default Theater Admin role created successfully: ${savedRole._id}`);
+    // Add role to the nested array using the addRole method
+    const savedRole = await rolesDoc.addRole(roleData);
+    
+    console.log(`✅ Default Theater Admin role created successfully in nested array`);
+    console.log(`   - Role ID: ${savedRole._id}`);
     console.log(`   - Permissions granted: ${permissions.length}`);
     console.log(`   - Theater: ${theaterName}`);
     console.log(`   - Protected: Cannot be edited or deleted`);
+    console.log(`   - Total roles in theater: ${rolesDoc.roleList.length}`);
     
     return savedRole;
     
@@ -118,14 +126,19 @@ async function createDefaultTheaterAdminRole(theaterId, theaterName) {
 }
 
 /**
- * Check if a role is protected (default role)
+ * Check if a role is protected (default role) - ARRAY-BASED STRUCTURE
  * 
  * @param {ObjectId} roleId - The role's MongoDB ObjectId
  * @returns {Promise<Boolean>} True if role is protected
  */
 async function isProtectedRole(roleId) {
   try {
-    const role = await Role.findById(roleId).select('isDefault canDelete canEdit').lean();
+    // Find the roles document that contains this role in its roleList
+    const rolesDoc = await RoleArray.findOne({ 'roleList._id': roleId }).lean();
+    if (!rolesDoc) return false;
+    
+    // Find the role in the roleList array
+    const role = rolesDoc.roleList.find(r => r._id.toString() === roleId.toString());
     return role && role.isDefault === true;
   } catch (error) {
     console.error('❌ Error checking if role is protected:', error);
@@ -134,14 +147,22 @@ async function isProtectedRole(roleId) {
 }
 
 /**
- * Check if role can be deleted
+ * Check if role can be deleted - ARRAY-BASED STRUCTURE
  * 
  * @param {ObjectId} roleId - The role's MongoDB ObjectId
  * @returns {Promise<Object>} { canDelete: Boolean, reason: String }
  */
 async function canDeleteRole(roleId) {
   try {
-    const role = await Role.findById(roleId).select('name isDefault canDelete').lean();
+    // Find the roles document that contains this role in its roleList
+    const rolesDoc = await RoleArray.findOne({ 'roleList._id': roleId }).lean();
+    
+    if (!rolesDoc) {
+      return { canDelete: false, reason: 'Role not found' };
+    }
+    
+    // Find the role in the roleList array
+    const role = rolesDoc.roleList.find(r => r._id.toString() === roleId.toString());
     
     if (!role) {
       return { canDelete: false, reason: 'Role not found' };
@@ -163,14 +184,22 @@ async function canDeleteRole(roleId) {
 }
 
 /**
- * Check if role can be edited
+ * Check if role can be edited - ARRAY-BASED STRUCTURE
  * 
  * @param {ObjectId} roleId - The role's MongoDB ObjectId
  * @returns {Promise<Object>} { canEdit: Boolean, reason: String }
  */
 async function canEditRole(roleId) {
   try {
-    const role = await Role.findById(roleId).select('name isDefault canEdit').lean();
+    // Find the roles document that contains this role in its roleList
+    const rolesDoc = await RoleArray.findOne({ 'roleList._id': roleId }).lean();
+    
+    if (!rolesDoc) {
+      return { canEdit: false, reason: 'Role not found' };
+    }
+    
+    // Find the role in the roleList array
+    const role = rolesDoc.roleList.find(r => r._id.toString() === roleId.toString());
     
     if (!role) {
       return { canEdit: false, reason: 'Role not found' };
@@ -192,17 +221,19 @@ async function canEditRole(roleId) {
 }
 
 /**
- * Get default role for a theater
+ * Get default role for a theater - ARRAY-BASED STRUCTURE
  * 
  * @param {ObjectId} theaterId - The theater's MongoDB ObjectId
  * @returns {Promise<Object|null>} The default role document or null
  */
 async function getDefaultRoleForTheater(theaterId) {
   try {
-    return await Role.findOne({
-      theater: theaterId,
-      isDefault: true
-    }).lean();
+    // Find the roles document for this theater
+    const rolesDoc = await RoleArray.findOne({ theater: theaterId }).lean();
+    if (!rolesDoc) return null;
+    
+    // Find the default role in the roleList array
+    return rolesDoc.roleList.find(role => role.isDefault === true) || null;
   } catch (error) {
     console.error('❌ Error fetching default role:', error);
     return null;
@@ -230,7 +261,7 @@ function isPermissionOnlyUpdate(updateData) {
 }
 
 /**
- * Validate role update request for default roles
+ * Validate role update request for default roles - ARRAY-BASED STRUCTURE
  * Provides detailed validation of what can/cannot be updated
  * 
  * @param {ObjectId} roleId - The role's MongoDB ObjectId
@@ -239,7 +270,19 @@ function isPermissionOnlyUpdate(updateData) {
  */
 async function validateRoleUpdate(roleId, updateData) {
   try {
-    const role = await Role.findById(roleId).select('isDefault canEdit name theater').lean();
+    // Find the roles document that contains this role in its roleList
+    const rolesDoc = await RoleArray.findOne({ 'roleList._id': roleId }).lean();
+    
+    if (!rolesDoc) {
+      return { 
+        canUpdate: false, 
+        reason: 'Role not found',
+        updateType: null
+      };
+    }
+    
+    // Find the role in the roleList array
+    const role = rolesDoc.roleList.find(r => r._id.toString() === roleId.toString());
     
     if (!role) {
       return { 

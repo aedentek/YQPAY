@@ -346,7 +346,7 @@ const TheaterUserDetails = () => {
     } finally {
       setRolesLoading(false);
     }
-  }, [theaterId, createUserData.role]); // ✅ Added theaterId dependency
+  }, [theaterId]); // ✅ Removed createUserData.role to prevent form refresh on role selection
 
   // Fetch theater details
   const fetchTheater = useCallback(async () => {

@@ -324,6 +324,15 @@
   font-size: 16px;
 }
 
+.discount-row {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.discount-amount {
+  color: #10b981 !important;
+}
+
 .summary-divider {
   height: 2px;
   background: linear-gradient(135deg, #6B0E9B, #6B0E9B);
@@ -606,6 +615,15 @@
 }
 
 .modal-content {
+  background: var(--white);
+  border-radius: 12px;
+  max-width: 1200px; /* GLOBAL STANDARD: Matching Theater List modal width */
+  width: 95%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
   padding: 24px;
 }
 

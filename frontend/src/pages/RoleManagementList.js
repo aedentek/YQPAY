@@ -503,6 +503,23 @@ const RoleManagementList = () => {
 
 
       </AdminLayout>
+
+      {/* Custom CSS for modal width - matches TheaterList */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .confirmation-modal {
+            max-width: 900px !important;
+            width: 85% !important;
+          }
+
+          @media (max-width: 768px) {
+            .confirmation-modal {
+              width: 95% !important;
+              max-width: none !important;
+            }
+          }
+        `
+      }} />
     </ErrorBoundary>
   );
 };
