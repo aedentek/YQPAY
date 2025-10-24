@@ -50,10 +50,18 @@ const TheaterLayout = ({ children, pageTitle = 'Theater Dashboard' }) => {
     if (path.includes('/online-pos/')) return 'online-pos';
     if (path.includes('/theater/orders')) return 'orders';
     if (path.includes('/theater-categories')) return 'categories';
+    if (path.includes('/theater-kiosk-types')) return 'kiosk-types';
     if (path.includes('/theater-products')) return 'products';
     if (path.includes('/theater-product-types')) return 'product-types';
     if (path.includes('/theater-add-product')) return 'add-product';
     if (path.includes('/theater-stock-management')) return 'products';
+    if (path.includes('/theater-reports')) return 'reports';
+    if (path.includes('/theater-roles')) return 'theater-roles';
+    if (path.includes('/theater-role-access')) return 'theater-role-access';
+    if (path.includes('/theater-qr-code-names')) return 'qr-code-names';
+    if (path.includes('/theater-generate-qr')) return 'generate-qr';
+    if (path.includes('/theater-qr-management')) return 'qr-management';
+    if (path.includes('/theater-user-management')) return 'theater-users';
     if (path.includes('/theater/qr-codes')) return 'qrcode';
     if (path.includes('/theater/staff')) return 'users';
     if (path.includes('/theater/sales')) return 'sales';

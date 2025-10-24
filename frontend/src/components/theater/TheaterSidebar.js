@@ -167,6 +167,7 @@ const TheaterSidebar = ({ sidebarOpen, setSidebarOpen, sidebarCollapsed, current
     { id: 'products', icon: 'products', label: 'Product Stock', path: effectiveTheaterId ? `/theater-products/${effectiveTheaterId}` : '/theater-products' },
     { id: 'product-types', icon: 'productname', label: 'Product Type', path: effectiveTheaterId ? `/theater-product-types/${effectiveTheaterId}` : '/theater-product-types' },
     { id: 'categories', icon: 'categories', label: 'Categorie Type', path: effectiveTheaterId ? `/theater-categories/${effectiveTheaterId}` : '/theater-categories' },
+    { id: 'kiosk-types', icon: 'categories', label: 'Kiosk Type', path: effectiveTheaterId ? `/theater-kiosk-types/${effectiveTheaterId}` : '/theater-kiosk-types' },
     { id: 'order-interface', icon: 'orderinterface', label: 'Order Interface', path: effectiveTheaterId ? `/theater-order/${effectiveTheaterId}` : '/theater-order' },
     { id: 'online-pos', icon: 'orderinterface', label: 'Online POS', path: effectiveTheaterId ? `/online-pos/${effectiveTheaterId}` : '/online-pos' },
     { id: 'order-history', icon: 'orderhistory', label: 'Order History', path: effectiveTheaterId ? `/theater-order-history/${effectiveTheaterId}` : '/theater-order-history' },
@@ -176,6 +177,8 @@ const TheaterSidebar = ({ sidebarOpen, setSidebarOpen, sidebarCollapsed, current
     { id: 'theater-role-access', icon: 'lock', label: 'Role Access', path: effectiveTheaterId ? `/theater-role-access/${effectiveTheaterId}` : '/theater-role-access' }, // ✅ Theater Role Access
     { id: 'qr-code-names', icon: 'qrcode', label: 'QR Code Names', path: effectiveTheaterId ? `/theater-qr-code-names/${effectiveTheaterId}` : '/theater-qr-code-names' }, // ✅ Theater QR Code Names
     { id: 'generate-qr', icon: 'qrcode', label: 'Generate QR', path: effectiveTheaterId ? `/theater-generate-qr/${effectiveTheaterId}` : '/theater-generate-qr' }, // ✅ Theater Generate QR
+    { id: 'qr-management', icon: 'qrcode', label: 'QR Management', path: effectiveTheaterId ? `/theater-qr-management/${effectiveTheaterId}` : '/theater-qr-management' }, // ✅ Theater QR Management
+    { id: 'theater-users', icon: 'users', label: 'Theater Users', path: effectiveTheaterId ? `/theater-user-management/${effectiveTheaterId}` : '/theater-user-management' }, // ✅ Theater User Management
     { id: 'settings', icon: 'settings', label: 'Settings', path: effectiveTheaterId ? `/theater-settings/${effectiveTheaterId}` : '/theater-settings' }
   ];
 

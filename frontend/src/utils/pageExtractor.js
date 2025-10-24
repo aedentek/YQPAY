@@ -36,8 +36,8 @@ export const extractPagesFromAppJS = () => {
     { page: 'TheaterAdminManagement', pageName: 'Theater Admin Management', route: '/theater-admin-management', description: 'Theater admin operations', roles: ['admin'] },
     
     // Theater Admin Pages
-    { page: 'TheaterDashboard', pageName: 'Theater Dashboard', route: '/theater-dashboard', description: 'Theater-specific dashboard', roles: ['theater-admin', 'admin'] },
-    { page: 'TheaterSettings', pageName: 'Theater Settings', route: '/theater-settings', description: 'Theater-specific settings', roles: ['theater-admin', 'admin'] },
+    // { page: 'TheaterDashboard', pageName: 'Theater Dashboard', route: '/theater-dashboard', description: 'Theater-specific dashboard', roles: ['theater-admin', 'admin'] },
+    // { page: 'TheaterSettings', pageName: 'Theater Settings', route: '/theater-settings', description: 'Theater-specific settings', roles: ['theater-admin', 'admin'] },
     
     // Theater Admin Pages with Parameters (missing from previous extraction)
     { page: 'TheaterDashboardWithId', pageName: 'Theater Dashboard (With ID)', route: '/theater-dashboard/:theaterId', description: 'Theater dashboard with specific theater ID', roles: ['theater-admin', 'admin'] },
@@ -45,6 +45,7 @@ export const extractPagesFromAppJS = () => {
     
   // Theater Category Management
   { page: 'TheaterCategories', pageName: 'Theater Categories', route: '/theater-categories/:theaterId', description: 'Manage theater-specific categories', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterKioskTypes', pageName: 'Theater Kiosk Types', route: '/theater-kiosk-types/:theaterId', description: 'Manage theater-specific kiosk types', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'TheaterProductTypes', pageName: 'Theater Product Names', route: '/theater-product-types/:theaterId', description: 'Manage theater-specific product names and codes', roles: ['theater_user', 'theater-admin', 'admin'] },
 
   // Theater Product Management
@@ -56,7 +57,9 @@ export const extractPagesFromAppJS = () => {
   { page: 'TheaterRoles', pageName: 'Theater Roles Management', route: '/theater-roles/:theaterId', description: 'Manage theater-specific roles and permissions', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'TheaterRoleAccess', pageName: 'Theater Role Access Management', route: '/theater-role-access/:theaterId', description: 'Manage page access permissions for theater roles', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'TheaterQRCodeNames', pageName: 'Theater QR Code Names', route: '/theater-qr-code-names/:theaterId', description: 'Manage QR code names and seat classes for theater', roles: ['theater_user', 'theater-admin', 'admin'] },
-  { page: 'TheaterGenerateQR', pageName: 'Theater Generate QR', route: '/theater-generate-qr/:theaterId', description: 'Generate single or screen QR codes for theater', roles: ['theater_user', 'theater-admin', 'admin'] }
+  { page: 'TheaterGenerateQR', pageName: 'Theater Generate QR', route: '/theater-generate-qr/:theaterId', description: 'Generate single or screen QR codes for theater', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterQRManagement', pageName: 'Theater QR Management', route: '/theater-qr-management/:theaterId', description: 'View and manage all generated QR codes for theater', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterUserManagement', pageName: 'Theater User Management', route: '/theater-user-management/:theaterId', description: 'Manage theater users and their roles', roles: ['theater_user', 'theater-admin', 'admin'] }
   ];
 
   // Filter out pages that should not be in page access management

@@ -155,6 +155,8 @@ app.use('/api/theater-products', productRoutes.products);
 // Use new category structure (one doc per theater with categoryList array)
 const theaterCategoriesRoutes = require('./routes/theater-categories-new');
 app.use('/api/theater-categories', theaterCategoriesRoutes);
+const theaterKioskTypesRoutes = require('./routes/theater-kiosk-types');
+app.use('/api/theater-kiosk-types', theaterKioskTypesRoutes);
 app.use('/api/theater-product-types', productRoutes.productTypes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/settings', settingsRoutes);
@@ -184,6 +186,7 @@ app.get('/api', (req, res) => {
       theaters: '/api/theaters',
       products: '/api/theater-products',
       categories: '/api/theater-categories',
+      kioskTypes: '/api/theater-kiosk-types',
       productTypes: '/api/theater-product-types',
       orders: '/api/orders',
       settings: '/api/settings',
