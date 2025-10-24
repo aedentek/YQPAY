@@ -54,7 +54,9 @@ export const extractPagesFromAppJS = () => {
   { page: 'TheaterOrderHistory', pageName: 'Theater Order History', route: '/theater-order-history/:theaterId', description: 'View and manage theater order history with search and filtering', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'TheaterAddProductWithId', pageName: 'Theater Add Product (With ID)', route: '/theater-add-product/:theaterId', description: 'Theater Product Management - Add new products to theater menu (With Theater ID)', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'TheaterRoles', pageName: 'Theater Roles Management', route: '/theater-roles/:theaterId', description: 'Manage theater-specific roles and permissions', roles: ['theater_user', 'theater-admin', 'admin'] },
-  { page: 'TheaterRoleAccess', pageName: 'Theater Role Access Management', route: '/theater-role-access/:theaterId', description: 'Manage page access permissions for theater roles', roles: ['theater_user', 'theater-admin', 'admin'] }
+  { page: 'TheaterRoleAccess', pageName: 'Theater Role Access Management', route: '/theater-role-access/:theaterId', description: 'Manage page access permissions for theater roles', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterQRCodeNames', pageName: 'Theater QR Code Names', route: '/theater-qr-code-names/:theaterId', description: 'Manage QR code names and seat classes for theater', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterGenerateQR', pageName: 'Theater Generate QR', route: '/theater-generate-qr/:theaterId', description: 'Generate single or screen QR codes for theater', roles: ['theater_user', 'theater-admin', 'admin'] }
   ];
 
   // Filter out pages that should not be in page access management

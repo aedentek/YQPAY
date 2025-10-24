@@ -58,6 +58,8 @@ export const filterNavigationByPermissions = (navigationItems = [], rolePermissi
       'reports': 'TheaterReports', // ✅ NEW
       'theater-roles': 'TheaterRoles', // ✅ Theater Roles Management
       'theater-role-access': 'TheaterRoleAccess', // ✅ Theater Role Access Management
+      'qr-code-names': 'TheaterQRCodeNames', // ✅ Theater QR Code Names
+      'generate-qr': 'TheaterGenerateQR', // ✅ Theater Generate QR
       'settings': 'TheaterSettingsWithId'
     };
 

@@ -174,6 +174,8 @@ const TheaterSidebar = ({ sidebarOpen, setSidebarOpen, sidebarCollapsed, current
     { id: 'reports', icon: 'reports', label: 'Reports', path: effectiveTheaterId ? `/theater-reports/${effectiveTheaterId}` : '/theater-reports' }, // ✅ NEW
     { id: 'theater-roles', icon: 'users', label: 'Role Management', path: effectiveTheaterId ? `/theater-roles/${effectiveTheaterId}` : '/theater-roles' }, // ✅ Theater Roles
     { id: 'theater-role-access', icon: 'lock', label: 'Role Access', path: effectiveTheaterId ? `/theater-role-access/${effectiveTheaterId}` : '/theater-role-access' }, // ✅ Theater Role Access
+    { id: 'qr-code-names', icon: 'qrcode', label: 'QR Code Names', path: effectiveTheaterId ? `/theater-qr-code-names/${effectiveTheaterId}` : '/theater-qr-code-names' }, // ✅ Theater QR Code Names
+    { id: 'generate-qr', icon: 'qrcode', label: 'Generate QR', path: effectiveTheaterId ? `/theater-generate-qr/${effectiveTheaterId}` : '/theater-generate-qr' }, // ✅ Theater Generate QR
     { id: 'settings', icon: 'settings', label: 'Settings', path: effectiveTheaterId ? `/theater-settings/${effectiveTheaterId}` : '/theater-settings' }
   ];
 

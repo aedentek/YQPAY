@@ -56,6 +56,8 @@ const TheaterProductList = React.lazy(() => import('./pages/theater/TheaterProdu
 const TheaterReports = React.lazy(() => import('./pages/theater/TheaterReports')); // ✅ NEW
 const TheaterRoles = React.lazy(() => import('./pages/theater/TheaterRoles')); // ✅ Theater Roles Management
 const TheaterRoleAccess = React.lazy(() => import('./pages/theater/TheaterRoleAccess')); // ✅ Theater Role Access Management
+const TheaterQRCodeNames = React.lazy(() => import('./pages/theater/TheaterQRCodeNames')); // ✅ Theater QR Code Names
+const TheaterGenerateQR = React.lazy(() => import('./pages/theater/TheaterGenerateQR')); // ✅ Theater Generate QR
 
 const StockManagement = React.lazy(() => import('./pages/theater/StockManagement'));
 const TestStockManagement = React.lazy(() => import('./pages/theater/TestStockManagement'));
@@ -149,6 +151,8 @@ function App() {
                 <Route path="/theater-reports/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><TheaterReports /></RoleBasedRoute>} /> {/* ✅ NEW */}
                 <Route path="/theater-roles/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><TheaterRoles /></RoleBasedRoute>} /> {/* ✅ Theater Roles */}
                 <Route path="/theater-role-access/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><TheaterRoleAccess /></RoleBasedRoute>} /> {/* ✅ Theater Role Access */}
+                <Route path="/theater-qr-code-names/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><TheaterQRCodeNames /></RoleBasedRoute>} /> {/* ✅ Theater QR Code Names */}
+                <Route path="/theater-generate-qr/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><TheaterGenerateQR /></RoleBasedRoute>} /> {/* ✅ Theater Generate QR */}
                 <Route path="/staff-order-history/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><StaffOrderHistory /></RoleBasedRoute>} />
                 <Route path="/theater-products/:theaterId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><TheaterProductList /></RoleBasedRoute>} />
                 <Route path="/theater-stock-management/:theaterId/:productId" element={<RoleBasedRoute allowedRoles={['theater_user', 'theater_admin', 'super_admin']}><StockManagement /></RoleBasedRoute>} />
