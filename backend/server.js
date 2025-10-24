@@ -64,9 +64,9 @@ const allowedOrigins = [
   'https://localhost:3001',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:3001',
-  'http://192.168.1.6:3000',
-  'http://192.168.1.6:3001',
-  'https://192.168.1.6:3001'
+  'http://172.20.10.2:3000',
+  'http://172.20.10.2:3001',
+  'https://172.20.10.2:3001'
 ];
 
 // Add network IP dynamically for mobile device access

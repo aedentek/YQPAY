@@ -3,9 +3,9 @@ echo ========================================
 echo Starting YQPayNow with IP Configuration
 echo ========================================
 echo.
-echo IP Address: 192.168.1.6
-echo Backend: http://192.168.1.6:5000
-echo Frontend: http://192.168.1.6:3001
+echo IP Address: 172.20.10.2
+echo Backend: http://172.20.10.2:5000
+echo Frontend: http://172.20.10.2:3001
 echo.
 echo ========================================
 echo.
@@ -25,8 +25,8 @@ echo ========================================
 echo Both servers are starting...
 echo.
 echo Access your application at:
-echo http://192.168.1.6:3001
+echo http://172.20.10.2:3001
 echo.
 echo Backend API available at:
-echo http://192.168.1.6:5000/api
+echo http://172.20.10.2:5000/api
 echo ========================================

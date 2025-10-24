@@ -52,7 +52,9 @@ export const extractPagesFromAppJS = () => {
   { page: 'TheaterOrderInterface', pageName: 'Theater Order Interface', route: '/theater-order/:theaterId', description: 'Theater canteen staff order taking screen for customers', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'OnlinePOSInterface', pageName: 'Online POS Interface', route: '/online-pos/:theaterId', description: 'Dual order management system with current and online orders', roles: ['theater_user', 'theater-admin', 'admin'] },
   { page: 'TheaterOrderHistory', pageName: 'Theater Order History', route: '/theater-order-history/:theaterId', description: 'View and manage theater order history with search and filtering', roles: ['theater_user', 'theater-admin', 'admin'] },
-  { page: 'TheaterAddProductWithId', pageName: 'Theater Add Product (With ID)', route: '/theater-add-product/:theaterId', description: 'Theater Product Management - Add new products to theater menu (With Theater ID)', roles: ['theater_user', 'theater-admin', 'admin'] }
+  { page: 'TheaterAddProductWithId', pageName: 'Theater Add Product (With ID)', route: '/theater-add-product/:theaterId', description: 'Theater Product Management - Add new products to theater menu (With Theater ID)', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterRoles', pageName: 'Theater Roles Management', route: '/theater-roles/:theaterId', description: 'Manage theater-specific roles and permissions', roles: ['theater_user', 'theater-admin', 'admin'] },
+  { page: 'TheaterRoleAccess', pageName: 'Theater Role Access Management', route: '/theater-role-access/:theaterId', description: 'Manage page access permissions for theater roles', roles: ['theater_user', 'theater-admin', 'admin'] }
   ];
 
   // Filter out pages that should not be in page access management

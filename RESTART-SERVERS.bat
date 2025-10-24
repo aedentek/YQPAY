@@ -30,11 +30,11 @@ echo.
 echo ========================================
 echo  SERVERS STARTED!
 echo ========================================
-echo  Backend:  http://192.168.1.6:5000/api
-echo  Frontend: http://192.168.1.6:3001
+echo  Backend:  http://172.20.10.2:5000/api
+echo  Frontend: http://172.20.10.2:3001
 echo.
 echo  IMPORTANT: Wait 15-20 seconds for complete startup
-echo  Then open: http://192.168.1.6:3001
+echo  Then open: http://172.20.10.2:3001
 echo ========================================
 echo.
 echo Press any key to exit this window...

@@ -56,6 +56,8 @@ export const filterNavigationByPermissions = (navigationItems = [], rolePermissi
       'categories': 'TheaterCategories',
       'product-types': 'TheaterProductTypes',
       'reports': 'TheaterReports', // ✅ NEW
+      'theater-roles': 'TheaterRoles', // ✅ Theater Roles Management
+      'theater-role-access': 'TheaterRoleAccess', // ✅ Theater Role Access Management
       'settings': 'TheaterSettingsWithId'
     };
 
