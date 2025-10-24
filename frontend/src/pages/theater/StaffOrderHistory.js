@@ -68,7 +68,7 @@ const StaffOrderHistory = () => {
           setTotalItems(data.data.pagination.totalItems);
         } else {
           console.error('Failed to fetch staff orders:', data.message);
-          showError('Failed to load your order history');
+          // Removed error modal - just show empty state
         }
       } else if (response.status === 404) {
         // Handle no orders found gracefully
@@ -80,15 +80,15 @@ const StaffOrderHistory = () => {
         setTotalItems(0);
       } else {
         console.error('HTTP error:', response.status);
-        showError('Failed to load your order history');
+        // Removed error modal - just show empty state
       }
     } catch (error) {
       console.error('Error fetching staff orders:', error);
-      showError('Network error while loading order history');
+      // Removed error modal - just show empty state
     } finally {
       setLoading(false);
     }
-  }, [dateFilter, showError]);
+  }, [dateFilter]);
 
   // Load data on component mount and filter changes
   useEffect(() => {

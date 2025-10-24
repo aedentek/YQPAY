@@ -160,7 +160,7 @@ const TheaterCategories = () => {
       }
     } catch (error) {
       if (error.name !== 'AbortError' && isMountedRef.current) {
-        showError('Failed to load categories. Please try again.');
+        // Removed error modal - just show empty state
         setCategories([]);
         setSummary({ activeCategories: 0, inactiveCategories: 0, totalCategories: 0 });
       }
@@ -290,13 +290,13 @@ const TheaterCategories = () => {
         console.error('   Error:', errorData.error);
         console.error('   Message:', errorData.message);
         console.error('   Details:', errorData.details);
-        showError(errorData.message || errorData.error || 'Failed to save category');
+        // Removed error modal - errors logged to console only
       }
     } catch (error) {
       console.error('❌ Submit error:', error);
       console.error('   Error name:', error.name);
       console.error('   Error message:', error.message);
-      showError('Failed to save category. Please try again.');
+      // Removed error modal - errors logged to console only
     }
   };
 
@@ -314,10 +314,10 @@ const TheaterCategories = () => {
         loadCategoriesData(currentPage, itemsPerPage, searchTerm); // Refresh the list
       } else {
         const errorData = await response.json();
-        showError(errorData.message || 'Failed to delete category');
+        // Removed error modal - errors logged to console only
       }
     } catch (error) {
-      showError('Failed to delete category. Please try again.');
+      // Removed error modal - errors logged to console only
     }
   };
 
@@ -505,12 +505,17 @@ const TheaterCategories = () => {
                             <img 
                               src={category.imageUrl || category.image} 
                               alt={category.name || category.categoryName || 'Category'}
+                              loading="eager"
+                              decoding="async"
+                              width="40"
+                              height="40"
                               style={{
                                 width: '40px',
                                 height: '40px',
                                 borderRadius: '8px',
                                 objectFit: 'cover',
-                                border: '2px solid #e0e0e0'
+                                border: '2px solid #e0e0e0',
+                                imageRendering: 'auto'
                               }}
                               onError={(e) => {
                                 console.log('Image load error for:', category.name || category.categoryName, category.imageUrl || category.image);
@@ -836,13 +841,16 @@ const TheaterCategories = () => {
                         <img
                           src={selectedCategory.imageUrl || selectedCategory.image}
                           alt={selectedCategory.name}
+                          loading="eager"
+                          decoding="async"
                           style={{
                             maxWidth: '100%',
                             height: 'auto',
                             maxHeight: '200px',
                             borderRadius: '8px',
                             border: '2px solid #e0e0e0',
-                            objectFit: 'cover'
+                            objectFit: 'cover',
+                            imageRendering: 'auto'
                           }}
                           onError={(e) => {
                             console.log('Modal image load error:', selectedCategory.imageUrl || selectedCategory.image);

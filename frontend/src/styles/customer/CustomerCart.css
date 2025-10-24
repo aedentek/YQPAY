@@ -248,6 +248,7 @@ This file contains Cart-specific overrides only
   font-weight: 600;
   color: #1f2937;
   margin: 0;
+  text-align: left;
   letter-spacing: 0.2px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -500,4 +501,47 @@ This file contains Cart-specific overrides only
   .empty-cart-title {
     font-size: 24px;
   }
+}
+
+/* Discount Styles */
+.discount-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.cart-item-image-container {
+  position: relative;
+}
+
+.cart-item-price-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-item-original-price {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+  margin: 0;
+  text-decoration: line-through;
+}
+
+.discount-row .summary-label {
+  color: #059669;
+}
+
+.discount-value {
+  color: #059669 !important;
+  font-weight: 700;
 }

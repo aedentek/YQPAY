@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../../contexts/CartContext';
 import OptimizedImage from '../../components/common/OptimizedImage';
 import ProductCollectionModal from '../../components/customer/ProductCollectionModal';
+import OfflineNotice from '../../components/OfflineNotice';
+import useNetworkStatus from '../../hooks/useNetworkStatus';
 import { 
   groupProductsIntoCollections, 
   filterCollections,
@@ -16,6 +18,9 @@ const CustomerHome = () => {
   const navigate = useNavigate();
   const cart = useCart();
   const { items, addItem, updateQuantity, removeItem, getTotalItems, getItemQuantity } = cart;
+  
+  // Network status for offline handling
+  const { shouldShowOfflineUI, isNetworkError } = useNetworkStatus();
   const [theaterId, setTheaterId] = useState(null);
   const [theater, setTheater] = useState(null);
   const [products, setProducts] = useState([]);
@@ -27,17 +32,46 @@ const CustomerHome = () => {
   const [loading, setLoading] = useState(true);
   const [qrName, setQrName] = useState(null);
   const [seat, setSeat] = useState(null);
+  const [screenName, setScreenName] = useState(null);
   const [selectedCollection, setSelectedCollection] = useState(null);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  
+  // Filter states
+  const [isVegOnly, setIsVegOnly] = useState(false);
+  const [selectedPriceRange, setSelectedPriceRange] = useState('all');
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const id = params.get('theaterid');
-    const qr = params.get('qrname');
-    const seatNum = params.get('seat');
+    // Support multiple parameter name variations for backwards compatibility
+    const id = params.get('theaterid') || params.get('theaterId') || params.get('THEATERID');
+    const qr = params.get('qrName') || params.get('qrname') || params.get('QRNAME');
+    const seatNum = params.get('seat') || params.get('SEAT');
+    const screen = params.get('screen') || params.get('SCREEN') || params.get('screenName');
+    
+    console.log('🔍 URL Parameters:', {
+      theaterid: id,
+      qrName: qr,
+      // seat: seatNum,
+      screen: screen,
+      fullURL: location.search,
+      allParams: Object.fromEntries(params.entries())
+    });
+    
     if (id) setTheaterId(id);
-    if (qr) setQrName(qr);
+    if (qr) {
+      console.log('✅ Setting QR Name:', qr);
+      setQrName(qr);
+      // If no screen name is provided, use qrName as screen name
+      if (!screen) {
+        console.log('ℹ️ No screen parameter, using qrName as screen name');
+        setScreenName(qr);
+      }
+    } else {
+      console.log('❌ No QR name found in URL parameters');
+      console.log('Available parameters:', Array.from(params.keys()));
+    }
     if (seatNum) setSeat(seatNum);
+    if (screen) setScreenName(screen);
   }, [location.search]);
 
   const loadTheater = useCallback(async (id) => {
@@ -57,6 +91,12 @@ const CustomerHome = () => {
       const data = await res.json();
       if (data.success && data.data.products) {
         console.log('🍔 Raw products from API:', data.data.products.slice(0, 2));
+        console.log('🍔 Full raw products:', data.data.products.map(p => ({ 
+          name: p.name, 
+          category: p.category, 
+          categoryType: typeof p.category,
+          categoryKeys: p.category ? Object.keys(p.category) : null
+        })));
         const mappedProducts = data.data.products.map(p => {
           // Handle different image formats
           let imageUrl = null;
@@ -73,16 +113,36 @@ const CustomerHome = () => {
             imageUrl = p.image; // Alternative old format
           }
           
+          // Check if product is available (active and has stock)
+          const isActive = p.isActive !== false && p.status === 'active';
+          const trackStock = p.inventory?.trackStock !== false;
+          const currentStock = p.inventory?.currentStock || 0;
+          const hasStock = !trackStock || currentStock > 0;
+          const isAvailable = isActive && hasStock;
+          
           return {
             _id: p._id,
             name: p.name || p.productName,
             price: p.pricing?.salePrice || p.price || p.sellingPrice || 0,
             description: p.description || '',
             image: imageUrl,
-            // Keep category as-is (products store category name as string)
+            // Store category ID directly from the product (it's already a field in the DB)
+            categoryId: p.categoryId || (typeof p.category === 'object' ? p.category?._id : p.category),
             category: typeof p.category === 'object' ? (p.category?.categoryName || p.category?.name) : p.category,
             quantity: p.quantity || null,
             size: p.size || null,
+            // Include tax and discount information
+            pricing: p.pricing,
+            taxRate: p.pricing?.taxRate || p.taxRate || 0,
+            gstType: p.gstType || 'EXCLUDE',
+            discountPercentage: p.pricing?.discountPercentage || p.discountPercentage || 0,
+            // Include availability information
+            isActive: p.isActive,
+            status: p.status,
+            inventory: p.inventory,
+            currentStock: currentStock,
+            trackStock: trackStock,
+            isAvailable: isAvailable,
           };
         });
         console.log('✅ Mapped products:', mappedProducts.slice(0, 2));
@@ -93,40 +153,8 @@ const CustomerHome = () => {
         console.log('📦 Collections created:', collections.length);
         setProductCollections(collections);
         
-        // Initial display depends on selected category
-        if (selectedCategory === 'all') {
-          setFilteredCollections(collections);
-        } else {
-          // For specific categories, show individual products
-          const individualProducts = mappedProducts
-            .filter(p => p.category === selectedCategory)
-            .map(p => ({
-              name: p.name,
-              baseImage: p.image,
-              category: p.category,
-              isCollection: false,
-              basePrice: parseFloat(p.price) || 0,
-              singleVariant: {
-                _id: p._id,
-                size: p.size || 'Regular',
-                sizeLabel: p.quantity || null,
-                price: parseFloat(p.price) || 0,
-                description: p.description,
-                image: p.image,
-                originalProduct: p
-              },
-              variants: [{
-                _id: p._id,
-                size: p.size || 'Regular',
-                sizeLabel: p.quantity || null,
-                price: parseFloat(p.price) || 0,
-                description: p.description,
-                image: p.image,
-                originalProduct: p
-              }]
-            }));
-          setFilteredCollections(individualProducts);
-        }
+        // Don't set filtered collections here - let filterProductCollections handle it
+        // This will be triggered by the useEffect that watches products/collections changes
       }
     } catch (err) {
       console.error('Error loading products:', err);
@@ -192,7 +220,17 @@ const CustomerHome = () => {
       setFilteredCollections(filtered);
     } else {
       // For specific categories: show individual products
-      let individualProducts = products.filter(p => p.category === selectedCategory);
+      // Filter by category ID (not name)
+      console.log('🔍 Selected category ID:', selectedCategory);
+      console.log('🔍 All product categories:', products.map(p => ({ name: p.name, categoryId: p.categoryId, category: p.category })));
+      
+      let individualProducts = products.filter(p => {
+        const matches = p.categoryId === selectedCategory;
+        console.log(`🔍 Comparing: "${p.categoryId}" === "${selectedCategory}" for product: ${p.name} - ${matches ? '✅' : '❌'}`);
+        return matches;
+      });
+      
+      console.log('🔍 Filtered products:', individualProducts.length);
       
       // Apply search filter
       if (searchQuery && searchQuery.trim()) {
@@ -201,6 +239,32 @@ const CustomerHome = () => {
           p.name.toLowerCase().includes(query) ||
           (p.description && p.description.toLowerCase().includes(query))
         );
+      }
+      
+      // Apply veg filter (only for category view, not "all")
+      if (isVegOnly) {
+        individualProducts = individualProducts.filter(p => 
+          p.isVeg === true || p.category?.toLowerCase().includes('veg')
+        );
+      }
+      
+      // Apply price range filter (only for category view, not "all")
+      if (selectedPriceRange !== 'all') {
+        individualProducts = individualProducts.filter(p => {
+          const price = parseFloat(p.price) || 0;
+          switch (selectedPriceRange) {
+            case 'under100':
+              return price < 100;
+            case '100-200':
+              return price >= 100 && price <= 200;
+            case '200-300':
+              return price > 200 && price <= 300;
+            case 'above300':
+              return price > 300;
+            default:
+              return true;
+          }
+        });
       }
       
       // Convert to collection format for consistent rendering
@@ -233,7 +297,7 @@ const CustomerHome = () => {
       console.log('✅ Showing individual products:', productItems.length);
       setFilteredCollections(productItems);
     }
-  }, [productCollections, products, selectedCategory, searchQuery]);
+  }, [productCollections, products, selectedCategory, searchQuery, isVegOnly, selectedPriceRange]);
 
   // Update filtered collections when filters change
   useEffect(() => {
@@ -288,26 +352,37 @@ const CustomerHome = () => {
 
   const handleCategoryChange = (categoryId) => {
     console.log('📂 Category changed to:', categoryId);
-    // Find the category name from the ID
-    const category = categories.find(cat => cat._id === categoryId);
-    const categoryName = category ? category.name : 'all';
-    console.log('📂 Category name:', categoryName);
-    setSelectedCategory(categoryName === 'all' ? 'all' : categoryName);
+    // Store the category ID (not the name) for filtering, except for 'all'
+    console.log('📂 All categories:', categories.map(c => ({ id: c._id, name: c.name })));
+    setSelectedCategory(categoryId === 'all' ? 'all' : categoryId);
   };
 
   // Handle adding product to cart
   const handleAddToCart = (product) => {
+    // Check if product is available
+    if (product.isAvailable === false) {
+      return; // Don't add to cart if not available
+    }
+    
     addItem({
       _id: product._id,
       name: product.name,
       price: product.price,
       image: product.image,
-      quantity: 1
+      quantity: 1,
+      taxRate: product.pricing?.taxRate || product.taxRate || 0,
+      gstType: product.gstType || 'EXCLUDE',
+      discountPercentage: product.pricing?.discountPercentage || product.discountPercentage || 0
     });
   };
 
   // Handle increasing quantity
   const handleIncreaseQuantity = (product) => {
+    // Check if product is available
+    if (product.isAvailable === false) {
+      return; // Don't allow adding if not available
+    }
+    
     const currentQty = getItemQuantity(product._id);
     if (currentQty > 0) {
       updateQuantity(product._id, currentQty + 1);
@@ -338,9 +413,20 @@ const CustomerHome = () => {
 
   const totalItems = getTotalItems();
   const defaultEmojis = ['🍔', '🥤', '🥤', '🍿'];
+  
+  // Debug: Log header values
+  console.log('📊 Header Display Values:', {
+    qrName,
+    seat,
+    screenName,
+    theaterName: theater?.name
+  });
 
   return (
     <div className="customer-home">
+      {/* Show offline notice if in offline mode */}
+      {shouldShowOfflineUI && <OfflineNotice />}
+      
       <header className="customer-header">
         {/* Theater Name - First Line */}
         <div className="theater-name-row">
@@ -350,12 +436,20 @@ const CustomerHome = () => {
         {/* Balance Icons - Second Line */}
         <div className="balance-row">
           <div className="balance-info">
-            {qrName && (
+            {screenName && (
+              <div className="balance-item">
+                <svg className="balance-icon" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
+                </svg>
+                <span className="balance-text">{screenName}</span>
+              </div>
+            )}
+            {qrName && qrName !== screenName && (
               <div className="balance-item">
                 <svg className="balance-icon" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M3 11h8V3H3v8zm2-6h4v4H5V5zm8-2v8h8V3h-8zm6 6h-4V5h4v4zM3 21h8v-8H3v8zm2-6h4v4H5v-4zm13-2h-2v3h-3v2h5v-5zm0 7h2v-2h-2v2zm-2-2h-2v2h2v-2z"/>
                 </svg>
-                <span className="balance-text">{qrName}</span>
+                <span className="balance-text">QR: {qrName}</span>
               </div>
             )}
             {seat && (
@@ -409,6 +503,7 @@ const CustomerHome = () => {
                   width={48}
                   height={48}
                   className="category-img"
+                  priority={true}
                   lazy={false}
                 />
               </div>
@@ -466,7 +561,8 @@ const CustomerHome = () => {
                       height={48}
                       className="category-img"
                       fallback="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=100&h=100&fit=crop"
-                        lazy={false}
+                      priority={true}
+                      lazy={false}
                       />
                     </div>
                     <span className="category-name">{category.name}</span>
@@ -478,82 +574,202 @@ const CustomerHome = () => {
       </header>
       <main className="customer-main">
        
+        {/* Filter Section - Only show when not in "All" category */}
+        {selectedCategory !== 'all' && (
+          <div className="filter-section">
+            <div className="filter-chips-container">
+              {/* Veg Toggle Switch */}
+              <div className="veg-toggle-container">
+                <label className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={isVegOnly}
+                    onChange={() => setIsVegOnly(!isVegOnly)}
+                  />
+                  <span className="toggle-slider"></span>
+                </label>
+              </div>
+              
+              {/* All Button - Clear all filters */}
+              <button
+                className={`filter-chip ${!isVegOnly && selectedPriceRange === 'all' ? 'active' : ''}`}
+                onClick={() => {
+                  setIsVegOnly(false);
+                  setSelectedPriceRange('all');
+                }}
+              >
+                <span>All</span>
+              </button>
+              
+              {/* Price Range Filters */}
+              <button
+                className={`filter-chip ${selectedPriceRange === 'under100' ? 'active' : ''}`}
+                onClick={() => setSelectedPriceRange(selectedPriceRange === 'under100' ? 'all' : 'under100')}
+              >
+                <span>Under ₹100</span>
+              </button>
+              
+              <button
+                className={`filter-chip ${selectedPriceRange === '100-200' ? 'active' : ''}`}
+                onClick={() => setSelectedPriceRange(selectedPriceRange === '100-200' ? 'all' : '100-200')}
+              >
+                <span>₹100-200</span>
+              </button>
+              
+              <button
+                className={`filter-chip ${selectedPriceRange === '200-300' ? 'active' : ''}`}
+                onClick={() => setSelectedPriceRange(selectedPriceRange === '200-300' ? 'all' : '200-300')}
+              >
+                <span>₹200-300</span>
+              </button>
+              
+              <button
+                className={`filter-chip ${selectedPriceRange === 'above300' ? 'active' : ''}`}
+                onClick={() => setSelectedPriceRange(selectedPriceRange === 'above300' ? 'all' : 'above300')}
+              >
+                <span>Above ₹300</span>
+              </button>
+              
+              {/* Clear Filters - Show only when filters are active */}
+              {(isVegOnly || selectedPriceRange !== 'all') && (
+                <button
+                  className="filter-chip clear-filter"
+                  onClick={() => {
+                    setIsVegOnly(false);
+                    setSelectedPriceRange('all');
+                  }}
+                >
+                  <span>✕ Clear</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+       
         {/* Products List - Collection Design */}
         <section className="products-section">
           <div className="products-list">
             {filteredCollections.length > 0 ? (
-              filteredCollections.map((collection) => {
+              filteredCollections.map((collection, index) => {
                 const defaultVariant = getDefaultVariant(collection);
                 const imgUrl = defaultVariant?.image || collection.baseImage;
                 const product = defaultVariant?.originalProduct || defaultVariant;
                 const productQty = product ? getItemQuantity(product._id) : 0;
                 
+                // Priority load first 6 images (above the fold)
+                const isPriority = index < 6;
+                
+                // Check if ANY variant in the collection is available
+                const hasAvailableVariant = collection.variants?.some(variant => 
+                  variant.originalProduct?.isAvailable !== false
+                );
+                const isProductAvailable = collection.isCollection 
+                  ? hasAvailableVariant 
+                  : (product?.isAvailable !== false);
+                
                 return (
                   <div 
                     key={collection.isCollection ? `collection-${collection.name}` : defaultVariant?._id} 
-                    className={`product-card ${collection.isCollection ? 'collection-card' : 'single-product-card'}`}
-                    onClick={() => handleCollectionClick(collection)}
-                    style={{ cursor: collection.isCollection ? 'pointer' : 'default' }}
+                    className={`product-card ${collection.isCollection ? 'collection-card' : 'single-product-card'} ${!isProductAvailable ? 'out-of-stock' : ''}`}
+                    onClick={() => isProductAvailable && handleCollectionClick(collection)}
+                    style={{ cursor: (collection.isCollection && isProductAvailable) ? 'pointer' : 'default' }}
                   >
-                    <div className="product-image-wrapper">
-                      <div className="product-image">
-                        {imgUrl ? (
-                          <OptimizedImage
-                            src={imgUrl && typeof imgUrl === 'string' 
-                              ? (imgUrl.startsWith('http') ? imgUrl : `${config.api.baseUrl}${imgUrl}`) 
-                              : null
-                            }
-                            alt={collection.name}
-                            width={100}
-                            height={100}
-                            className="product-img"
-                            fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='40'%3E🍽️%3C/text%3E%3C/svg%3E"
-                            lazy={false}
-                          />
-                        ) : (
-                          <div className="product-placeholder">
-                            <span>🍽️</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Quantity Controls Overlay - Only for single products */}
-                      {!collection.isCollection && product && (
-                        <div className="product-actions" onClick={(e) => e.stopPropagation()}>
-                          {productQty > 0 && (
-                            <button 
-                              className="quantity-btn minus"
-                              onClick={() => handleDecreaseQuantity(product)}
-                            >
-                              −
-                            </button>
-                          )}
-                          <span className="quantity-display">{productQty}</span>
-                          <button 
-                            className="quantity-btn plus"
-                            onClick={() => handleIncreaseQuantity(product)}
-                          >
-                            +
-                          </button>
+                    {/* Image Container */}
+                    <div className="product-image-container">
+                      {imgUrl ? (
+                        <OptimizedImage
+                          src={imgUrl && typeof imgUrl === 'string' 
+                            ? (imgUrl.startsWith('http') ? imgUrl : `${config.api.baseUrl}${imgUrl}`) 
+                            : null
+                          }
+                          alt={collection.name}
+                          width={100}
+                          height={100}
+                          className="product-img"
+                          fallback="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23f0f0f0' width='100' height='100'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' font-size='40'%3E🍽️%3C/text%3E%3C/svg%3E"
+                          priority={isPriority}
+                          lazy={!isPriority}
+                        />
+                      ) : (
+                        <div className="product-placeholder">
+                          <span>🍽️</span>
+                        </div>
+                      )}
+                      {/* Discount Badge */}
+                      {product?.discountPercentage > 0 && isProductAvailable && (
+                        <div className="product-discount-badge">
+                          {product.discountPercentage}% OFF
+                        </div>
+                      )}
+                      {/* Out of Stock Overlay */}
+                      {!isProductAvailable && (
+                        <div className="out-of-stock-overlay">
+                          <span className="out-of-stock-text">Out of Stock</span>
                         </div>
                       )}
                     </div>
                     
+                    {/* Product Details */}
                     <div className="product-details">
                       <h3 className="product-name">{collection.name}</h3>
                       {collection.isCollection ? (
                         <>
                           <p className="product-collection-info">
-                            {collection.variants.length} sizes available
+                            {collection.variants.length > 1 ? `${collection.variants.length} sizes available` : '1 size available'}
                           </p>
                           <p className="product-price-range">
-                            From ₹{parseFloat(collection.basePrice || 0).toFixed(2)}
+                            {collection.variants.length > 1 ? `From ₹${parseFloat(collection.basePrice || 0).toFixed(2)}` : `₹${parseFloat(collection.basePrice || 0).toFixed(2)}`}
                           </p>
                         </>
                       ) : (
-                        <p className="product-price">₹{parseFloat(defaultVariant?.price || 0).toFixed(2)}</p>
+                        <>
+                          <p className="product-quantity">{defaultVariant?.sizeLabel || defaultVariant?.originalProduct?.quantity || 'Regular'}</p>
+                          {product?.discountPercentage > 0 ? (
+                            <div className="product-price-container">
+                              <span className="product-discounted-price">
+                                ₹{(parseFloat(defaultVariant?.price || 0) * (1 - product.discountPercentage / 100)).toFixed(2)}
+                              </span>
+                              <span className="product-original-price">
+                                ₹{parseFloat(defaultVariant?.price || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="product-regular-price">
+                              ₹{parseFloat(defaultVariant?.price || 0).toFixed(2)}
+                            </p>
+                          )}
+                        </>
                       )}
                     </div>
+
+                    {/* Actions Section - Only for single products */}
+                    {!collection.isCollection && product && (
+                      <div className="product-item-actions" onClick={(e) => e.stopPropagation()}>
+                        <div className="product-actions">
+                          <button 
+                            className="quantity-btn minus"
+                            onClick={() => handleDecreaseQuantity(product)}
+                            disabled={!isProductAvailable}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                          
+                          <span className="quantity-display">{productQty}</span>
+                          
+                          <button 
+                            className="quantity-btn plus"
+                            onClick={() => isProductAvailable && handleIncreaseQuantity(product)}
+                            disabled={!isProductAvailable}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })

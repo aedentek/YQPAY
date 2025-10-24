@@ -14,6 +14,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <title>Theater Canteen QR Order System</title>
     
+    <!-- Performance optimization for images -->
+    <style>
+      img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        transform: translateZ(0);
+        backface-visibility: hidden;
+      }
+    </style>
+    
     <!-- Auto-set auth token for testing -->
     <script>
       if (!localStorage.getItem('authToken')) {

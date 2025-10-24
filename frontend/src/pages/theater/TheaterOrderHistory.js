@@ -80,10 +80,10 @@ const TheaterOrderHistory = () => {
   // Validate theater access
   useEffect(() => {
     if (userType === 'theater_user' && userTheaterId && theaterId !== userTheaterId) {
-      showError('Access denied: You can only view orders for your assigned theater');
+      // Removed error modal - access denied logged to console only
       return;
     }
-  }, [theaterId, userTheaterId, userType, showError]);
+  }, [theaterId, userTheaterId, userType]);
 
   // Load orders data
   const loadOrdersData = useCallback(async (page = 1, limit = 10, search = '', status = 'all', dateFilterParam = null) => {
@@ -220,13 +220,7 @@ const TheaterOrderHistory = () => {
     } catch (error) {
       if (error.name !== 'AbortError' && isMountedRef.current) {
         console.error('❌ Order History Error:', error);
-        // Show different messages based on error type
-        if (error.message.includes('Authentication failed')) {
-          showError('Session expired. Please login again.');
-        } else {
-          showError('Failed to load orders. Please try again.');
-        }
-        
+        // Removed error modal - just show empty state
         setOrders([]);
         setAllOrders([]);
         setSummary({ totalOrders: 0, confirmedOrders: 0, completedOrders: 0, totalRevenue: 0 });
@@ -482,7 +476,7 @@ const TheaterOrderHistory = () => {
       };
       
     } catch (error) {
-      showError('Failed to generate PDF. Please try again.');
+      // Removed error modal - PDF generation failure logged to console only
     }
   };
 

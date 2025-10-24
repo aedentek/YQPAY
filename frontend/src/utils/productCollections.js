@@ -67,10 +67,12 @@ export const groupProductsIntoCollections = (products) => {
       // Generate ingredient icons based on product name
       collection.ingredients = generateIngredientIcons(collection.name);
     } else {
-      // Single product - not a collection
-      collection.isCollection = false;
+      // Single product - treat as collection for consistent UI in "All" view
+      collection.isCollection = true;
       collection.basePrice = parseFloat(collection.variants[0]?.price) || 0;
       collection.singleVariant = collection.variants[0];
+      // Generate ingredient icons for single products too
+      collection.ingredients = generateIngredientIcons(collection.name);
     }
 
     return collection;

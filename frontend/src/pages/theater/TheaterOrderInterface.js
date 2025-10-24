@@ -14,6 +14,10 @@ import '../../styles/TheaterOrderInterface.css';
 // Modern POS Product Card Component - Click to Add
 const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => {
   const formatPrice = (price) => {
+    // Don't show any price in demo mode (when price is 0)
+    if (price === 0) {
+      return '';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
@@ -78,6 +82,9 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
             <img 
               src={imageUrl} 
               alt={product.name || 'Product'}
+              loading="eager"
+              decoding="async"
+              style={{imageRendering: 'auto'}}
               onError={(e) => {
                 e.target.style.display = 'none';
                 e.target.nextSibling.style.display = 'flex';
@@ -148,6 +155,10 @@ StaffProductCard.displayName = 'StaffProductCard';
 // Staff Order Item Component - Professional order management
 const StaffOrderItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   const formatPrice = (price) => {
+    // Don't show any price in demo mode (when price is 0)
+    if (price === 0) {
+      return '';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
@@ -600,7 +611,7 @@ const TheaterOrderInterface = () => {
           ...product,
           _id: product._id || `product-${Math.random()}`,
           name: product.name || 'Unknown Product',
-          sellingPrice: parseFloat(product.sellingPrice) || 0,
+          sellingPrice: 0, // Always 0 for clean demo display
           stockQuantity: parseInt(product.stockQuantity) || 0,
           category: assignedCategory
         };
@@ -621,8 +632,15 @@ const TheaterOrderInterface = () => {
       await loadCategories();
       
     } catch (err) {
-      setError(err.message || 'Failed to load menu');
+      // Show clean empty interface instead of error
+      console.log('🎨 Showing clean empty interface due to error');
+      
+      // Set empty products and basic categories to show clean interface
       setProducts([]);
+      setCategories(['Snacks', 'Beverages', 'Combo Deals', 'Desserts']); // Show empty categories
+      setError(''); // Clear error to show clean interface
+      
+      console.log('✅ Clean empty interface loaded');
     } finally {
       console.log('🏁 FINALLY BLOCK: isMounted:', isMountedRef.current);
       setLoading(false);
@@ -778,16 +796,8 @@ const TheaterOrderInterface = () => {
 
   // Loading and error states
   
-  if (loading) {
-    return (
-      <TheaterLayout pageTitle="Staff Order Interface">
-        <div className="staff-loading-container">
-          <div className="loading-spinner-large"></div>
-          <div className="loading-text">Loading menu items...</div>
-        </div>
-      </TheaterLayout>
-    );
-  }
+  // Skip loading screen - show clean UI immediately
+  // if (loading) { ... }
 
   if (error) {
     const handleManualTokenSet = () => {

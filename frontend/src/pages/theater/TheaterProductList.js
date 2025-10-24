@@ -254,12 +254,17 @@ const ProductRow = React.memo(({ product, index, theaterId, categories = [], pro
             <img 
               src={productImage}
               alt={product.name}
+              loading="eager"
+              decoding="async"
+              width="40"
+              height="40"
               style={{
                 width: '40px',
                 height: '40px',
                 borderRadius: '8px',
                 objectFit: 'cover',
-                border: '2px solid #e0e0e0'
+                border: '2px solid #e0e0e0',
+                imageRendering: 'auto'
               }}
               onError={(e) => {
                 e.target.style.display = 'none';

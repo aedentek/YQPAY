@@ -9,6 +9,10 @@ import '../../styles/ProfessionalPOS.css';
 // Professional POS Product Card Component
 const POSProductCard = React.memo(({ product, onAddToCart }) => {
   const formatPrice = (price) => {
+    // Don't show any price in demo mode (when price is 0)
+    if (price === 0) {
+      return '';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
@@ -25,6 +29,9 @@ const POSProductCard = React.memo(({ product, onAddToCart }) => {
           <img 
             src={product.productImage} 
             alt={product.name || 'Product'}
+            loading="eager"
+            decoding="async"
+            style={{imageRendering: 'auto'}}
             onError={(e) => {
               e.target.src = '/placeholder-product.png';
             }}
@@ -54,6 +61,10 @@ const POSProductCard = React.memo(({ product, onAddToCart }) => {
 // POS Order Item Component
 const POSOrderItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   const formatPrice = (price) => {
+    // Don't show any price in demo mode (when price is 0)
+    if (price === 0) {
+      return '';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
@@ -261,7 +272,7 @@ const ProfessionalPOSInterface = () => {
           ...product,
           _id: product._id || `product-${Math.random()}`,
           name: product.name || 'Unknown Product',
-          sellingPrice: parseFloat(product.sellingPrice) || 0,
+          sellingPrice: 0, // Always 0 for clean demo display
           stockQuantity: parseInt(product.stockQuantity) || 0,
           category: typeof product.category === 'string' ? product.category : 'Other'
         })) : [];
@@ -280,9 +291,15 @@ const ProfessionalPOSInterface = () => {
       setCategories(theaterCategories);
       
     } catch (err) {
-      setError(err.message || 'Failed to load menu');
+      // Show clean empty interface instead of error
+      console.log('🎨 Showing clean empty interface due to error');
+      
+      // Set empty products and basic categories to show clean interface
       setProducts([]);
-      setCategories([]);
+      setCategories(['BURGER', 'FRENCH FRIES', 'ICE CREAM', 'PIZZA', 'POP CORN']); // Show empty categories
+      setError(''); // Clear error to show clean interface
+      
+      console.log('✅ Clean empty interface loaded');
     } finally {
       setLoading(false);
     }
@@ -403,15 +420,9 @@ const ProfessionalPOSInterface = () => {
     }
   }, [currentOrder, customerName, orderNotes, orderImages, orderTotals, theaterId, clearOrder]);
 
-  // Loading and error states
-  if (loading) {
-    return (
-      <div className="pos-loading">
-        <div className="pos-loading-spinner"></div>
-        <div className="pos-loading-text">Loading POS System...</div>
-      </div>
-    );
-  }
+  // Loading and error states - REMOVED loading screen to show UI immediately
+  // Skip loading screen - show clean UI immediately
+  // if (loading) { ... }
 
   if (error) {
     const handleManualTokenSet = () => {

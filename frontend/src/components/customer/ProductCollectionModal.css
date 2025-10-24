@@ -618,6 +618,15 @@
   gap: 6px;
 }
 
+.circular-variant-item.variant-out-of-stock {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.circular-variant-item.variant-out-of-stock:hover .variant-image-circle {
+  transform: none;
+}
+
 .circular-variant-item:hover .variant-image-circle {
   transform: scale(1.05);
 }
@@ -676,6 +685,44 @@
   text-transform: uppercase;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
+}
+
+/* Variant Out of Stock Badge */
+.variant-out-of-stock-badge {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(220, 38, 38, 0.95);
+  color: white;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  z-index: 2;
+}
+
+/* Modal Out of Stock Message */
+.modal-out-of-stock-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 0;
+}
+
+.out-of-stock-badge-modal {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.4);
 }
 
 .circular-nav-item:hover .nav-item-circle {

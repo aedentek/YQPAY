@@ -74,10 +74,10 @@ const TheaterProductTypes = () => {
   useEffect(() => {
     if (userType === 'theater_user' && userTheaterId && theaterId !== userTheaterId) {
       console.error('Theater access denied: User can only access their own theater');
-      showError('Access denied: You can only manage product types for your assigned theater');
+      // Removed error modal - access denied logged to console only
       return;
     }
-  }, [theaterId, userTheaterId, userType, showError]);
+  }, [theaterId, userTheaterId, userType]);
 
   // Load product types data
   const loadProductTypesData = useCallback(async (page = 1, limit = 10, search = '') => {
@@ -166,11 +166,11 @@ const TheaterProductTypes = () => {
       if (error.name !== 'AbortError' && isMountedRef.current) {
         console.error('🔥 DEBUGGING: ERROR loading product types:', error);
         console.error('🔥 DEBUGGING: ERROR stack:', error.stack);
-        showError('Failed to load product types. Please try again.');
+        // Removed error modal - just show empty state
         setProductTypes([]);
         setSummary({ activeProductTypes: 0, inactiveProductTypes: 0, totalProductTypes: 0 });
       }
-    } finally {
+    } finally{
       if (isMountedRef.current) {
         setLoading(false);
       }
@@ -291,11 +291,11 @@ const TheaterProductTypes = () => {
         setSelectedProductType(null);
       } else {
         const errorData = await response.json();
-        showError(errorData.message || 'Failed to save product type');
+        // Removed error modal - errors logged to console only
       }
     } catch (error) {
       console.error('Error saving product type:', error);
-      showError('Failed to save product type. Please try again.');
+      // Removed error modal - errors logged to console only
     }
   };
 
@@ -313,11 +313,11 @@ const TheaterProductTypes = () => {
         loadProductTypesData(currentPage, itemsPerPage, searchTerm); // Refresh the list
       } else {
         const errorData = await response.json();
-        showError(errorData.message || 'Failed to delete product type');
+        // Removed error modal - errors logged to console only
       }
     } catch (error) {
       console.error('Error deleting product type:', error);
-      showError('Failed to delete product type. Please try again.');
+      // Removed error modal - errors logged to console only
     }
   };
 
@@ -504,12 +504,17 @@ const TheaterProductTypes = () => {
                             <img 
                               src={productType.imageUrl || productType.image} 
                               alt={productType.productName}
+                              loading="eager"
+                              decoding="async"
+                              width="40"
+                              height="40"
                               style={{
                                 width: '40px',
                                 height: '40px',
                                 borderRadius: '8px',
                                 objectFit: 'cover',
-                                border: '2px solid #e0e0e0'
+                                border: '2px solid #e0e0e0',
+                                imageRendering: 'auto'
                               }}
                               onError={(e) => {
                                 console.log('Image load error for:', productType.productName, productType.imageUrl || productType.image);

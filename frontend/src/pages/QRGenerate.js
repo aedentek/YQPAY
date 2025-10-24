@@ -142,14 +142,14 @@ const QRGenerate = React.memo(() => {
         
         console.log('Loaded theaters:', theaterList.length);
       } else {
-        showError('Error', data.message || 'Failed to load theaters');
+        // Removed error modal - errors logged to console only
       }
     } catch (error) {
       if (error.name === 'AbortError') {
         console.log('Theater fetch was aborted');
         return;
       }
-      showError('Error', 'Failed to load theaters');
+      // Removed error modal - errors logged to console only
     } finally {
       setTheatersLoading(false);
       abortControllerRef.current = null;
@@ -326,12 +326,12 @@ const QRGenerate = React.memo(() => {
     } catch (error) {
       console.error('❌ Error in loadQRNames:', error);
       setQrNames([]);
-      showError('Error', `Failed to load QR names: ${error.message}`);
+      // Removed error modal - errors logged to console only
     } finally {
       console.log('🏁 Setting loading state to false');
       setQrNamesLoading(false);
     }
-  }, [showError]);
+  }, []);
 
   // Removed useEffect that was causing race condition
   // QR names are loaded directly in handleInputChange when theater is selected
@@ -613,35 +613,35 @@ const QRGenerate = React.memo(() => {
     const { theaterId, qrType, name, seatStart, seatEnd, seatClass } = formData;
     
     if (!theaterId) {
-      showError('Validation Error', 'Please select a theater');
+      // Removed error modal - validation errors silently fail
       return false;
     }
     
     if (!name.trim()) {
-      showError('Validation Error', 'Please enter a QR code name');
+      // Removed error modal - validation errors silently fail
       return false;
     }
     
     if (qrType === 'screen') {
       if (!seatClass) {
-        showError('Validation Error', 'Please select a seat class');
+        // Removed error modal - validation errors silently fail
         return false;
       }
       
       // Check if seats are selected
       if (!formData.selectedSeats || formData.selectedSeats.length === 0) {
-        showError('Validation Error', 'Please generate seat map and select seats before creating QR codes');
+        // Removed error modal - validation errors silently fail
         return false;
       }
       
       if (formData.selectedSeats.length > 100) {
-        showError('Validation Error', 'Cannot generate more than 100 QR codes at once');
+        // Removed error modal - validation errors silently fail
         return false;
       }
     }
     
     return true;
-  }, [formData, showError]);
+  }, [formData]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -670,7 +670,7 @@ const QRGenerate = React.memo(() => {
       const token = config.helpers.getAuthToken();
       
       if (!token) {
-        showError('Authentication Error', 'Please login to generate QR codes');
+        // Removed error modal - authentication errors silently fail
         setGenerating(false);
         return;
       }
@@ -784,15 +784,15 @@ const QRGenerate = React.memo(() => {
         }, 1000);
       } else {
         console.error('Backend returned error:', data);
-        showError('Error', data.message || 'Failed to generate QR codes');
+        // Removed error modal - errors logged to console only
         setGenerating(false);
       }
     } catch (error) {
       console.error('Error generating QR codes:', error);
-      showError('Error', 'Failed to generate QR codes. Please try again.');
+      // Removed error modal - errors logged to console only
       setGenerating(false);
     }
-  }, [formData, validateForm, showSuccess, showError, navigate, loadQRNames, defaultLogoUrl]);
+  }, [formData, validateForm, showSuccess, navigate, loadQRNames, defaultLogoUrl]);
 
   // Add button click handler to generate seat map
   const handleGenerateSeatMap = useCallback(() => {
@@ -819,7 +819,7 @@ const QRGenerate = React.memo(() => {
     const endMatch = formData.seatEnd.match(/^([A-Z]+)(\d+)$/);
     
     if (!startMatch || !endMatch) {
-      showError('Validation Error', 'Please enter valid seat IDs (e.g., A1, B20, etc.)');
+      // Removed error modal - validation errors silently fail
       return;
     }
     

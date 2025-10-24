@@ -5,6 +5,22 @@ const axios = require('axios');
 const path = require('path');
 const fs = require('fs').promises;
 const mongoose = require('mongoose');
+const os = require('os');
+
+/**
+ * Get Network IP for mobile access
+ */
+const getNetworkIP = () => {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (iface.family === 'IPv4' && !iface.internal) {
+        return iface.address;
+      }
+    }
+  }
+  return null;
+};
 
 /**
  * Fetch logo from URL or local path
@@ -169,7 +185,11 @@ async function generateSingleQRCode({
     const uniqueId = `${theaterId}_${qrName}_${seatClass}${seatPart}_${timestamp}`.replace(/\s+/g, '_');
     
     // QR code will point to customer landing page with theater and seat info
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    // Use network IP for mobile access, fallback to FRONTEND_URL or localhost
+    const networkIP = getNetworkIP();
+    const baseUrl = networkIP ? `http://${networkIP}:3001` : (process.env.FRONTEND_URL || 'http://localhost:3001');
+    console.log(`🌐 QR Code Base URL: ${baseUrl} (Network IP: ${networkIP || 'not detected'})`);
+    
     const typeParam = seat ? 'screen' : 'single';
     const seatParam = seat ? `&seat=${encodeURIComponent(seat)}` : '';
     const qrCodeData = `${baseUrl}/menu/${theaterId}?qrName=${encodeURIComponent(qrName)}&type=${typeParam}${seatParam}`;

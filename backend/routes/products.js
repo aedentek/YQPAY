@@ -227,7 +227,8 @@ router.post('/:theaterId', [
         salePrice: req.body.pricing?.salePrice || 0,
         discountPercentage: req.body.pricing?.discountPercentage || 0,
         taxRate: req.body.pricing?.taxRate || 0,
-        currency: req.body.pricing?.currency || 'INR'
+        currency: req.body.pricing?.currency || 'INR',
+        gstType: req.body.pricing?.gstType || 'EXCLUDE'
       },
       inventory: {
         trackStock: req.body.inventory?.trackStock !== false,

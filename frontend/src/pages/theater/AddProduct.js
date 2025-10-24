@@ -922,7 +922,8 @@ const AddProduct = React.memo(() => {
           basePrice: parseFloat(formData.sellingPrice), // Backend expects pricing.basePrice
           salePrice: formData.costPrice ? parseFloat(formData.costPrice) : parseFloat(formData.sellingPrice),
           discountPercentage: formData.discount ? parseFloat(formData.discount) : 0,
-          taxRate: formData.taxRate ? parseFloat(formData.taxRate) : 0
+          taxRate: formData.taxRate ? parseFloat(formData.taxRate) : 0,
+          gstType: formData.gstType || 'EXCLUDE'
         },
         inventory: {
           trackStock: true,

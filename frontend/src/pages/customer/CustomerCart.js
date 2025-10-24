@@ -24,13 +24,52 @@ const CustomerCart = () => {
     if (name) setTheaterName(name);
   }, [location.search]);
 
-  // Calculate totals - handle price safely
-  const subtotal = items.reduce((sum, item) => {
-    const price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
-    return sum + (price * item.quantity);
-  }, 0);
-  const tax = subtotal * 0.05; // 5% tax
-  const total = subtotal + tax;
+  // Calculate totals - Discount should be applied to base price, then GST calculated on discounted amount
+  const { subtotal, tax, total, totalDiscount } = items.reduce((acc, item) => {
+    const originalPrice = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+    const qty = parseInt(item.quantity) || 0;
+    const taxRate = parseFloat(item.taxRate) || 0;
+    const gstType = item.gstType || 'EXCLUDE';
+    const discountPercentage = parseFloat(item.discountPercentage || item.pricing?.discountPercentage) || 0;
+    
+    let basePrice = 0;
+    let originalSubtotal = 0; // For display in subtotal (original price)
+    let itemTax = 0;
+    let discountAmount = 0;
+    let finalTotal = 0;
+    
+    if (gstType === 'INCLUDE') {
+      // Price includes GST - use original price as subtotal
+      basePrice = (originalPrice * qty) / (1 + (taxRate / 100));
+      originalSubtotal = originalPrice * qty;
+      // GST portion included in subtotal (before discount)
+      itemTax = originalSubtotal - basePrice;
+      // Apply discount to base price
+      discountAmount = discountPercentage > 0 
+        ? basePrice * (discountPercentage / 100)
+        : 0;
+      const discountedBase = basePrice - discountAmount;
+      finalTotal = discountedBase + itemTax;
+    } else {
+      // GST EXCLUDE - subtotal is original price, tax is calculated separately
+      basePrice = originalPrice * qty;
+      originalSubtotal = basePrice;
+      itemTax = basePrice * (taxRate / 100);
+      // Apply discount to (original price + GST)
+      const preDiscountTotal = basePrice + itemTax;
+      discountAmount = discountPercentage > 0
+        ? preDiscountTotal * (discountPercentage / 100)
+        : 0;
+      finalTotal = preDiscountTotal - discountAmount;
+    }
+    
+    return {
+      subtotal: acc.subtotal + originalSubtotal,
+      tax: acc.tax + itemTax,
+      total: acc.total + finalTotal,
+      totalDiscount: acc.totalDiscount + discountAmount
+    };
+  }, { subtotal: 0, tax: 0, total: 0, totalDiscount: 0 });
 
   const handleCheckout = () => {
     // Navigate to phone entry page
@@ -148,6 +187,12 @@ const CustomerCart = () => {
         <div className="cart-items-list">
           {items.map((item, index) => {
             const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+            const discountPercentage = parseFloat(item.discountPercentage || item.pricing?.discountPercentage) || 0;
+            const discountedPrice = discountPercentage > 0 
+              ? itemPrice * (1 - discountPercentage / 100)
+              : itemPrice;
+            const hasDiscount = discountPercentage > 0;
+            
             return (
             <div key={item._id || index} className="cart-item">
               <div className="cart-item-image-container">
@@ -159,11 +204,23 @@ const CustomerCart = () => {
                     e.target.src = '/placeholder-product.png';
                   }}
                 />
+                {hasDiscount && (
+                  <div className="discount-badge">{discountPercentage}% OFF</div>
+                )}
               </div>
               
               <div className="cart-item-details">
                 <h3 className="cart-item-name">{item.name}</h3>
-                <p className="cart-item-price">₹{itemPrice.toFixed(2)}</p>
+                <div className="cart-item-price-container">
+                  {hasDiscount ? (
+                    <>
+                      <p className="cart-item-price">₹{discountedPrice.toFixed(2)}</p>
+                      <p className="cart-item-original-price">₹{itemPrice.toFixed(2)}</p>
+                    </>
+                  ) : (
+                    <p className="cart-item-price">₹{itemPrice.toFixed(2)}</p>
+                  )}
+                </div>
               </div>
 
               <div className="cart-item-actions">
@@ -189,7 +246,7 @@ const CustomerCart = () => {
                   </button>
                 </div>
                 
-                <p className="cart-item-total">₹{(itemPrice * item.quantity).toFixed(2)}</p>
+                <p className="cart-item-total">₹{(discountedPrice * item.quantity).toFixed(2)}</p>
               </div>
             </div>
             );
@@ -206,8 +263,15 @@ const CustomerCart = () => {
           <span className="summary-value">₹{subtotal.toFixed(2)}</span>
         </div>
         
+        {totalDiscount > 0 && (
+          <div className="summary-row discount-row">
+            <span className="summary-label">Discount</span>
+            <span className="summary-value discount-value">-₹{totalDiscount.toFixed(2)}</span>
+          </div>
+        )}
+        
         <div className="summary-row">
-          <span className="summary-label">Tax (5%)</span>
+          <span className="summary-label">Tax (GST)</span>
           <span className="summary-value">₹{tax.toFixed(2)}</span>
         </div>
         

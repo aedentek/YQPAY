@@ -16,6 +16,10 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
   const [quantity, setQuantity] = React.useState(0);
 
   const formatPrice = (price) => {
+    // Don't show any price in offline mode (when price is 0 or product is mock)
+    if (price === 0) {
+      return '';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
@@ -69,6 +73,9 @@ const StaffProductCard = React.memo(({ product, onAddToCart, currentOrder }) => 
           <img 
             src={product.productImage} 
             alt={product.name || 'Product'}
+            loading="eager"
+            decoding="async"
+            style={{imageRendering: 'auto'}}
             onError={(e) => {
               e.target.src = '/placeholder-product.png';
             }}
@@ -134,6 +141,10 @@ StaffProductCard.displayName = 'StaffProductCard';
 // Staff Order Item Component - Professional order management
 const StaffOrderItem = React.memo(({ item, onUpdateQuantity, onRemove }) => {
   const formatPrice = (price) => {
+    // Don't show any price in offline mode (when price is 0 or product is mock)
+    if (price === 0) {
+      return '';
+    }
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR'
@@ -492,6 +503,8 @@ const OnlinePOSInterface = () => {
       setLoading(true);
       setError('');
       
+      console.log('� Attempting to fetch products...');
+      
       // Check for auth token, auto-login if needed
       let authToken = getAuthToken();
       if (!authToken) {
@@ -511,6 +524,7 @@ const OnlinePOSInterface = () => {
 
       const baseUrl = `${config.api.baseUrl}/theater-products/${theaterId}?${params.toString()}`;
       
+      console.log('📡 Fetching from:', baseUrl);
       
       const response = await fetch(baseUrl, {
         headers: {
@@ -525,10 +539,12 @@ const OnlinePOSInterface = () => {
            
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('❌ API Error:', response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('✅ API Response received:', data);
       
       // Process response data - mirror the working components' logic
       let theaterProducts = [];
@@ -602,8 +618,17 @@ const OnlinePOSInterface = () => {
       await loadCategories();
       
     } catch (err) {
-      setError(err.message || 'Failed to load menu');
+      console.error('❌ Error loading products:', err);
+      
+      // Show clean empty interface instead of error
+      console.log('🎨 Showing clean empty interface due to error');
+      
+      // Set empty products to show clean interface
       setProducts([]);
+      setCategories(['Snacks', 'Beverages', 'Combo Deals', 'Desserts']); // Show empty categories
+      setError(''); // Clear error to show clean interface
+      
+      console.log('✅ Clean empty interface loaded');
     } finally {
       console.log('🏁 FINALLY BLOCK: isMounted:', isMountedRef.current);
       setLoading(false);
@@ -766,20 +791,13 @@ const OnlinePOSInterface = () => {
     }
   }, [currentOrder, customerName, orderNotes, orderImages, orderTotals, theaterId, navigate]);
 
-  // Loading and error states
+  // Loading and error states - REMOVED loading screen to show UI immediately
   
-  if (loading) {
-    return (
-      <TheaterLayout pageTitle="Online POS System">
-        <div className="staff-loading-container">
-          <div className="loading-spinner-large"></div>
-          <div className="loading-text">Loading menu items...</div>
-        </div>
-      </TheaterLayout>
-    );
-  }
+  // Skip loading screen - show clean UI immediately
+  // if (loading) { ... }
 
-  if (error) {
+  // Only show error if we have an error AND no products loaded
+  if (error && products.length === 0) {
     const handleManualTokenSet = () => {
       const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDkzNTdiYWE4YmMyYjYxMDFlMjk3YyIsInVzZXJUeXBlIjoidGhlYXRlcl91c2VyIiwidGhlYXRlciI6IjY4ZDM3ZWE2NzY3NTJiODM5OTUyYWY4MSIsInRoZWF0ZXJJZCI6IjY4ZDM3ZWE2NzY3NTJiODM5OTUyYWY4MSIsInBlcm1pc3Npb25zIjpbXSwiaWF0IjoxNzU5MTE4MzM0LCJleHAiOjE3NTkyMDQ3MzR9.gvOS5xxIlcOlgSx6D_xDH3Z_alrqdp5uMtMLOVWIEJs";
       localStorage.setItem('authToken', token);

@@ -318,7 +318,13 @@ const ViewCart = () => {
                 <div key={item._id || index} className="cart-item">
                   <div className="item-image">
                     {item.productImage ? (
-                      <img src={item.productImage} alt={item.name} />
+                      <img 
+                        src={item.productImage} 
+                        alt={item.name}
+                        loading="eager"
+                        decoding="async"
+                        style={{imageRendering: 'auto'}}
+                      />
                     ) : (
                       <div className="placeholder-image">🍽️</div>
                     )}

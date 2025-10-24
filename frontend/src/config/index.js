@@ -4,13 +4,33 @@
  * Any new component automatically uses these settings
  */
 
+// Smart API URL detection - uses current hostname DYNAMICALLY
+const getApiBaseUrl = () => {
+  // If environment variable is set and not empty, use it
+  if (process.env.REACT_APP_API_URL && process.env.REACT_APP_API_URL.trim() !== '') {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // Otherwise, detect based on current window location at runtime
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // Use the same hostname as the frontend for the API
+  const dynamicUrl = `${protocol}//${hostname}:5000/api`;
+  console.log('🌐 Dynamic API URL:', dynamicUrl, 'from hostname:', hostname);
+  return dynamicUrl;
+};
+
 // React environment variables must start with REACT_APP_
 const config = {
   // ==============================================
   // API CONFIGURATION
   // ==============================================
   api: {
-    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+    // Use getter to make baseUrl dynamic - evaluated on each access
+    get baseUrl() {
+      return getApiBaseUrl();
+    },
     timeout: parseInt(process.env.REACT_APP_API_TIMEOUT) || 10000,
     retryAttempts: parseInt(process.env.REACT_APP_API_RETRY_ATTEMPTS) || 3,
     retryDelay: parseInt(process.env.REACT_APP_API_RETRY_DELAY) || 1000

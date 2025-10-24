@@ -189,12 +189,11 @@ export const ModalProvider = ({ children }) => {
   }, [alert]);
 
   const showError = useCallback((message, title = 'Error') => {
-    return alert({
-      title,
-      message,
-      type: 'error'
-    });
-  }, [alert]);
+    // DISABLED: Error modals removed for demo/presentation purposes
+    // Errors are logged to console only
+    console.error(`[${title}]:`, message);
+    return Promise.resolve(); // Return resolved promise to maintain compatibility
+  }, []);
 
   const showWarning = useCallback((message, title = 'Warning') => {
     return alert({

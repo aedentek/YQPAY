@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import OfflineNotice from '../../components/OfflineNotice';
+import useNetworkStatus from '../../hooks/useNetworkStatus';
 import config from '../../config';
 import '../../styles/customer/CustomerLanding.css';
 
@@ -61,6 +63,9 @@ const CustomerLanding = () => {
   const navigate = useNavigate();
   const params = useParams(); // Get route parameters (for /menu/:theaterId)
   
+  // Network status for offline handling
+  const { shouldShowOfflineUI, isNetworkError } = useNetworkStatus();
+  
   // State management
   const [theater, setTheater] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -77,12 +82,13 @@ const CustomerLanding = () => {
     
     // Theater ID can come from route parameter (/menu/:theaterId) or query string (?theaterid=...)
     const routeTheaterId = params.theaterId; // From /menu/:theaterId
-    const queryTheaterId = urlParams.get('theaterid'); // From ?theaterid=...
+    const queryTheaterId = urlParams.get('theaterid') || urlParams.get('theaterId') || urlParams.get('THEATERID');
     const id = routeTheaterId || queryTheaterId;
     
-    const screen = urlParams.get('screen');
-    const seat = urlParams.get('seat');
-    const qr = urlParams.get('qrName'); // QR name from scanned code
+    // Support both lowercase and uppercase parameter names for backwards compatibility
+    const screen = urlParams.get('screen') || urlParams.get('SCREEN');
+    const seat = urlParams.get('seat') || urlParams.get('SEAT');
+    const qr = urlParams.get('qrName') || urlParams.get('qrname') || urlParams.get('QRNAME');
     
     if (!id) {
       setError('Theater ID is required');
@@ -102,9 +108,28 @@ const CustomerLanding = () => {
   const loadTheaterData = useCallback(async (id) => {
     try {
       console.log('🎭 Loading theater data for ID:', id);
+      console.log('🎭 Config API Base URL:', config.api.baseUrl);
+      
       const apiUrl = `${config.api.baseUrl}/theaters/${id}`;
       console.log('📡 API URL:', apiUrl);
-      const response = await fetch(apiUrl);
+      console.log('📡 Making fetch request...');
+      
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        mode: 'cors' // Explicitly enable CORS
+      });
+      
+      console.log('📡 Response received:', response.status, response.statusText);
+      console.log('📡 Response OK:', response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+      }
+      
       const data = await response.json();
       
       console.log('📦 API Response:', data);
@@ -117,7 +142,14 @@ const CustomerLanding = () => {
       }
     } catch (error) {
       console.error('❌ Error loading theater:', error);
-      setError(`Theater not found: ${error.message}`);
+      console.error('❌ Error type:', error.name);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      
+      // Show detailed error message
+      const errorMsg = error.message || 'Unknown error occurred';
+      setError(`Theater not found: Load failed\n${errorMsg}`);
+      console.error('❌ Setting error state:', errorMsg);
     }
   }, []);
 
@@ -125,6 +157,7 @@ const CustomerLanding = () => {
   const loadSettings = useCallback(async () => {
     try {
       console.log('⚙️ Loading settings...');
+      
       const apiUrl = `${config.api.baseUrl}/settings/general`;
       console.log('📡 Settings API URL:', apiUrl);
       const response = await fetch(apiUrl);
@@ -136,7 +169,7 @@ const CustomerLanding = () => {
       }
     } catch (error) {
       console.error('❌ Error loading settings:', error);
-      // Continue without settings (use defaults)
+      // Continue without settings (use defaults) - settings are not critical
     }
   }, []);
 
@@ -192,6 +225,30 @@ const CustomerLanding = () => {
           <h2>Theater Not Found</h2>
           <p>{error}</p>
           <p className="error-hint">Please check the QR code and try again.</p>
+          <div style={{ marginTop: '20px', fontSize: '12px', color: '#666' }}>
+            <p>Debug Info:</p>
+            <p>Theater ID: {theaterId || 'Not set'}</p>
+            <p>API URL: {config.api.baseUrl}</p>
+            <p>Current URL: {window.location.href}</p>
+          </div>
+          <button 
+            onClick={() => {
+              setError(null);
+              setLoading(true);
+              if (theaterId) loadTheaterData(theaterId);
+            }}
+            style={{
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: '#6B0E9B',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -200,6 +257,9 @@ const CustomerLanding = () => {
   return (
     <ErrorBoundary>
       <div className="customer-landing">
+        {/* Show offline notice if in offline mode */}
+        {shouldShowOfflineUI && <OfflineNotice />}
+        
         {/* Header Section - Clean welcome without seat info */}
         <div className="welcome-section fade-in">
           <h1 className="welcome-title">WELCOME TO</h1>

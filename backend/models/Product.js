@@ -58,7 +58,14 @@ const productSchema = new mongoose.Schema({
       max: 100,
       default: 0
     },
-    currency: { type: String, default: 'INR' }
+    currency: { type: String, default: 'INR' },
+    gstType: {
+      type: String,
+      enum: ['INCLUDE', 'EXCLUDE'],
+      default: 'EXCLUDE',
+      required: true,
+      description: 'Whether GST is included in the price (INCLUDE) or added on top (EXCLUDE)'
+    }
   },
   inventory: {
     trackStock: { type: Boolean, default: true },
