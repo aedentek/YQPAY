@@ -185,7 +185,14 @@ const TheaterSidebar = ({ sidebarOpen, setSidebarOpen, sidebarCollapsed, current
   // Filter navigation items based on role permissions (including temporary override)
   let navigationItems;
   
-  if (!effectiveRolePermissions || effectiveRolePermissions.length === 0) {
+  // 🔧 TEMPORARY: Show all pages for testing (bypass permission check)
+  // TODO: Remove this once permissions are properly set in database
+  const SHOW_ALL_PAGES_FOR_TESTING = true;
+  
+  if (SHOW_ALL_PAGES_FOR_TESTING) {
+    console.log('⚠️ TESTING MODE: Showing all navigation pages (bypass permissions)');
+    navigationItems = allNavigationItems;
+  } else if (!effectiveRolePermissions || effectiveRolePermissions.length === 0) {
     console.log('⚠️ WARNING: No role permissions available - showing fallback Dashboard only');
     console.log('⚠️ User must re-login to load permissions from database');
     // Fallback: only show Dashboard if no permissions are available

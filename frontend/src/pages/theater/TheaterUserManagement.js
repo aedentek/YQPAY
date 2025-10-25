@@ -6,6 +6,7 @@ import PageContainer from '../../components/PageContainer';
 import VerticalPageHeader from '../../components/VerticalPageHeader';
 import { ActionButton, ActionButtons } from '../../components/ActionButton';
 import config from '../../config';
+import '../../styles/TheaterGlobalModals.css'; // Global theater modal styles
 import '../../styles/TheaterUserDetails.css';
 import '../../styles/TheaterList.css';
 import '../../styles/QRManagementPage.css';

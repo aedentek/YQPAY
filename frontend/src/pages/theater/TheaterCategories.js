@@ -22,6 +22,7 @@ const TheaterCategories = () => {
   
   // Data state
   const [categories, setCategories] = useState([]);
+  const [kioskTypes, setKioskTypes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState({
     activeCategories: 0,
@@ -46,7 +47,7 @@ const TheaterCategories = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    description: '',
+    kioskTypeId: '',
     isActive: true,
     image: null,
     removeImage: false
@@ -171,6 +172,33 @@ const TheaterCategories = () => {
     }
   }, [theaterId, showError]);
 
+  // Load kiosk types for the theater
+  const loadKioskTypes = useCallback(async () => {
+    if (!theaterId) return;
+    
+    try {
+      const response = await fetch(`${config.api.baseUrl}/theater-kiosk-types/${theaterId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // API returns { success: true, data: { kioskTypes: [...], pagination: {...}, statistics: {...} } }
+        const kioskTypesList = data.data?.kioskTypes || [];
+        setKioskTypes(kioskTypesList);
+        console.log('✅ Loaded kiosk types:', kioskTypesList.length);
+      } else {
+        console.error('Failed to load kiosk types:', response.status);
+        setKioskTypes([]);
+      }
+    } catch (error) {
+      console.error('Failed to load kiosk types:', error);
+      setKioskTypes([]);
+    }
+  }, [theaterId]);
+
   // Debounced search functionality
   const debouncedSearch = useCallback((query) => {
     if (searchTimeoutRef.current) {
@@ -212,7 +240,7 @@ const TheaterCategories = () => {
     setSelectedCategory(category);
     setFormData({
       name: category.categoryName || category.name || '',  // Backend now uses 'categoryName'
-      description: category.description || '',
+      kioskTypeId: category.kioskTypeId || '',
       isActive: category.isActive,
       image: category.imageUrl || null,
       removeImage: false
@@ -232,6 +260,17 @@ const TheaterCategories = () => {
     try {
       setImageError('');
       
+      // Validate required fields
+      if (!formData.name || !formData.name.trim()) {
+        setImageError('Category name is required');
+        return;
+      }
+      
+      if (!formData.kioskTypeId) {
+        setImageError('Kiosk Type is required');
+        return;
+      }
+      
       const url = isEdit 
         ? `${config.api.baseUrl}/theater-categories/${theaterId}/${selectedCategory._id}` 
         : `${config.api.baseUrl}/theater-categories/${theaterId}`;
@@ -241,8 +280,11 @@ const TheaterCategories = () => {
       
       // Create FormData for file upload
       const formDataToSend = new FormData();
-      formDataToSend.append('name', formData.name);  // Backend now accepts 'name'
+      formDataToSend.append('categoryName', formData.name);  // Backend expects 'categoryName'
       formDataToSend.append('isActive', formData.isActive);
+      
+      // Add kioskTypeId (now required)
+      formDataToSend.append('kioskTypeId', formData.kioskTypeId);
       
       // Add image file if selected
       if (imageFile) {
@@ -275,7 +317,7 @@ const TheaterCategories = () => {
         // Reset form
         setFormData({
           name: '',
-          description: '',
+          kioskTypeId: '',
           isActive: true,
           image: null,
           removeImage: false
@@ -324,7 +366,7 @@ const TheaterCategories = () => {
   const handleCreateNewCategory = () => {
     setFormData({
       name: '',
-      description: '',
+      kioskTypeId: '',
       isActive: true,
       image: null,
       removeImage: false
@@ -376,8 +418,9 @@ const TheaterCategories = () => {
   useEffect(() => {
     if (theaterId) {
       loadCategoriesData(1, 10, '');
+      loadKioskTypes();
     }
-  }, [theaterId, loadCategoriesData]);
+  }, [theaterId, loadCategoriesData, loadKioskTypes]);
 
   // Cleanup effect
   useEffect(() => {
@@ -447,7 +490,7 @@ const TheaterCategories = () => {
           <div className="search-box">
             <input
               type="text"
-              placeholder="Search categories by name or description..."
+              placeholder="Search categories by name or kiosk type..."
               value={searchTerm}
               onChange={handleSearch}
               className="search-input"
@@ -484,6 +527,7 @@ const TheaterCategories = () => {
                 <th style={{textAlign: 'center'}}>S.No</th>
                 <th style={{textAlign: 'center'}}>Image</th>
                 <th style={{textAlign: 'center'}}>Category Name</th>
+                <th style={{textAlign: 'center'}}>Kiosk Type</th>
                 <th style={{textAlign: 'center'}}>Status</th>
                 <th style={{textAlign: 'center'}}>Action</th>
               </tr>
@@ -545,9 +589,17 @@ const TheaterCategories = () => {
                       <td style={{textAlign: 'center'}}>
                         <div className="qr-info" style={{textAlign: 'center'}}>
                           <div className="qr-name">{category.categoryName || category.name}</div>
-                          {category.description && (
-                            <div className="qr-description">{category.description}</div>
-                          )}
+                        </div>
+                      </td>
+                      <td style={{textAlign: 'center'}}>
+                        <div className="qr-description">
+                          {(() => {
+                            if (!category.kioskTypeId) return 'Not Assigned';
+                            if (!Array.isArray(kioskTypes) || kioskTypes.length === 0) return 'Loading...';
+                            
+                            const found = kioskTypes.find(kt => String(kt._id) === String(category.kioskTypeId));
+                            return found?.name || 'Unknown';
+                          })()}
                         </div>
                       </td>
                       <td style={{textAlign: 'center'}}>
@@ -663,14 +715,20 @@ const TheaterCategories = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Description</label>
-                    <textarea 
-                      value={formData.description || ''} 
-                      onChange={(e) => handleInputChange('description', e.target.value)}
+                    <label>Kiosk Type Name <span style={{color: 'red'}}>*</span></label>
+                    <select 
+                      value={formData.kioskTypeId || ''} 
+                      onChange={(e) => handleInputChange('kioskTypeId', e.target.value)}
                       className="form-control"
-                      placeholder="Enter category description (optional)"
-                      rows="3"
-                    />
+                      required
+                    >
+                      <option value="">Select Kiosk Type</option>
+                      {Array.isArray(kioskTypes) && kioskTypes.map((kioskType) => (
+                        <option key={kioskType._id} value={kioskType._id}>
+                          {kioskType.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Category Image</label>
@@ -745,14 +803,20 @@ const TheaterCategories = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Description</label>
-                    <textarea 
-                      value={formData.description || ''} 
-                      onChange={(e) => handleInputChange('description', e.target.value)}
+                    <label>Kiosk Type Name <span style={{color: 'red'}}>*</span></label>
+                    <select 
+                      value={formData.kioskTypeId || ''} 
+                      onChange={(e) => handleInputChange('kioskTypeId', e.target.value)}
                       className="form-control"
-                      placeholder="Enter category description (optional)"
-                      rows="3"
-                    />
+                      required
+                    >
+                      <option value="">Select Kiosk Type</option>
+                      {Array.isArray(kioskTypes) && kioskTypes.map((kioskType) => (
+                        <option key={kioskType._id} value={kioskType._id}>
+                          {kioskType.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label>Category Image</label>
@@ -826,12 +890,22 @@ const TheaterCategories = () => {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label>Description</label>
-                    <textarea 
-                      value={selectedCategory?.description || ''} 
+                    <label>Kiosk Type Name</label>
+                    <input 
+                      type="text" 
+                      value={(() => {
+                        if (!selectedCategory?.kioskTypeId) return 'Not Assigned';
+                        if (!Array.isArray(kioskTypes) || kioskTypes.length === 0) return 'Loading...';
+                        
+                        const found = kioskTypes.find(kt => String(kt._id) === String(selectedCategory.kioskTypeId));
+                        console.log('🔍 Looking for kioskTypeId:', selectedCategory.kioskTypeId);
+                        console.log('🔍 Available kiosk types:', kioskTypes.map(kt => ({ id: kt._id, name: kt.name })));
+                        console.log('🔍 Found:', found);
+                        
+                        return found?.name || 'Not Assigned';
+                      })()} 
                       className="form-control"
                       readOnly
-                      rows="3"
                     />
                   </div>
                   {(selectedCategory?.imageUrl || selectedCategory?.image) && (

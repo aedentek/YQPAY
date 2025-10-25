@@ -169,6 +169,7 @@ app.use('/api/dashboard', require('./routes/dashboard')); // Super Admin Dashboa
 app.use('/api/theaters', theaterRoutes);
 app.use('/api/theater-products', productRoutes.products);
 app.use('/api/theater-categories', productRoutes.categories);
+app.use('/api/theater-kiosk-types', require('./routes/theater-kiosk-types'));
 app.use('/api/theater-product-types', productRoutes.productTypes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/settings', settingsRoutes);

@@ -240,40 +240,31 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
-      {/* Theater Curtain Background */}
-      <div className="theater-background">
-        <div className="curtain-left"></div>
-        <div className="curtain-right"></div>
-        <div className="theater-lights"></div>
-      </div>
-
-      {/* Theater Masks - Decorative Elements */}
-      <div className="theater-masks">
-        <div className="mask comedy-mask">
-          <div className="mask-face">
-            <div className="eye left-eye"></div>
-            <div className="eye right-eye"></div>
-            <div className="mouth comedy-mouth"></div>
-          </div>
-        </div>
-        <div className="mask tragedy-mask">
-          <div className="mask-face">
-            <div className="eye left-eye"></div>
-            <div className="eye right-eye"></div>
-            <div className="mouth tragedy-mouth"></div>
-          </div>
+      {/* Left Side - Video/Branding Section */}
+      <div className="login-left-section">
+        <div className="login-left-overlay"></div>
+        <div className="login-left-content">
+          <video 
+            className="login-main-video" 
+            autoPlay 
+            loop 
+            muted 
+            playsInline
+          >
+            <source src={require('../home/images/Home-1.mp4')} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
         </div>
       </div>
 
-      {/* Main Login Content */}
-      <div className="login-container">
-        <div className="login-card">
+      {/* Right Side - Login Form Section */}
+      <div className="login-right-section">
+        <div className="login-form-container">
           {/* Header */}
           <div className="login-header">
-            <div className="brand-logo">
-              <h1 className="brand-name">YQPayNow</h1>
-            </div>
-                  </div>
+            <h2 className="login-title">Welcome Back</h2>
+            <p className="login-subtitle">Sign in to access your dashboard</p>
+          </div>
 
           {/* Error Message */}
           {errors.general && (
@@ -377,12 +368,20 @@ const LoginPage = () => {
               >
                 ← Back
               </button>
+              <h2 className="login-title" style={{marginBottom: '16px'}}>Enter Your PIN</h2>
               <p className="pin-instruction">
                 Welcome, <strong>{pendingAuth?.username}</strong>!
                 <br />
                 Please enter your 4-digit PIN to continue
               </p>
             </div>
+
+            {errors.pin && (
+              <div className="error-banner">
+                <span className="error-icon">!</span>
+                {errors.pin}
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="pin" className="form-label">4-Digit PIN</label>
@@ -394,7 +393,7 @@ const LoginPage = () => {
                   value={pin}
                   onChange={handlePinChange}
                   className={`form-input pin-input ${errors.pin ? 'error' : ''}`}
-                  placeholder="Enter 4-digit PIN"
+                  placeholder="••••"
                   maxLength="4"
                   autoFocus
                   inputMode="numeric"
@@ -402,7 +401,6 @@ const LoginPage = () => {
                 />
                 <span className="input-icon">🔢</span>
               </div>
-              {errors.pin && <span className="error-text">{errors.pin}</span>}
             </div>
 
             <button 
@@ -424,11 +422,10 @@ const LoginPage = () => {
 
           {/* Footer */}
           <div className="login-footer">
+            <p className="footer-text">© 2025 YQPayNow. All rights reserved.</p>
           </div>
         </div>
       </div>
-
-
     </div>
   );
 };

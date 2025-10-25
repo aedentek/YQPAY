@@ -9,6 +9,7 @@ import { ActionButton, ActionButtons } from '../../components/ActionButton';
 import { useModal } from '../../contexts/ModalContext';
 import { usePerformanceMonitoring } from '../../hooks/usePerformanceMonitoring';
 import config from '../../config';
+import '../../styles/TheaterGlobalModals.css'; // Global theater modal styles
 import '../../styles/QRManagementPage.css';
 import '../../styles/TheaterList.css';
 

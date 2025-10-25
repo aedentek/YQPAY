@@ -135,9 +135,9 @@ router.post('/:theaterId', [
     }
 
     const { theaterId } = req.params;
-    const { categoryName, categoryType, isActive, sortOrder } = req.body;
+    const { categoryName, categoryType, isActive, sortOrder, kioskTypeId } = req.body;
 
-    console.log('🔥 Creating category:', { theaterId, categoryName, categoryType, hasImage: !!req.file });
+    console.log('🔥 Creating category:', { theaterId, categoryName, categoryType, kioskTypeId, hasImage: !!req.file });
 
     // Find or create category document for this theater
     let categoryDoc = await Category.findOne({ theater: theaterId });
@@ -167,6 +167,7 @@ router.post('/:theaterId', [
       categoryType: categoryType || 'Food',
       sortOrder: sortOrder || 0,
       isActive: isActive !== undefined ? isActive : true,
+      kioskTypeId: kioskTypeId || null,
       items: [],
       imageUrl: null,
       createdAt: new Date(),
@@ -239,9 +240,9 @@ router.put('/:theaterId/:categoryId', [
     }
 
     const { theaterId, categoryId } = req.params;
-    const { categoryName, categoryType, isActive, sortOrder, removeImage } = req.body;
+    const { categoryName, categoryType, isActive, sortOrder, removeImage, kioskTypeId } = req.body;
     
-    console.log('🔥 Updating category:', { categoryId, hasImage: !!req.file, removeImage });
+    console.log('🔥 Updating category:', { categoryId, kioskTypeId, hasImage: !!req.file, removeImage });
     
     // Find category document
     const categoryDoc = await Category.findOne({ theater: theaterId });
@@ -280,6 +281,7 @@ router.put('/:theaterId/:categoryId', [
     if (categoryType) category.categoryType = categoryType;
     if (isActive !== undefined) category.isActive = isActive;
     if (sortOrder !== undefined) category.sortOrder = sortOrder;
+    if (kioskTypeId !== undefined) category.kioskTypeId = kioskTypeId || null;
     category.updatedAt = new Date();
 
     // Handle image removal

@@ -46,6 +46,11 @@ const categoryObjectSchema = new mongoose.Schema({
     enum: ['Food', 'Beverage', 'Snacks', 'Combo', 'Other'],
     default: 'Food'
   },
+  kioskTypeId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'KioskType',
+    default: null
+  },
   imageUrl: {
     type: String,
     default: null
